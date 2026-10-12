@@ -56,6 +56,10 @@ e.g. "Salinas Valley"), `parent` (string, fine only = id of containing coarse re
 Plus key `"search"`: `{ "<crop_id>": { "center": [lon, lat], "zoom": number, "label": string,
 "acres_total": number } }` — for every crop_id in crops.json: center of that crop's densest
 area (fly-to target), suggested zoom (10–12), place label, statewide total acres.
+Each search entry also has `"places": [{ "center": [lon, lat], "zoom": number, "label": string,
+"acres": number }]` — 1–5 distinct hotspots for that crop, sorted by acres desc, ≥ 25 km apart,
+each ≥ 5% of the crop's statewide acres (always at least 1); `places[0]` equals the primary
+center/zoom/label. `"bbox": [w, s, e, n]` covering all places (for an overview fit).
 
 **Site config** `site/src/config.ts` exports `FIELDS_URL`, `BASEMAP_URL`, `REGIONS_URL`,
 `CROPS_URL`, `ICONS_BASE` (defaults to `/data/fields.pmtiles`, `/data/basemap.pmtiles`,
