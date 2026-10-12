@@ -10,12 +10,14 @@ import type { CropIndex } from '../data/crops';
 import { mix } from '../lib/color';
 import { iconImageId } from '../lib/icons';
 import { FIELDS_BEFORE_LAYER_ID } from '../style/basemap';
+import { patternImageExpression, registerFieldPatterns, texturedCropIds } from './field-patterns';
 
 export const FIELDS_SOURCE = 'fields';
 export const FIELDS_LAYER = 'fields';
 export const FIELD_POINTS_LAYER = 'field_points';
 
 export const FIELD_FILL_LAYER_ID = 'fields-fill';
+export const FIELD_TEXTURE_LAYER_ID = 'fields-texture';
 export const FIELD_OUTLINE_LAYER_ID = 'fields-outline';
 export const FIELD_GLOW_LAYER_ID = 'fields-glow';
 export const FIELD_SELECTED_GLOW_LAYER_ID = 'fields-selected-glow';
@@ -32,6 +34,10 @@ const HOVER_EXTRA_OPACITY = 0.16;
 const DEFAULT_DIM = 0.2;
 const FALLBACK_COLOR = '#d8d3c4';
 const FALLBACK_ICON = 'icon-seedling';
+
+const TEXTURE_OPACITY = 0.82;
+const TEXTURE_LIT_OPACITY = 0.4;
+const TEXTURE_FADE_IN: readonly [number, number] = [11.5, 12.4];
 
 export interface FieldHit {
   /** Numeric feature id (tiles were built with --generate-ids). */
@@ -90,6 +96,12 @@ function iconOpacity(ids: readonly number[] | null, dim: number): ExpressionSpec
   return zoomCurve([12.4, 0], [13, emphasisOpacity(1, ids, dim)]);
 }
 
+function textureOpacity(ids: readonly number[] | null, dim: number): ExpressionSpecification {
+  const at: ExpressionSpecification = ['case', LIT, TEXTURE_LIT_OPACITY, emphasisOpacity(TEXTURE_OPACITY, ids, dim)] as ExpressionSpecification;
+  const [from, to] = TEXTURE_FADE_IN;
+  return zoomCurve([from, 0], [to, at]);
+}
+
 function buildLayers(crops: CropIndex): LayerSpecification[] {
   const base = cropMatch(crops, (hex) => hex, FALLBACK_COLOR);
   const bright = cropMatch(crops, (hex) => mix(hex, '#ffffff', HOVER_WHITE_MIX), FALLBACK_COLOR);
@@ -107,6 +119,19 @@ function buildLayers(crops: CropIndex): LayerSpecification[] {
         'fill-color': ['case', LIT, bright, base] as ExpressionSpecification,
         'fill-opacity': fillOpacity(null, DEFAULT_DIM),
         'fill-antialias': true,
+      },
+    },
+    {
+      id: FIELD_TEXTURE_LAYER_ID,
+      type: 'fill',
+      source: FIELDS_SOURCE,
+      'source-layer': FIELDS_LAYER,
+      minzoom: TEXTURE_FADE_IN[0],
+      filter: ['in', ['get', 'crop_id'], ['literal', texturedCropIds(crops)]] as ExpressionSpecification,
+      paint: {
+        'fill-pattern': patternImageExpression(crops),
+        'fill-opacity': textureOpacity(null, DEFAULT_DIM),
+        'fill-antialias': false,
       },
     },
     {
@@ -206,6 +231,7 @@ export function addFieldsLayers(map: MapLibreMap, crops: CropIndex): FieldsLayer
   const url = `pmtiles://${new URL(FIELDS_URL, `${window.location.origin}/`).href}`;
   map.addSource(FIELDS_SOURCE, { type: 'vector', url });
 
+  registerFieldPatterns(map, crops);
   const specs = buildLayers(crops);
   for (const spec of specs) map.addLayer(spec, FIELDS_BEFORE_LAYER_ID);
 
@@ -248,6 +274,7 @@ export function addFieldsLayers(map: MapLibreMap, crops: CropIndex): FieldsLayer
     },
     setEmphasis(cropIds, dimOpacity = DEFAULT_DIM) {
       map.setPaintProperty(FIELD_FILL_LAYER_ID, 'fill-opacity', fillOpacity(cropIds, dimOpacity));
+      map.setPaintProperty(FIELD_TEXTURE_LAYER_ID, 'fill-opacity', textureOpacity(cropIds, dimOpacity));
       map.setPaintProperty(FIELD_OUTLINE_LAYER_ID, 'line-opacity', outlineOpacity(cropIds, dimOpacity));
       map.setPaintProperty(FIELD_ICONS_LAYER_ID, 'icon-opacity', iconOpacity(cropIds, dimOpacity));
     },
