@@ -23,8 +23,9 @@ const context = await browser.newContext({
   recordVideo: { dir: outDir, size: viewport },
 });
 
-// A soft cursor (laptop) or touch dot (mobile) so viewers can follow the interaction.
+// A touch dot on mobile so viewers can follow the taps (the laptop recording shows no pointer).
 await context.addInitScript((isMobile) => {
+  if (!isMobile) return;
   window.addEventListener('DOMContentLoaded', () => {
     const dot = document.createElement('div');
     dot.id = 'demo-cursor';
