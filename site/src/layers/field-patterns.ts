@@ -57,6 +57,18 @@ const rgba = (hex: string, alpha: number): string => {
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
 };
 
+/** Runs `draw` at the 3x3 neighbouring offsets so anything crossing a tile edge wraps seamlessly. */
+function wrapped(ctx: Ctx, draw: (ctx: Ctx) => void): void {
+  for (const dx of [-TILE, 0, TILE]) {
+    for (const dy of [-TILE, 0, TILE]) {
+      ctx.save();
+      ctx.translate(dx, dy);
+      draw(ctx);
+      ctx.restore();
+    }
+  }
+}
+
 function fillBase(ctx: Ctx, base: string): void {
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, TILE, TILE);
