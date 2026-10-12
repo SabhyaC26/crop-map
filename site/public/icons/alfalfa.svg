@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="leaf" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#c8f28a"/>
+      <stop offset="0.45" stop-color="#84cf4e"/>
+      <stop offset="0.85" stop-color="#4aa23a"/>
+      <stop offset="1" stop-color="#3a8a30"/>
+    </radialGradient>
+    <linearGradient id="stem" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#8fd05a"/>
+      <stop offset="1" stop-color="#4a9a38"/>
+    </linearGradient>
+    <radialGradient id="bloom" cx="0.38" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#e2b8ff"/>
+      <stop offset="0.5" stop-color="#a86be0"/>
+      <stop offset="1" stop-color="#7a3fb8"/>
+    </radialGradient>
+    <radialGradient id="sheen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.9"/>
+      <stop offset="0.6" stop-color="#fff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#1f5a1a" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#1f5a1a" stop-opacity="0"/>
+    </radialGradient>
+    <symbol id="lf" viewBox="-30 -50 60 100" overflow="visible">
+      <path d="M0 -50C26 -42 34 -14 24 12C16 32 6 44 0 50C-6 44 -16 32 -24 12C-34 -14 -26 -42 0 -50Z" fill="url(#leaf)"/>
+      <path d="M0 -42C-4 -20 -4 14 0 42C4 14 4 -20 0 -42Z" fill="#fff" opacity="0.16"/>
+      <path d="M0 50C-6 44 -16 32 -24 12C-10 34 12 34 24 12C16 32 6 44 0 50Z" fill="#1f6a22" opacity="0.28"/>
+      <ellipse cx="-11" cy="-22" rx="7" ry="16" fill="url(#sheen)" transform="rotate(14 -11 -22)"/>
+    </symbol>
+    <symbol id="bl" viewBox="-14 -14 28 28" overflow="visible">
+      <circle r="13" fill="url(#bloom)"/>
+      <ellipse cx="-4" cy="-5" rx="5" ry="3.4" fill="#fff" opacity="0.7" transform="rotate(-30 -4 -5)"/>
+    </symbol>
+  </defs>
+  <ellipse cx="128" cy="244" rx="70" ry="9" fill="url(#shadow)"/>
+  <path d="M128 244C126 200 130 160 128 120" fill="none" stroke="url(#stem)" stroke-width="10" stroke-linecap="round"/>
+  <path d="M128 190C108 180 82 176 66 164" fill="none" stroke="url(#stem)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M128 176C150 168 176 164 192 152" fill="none" stroke="url(#stem)" stroke-width="7" stroke-linecap="round"/>
+  <use href="#lf" x="-30" y="-50" width="60" height="100" transform="translate(52 168) rotate(-62) scale(0.9)"/>
+  <use href="#lf" x="-30" y="-50" width="60" height="100" transform="translate(82 182) rotate(-96) scale(0.88)"/>
+  <use href="#lf" x="-30" y="-50" width="60" height="100" transform="translate(70 140) rotate(-30) scale(0.88)"/>
+  <use href="#lf" x="-30" y="-50" width="60" height="100" transform="translate(204 150) rotate(62) scale(0.9)"/>
+  <use href="#lf" x="-30" y="-50" width="60" height="100" transform="translate(174 164) rotate(96) scale(0.88)"/>
+  <use href="#lf" x="-30" y="-50" width="60" height="100" transform="translate(186 122) rotate(30) scale(0.88)"/>
+  <use href="#lf" x="-30" y="-50" width="60" height="100" transform="translate(128 102) rotate(0) scale(0.95)"/>
+  <use href="#lf" x="-30" y="-50" width="60" height="100" transform="translate(98 130) rotate(-52) scale(0.9)"/>
+  <use href="#lf" x="-30" y="-50" width="60" height="100" transform="translate(158 130) rotate(52) scale(0.9)"/>
+  <use href="#bl" x="-14" y="-14" width="28" height="28" transform="translate(128 40)"/>
+  <use href="#bl" x="-14" y="-14" width="28" height="28" transform="translate(108 52)"/>
+  <use href="#bl" x="-14" y="-14" width="28" height="28" transform="translate(148 52)"/>
+  <use href="#bl" x="-14" y="-14" width="28" height="28" transform="translate(128 22)"/>
+  <use href="#bl" x="-14" y="-14" width="28" height="28" transform="translate(128 66)"/>
+</svg>

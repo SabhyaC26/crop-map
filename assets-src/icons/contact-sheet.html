@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Crop icon contact sheet</title>
+<style>
+  body { margin: 0; padding: 24px; font: 600 11px/1.2 system-ui, sans-serif; color: #345; background: #fff; width: 1500px; }
+  h2 { margin: 18px 0 8px; font-size: 13px; }
+  .band { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; border-radius: 14px; margin-bottom: 8px; }
+  .light { background: #f7f8fa; }
+  .green { background: #cfeccd; }
+  .cell { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 104px; }
+  .cell .big img { width: 96px; height: 96px; display: block; }
+  .row { display: flex; align-items: center; gap: 6px; }
+  .row img.small { width: 40px; height: 40px; }
+  .row img.tiny { width: 28px; height: 28px; }
+  .custom .cell { outline: 1px dashed rgba(0,0,0,.15); border-radius: 8px; padding: 2px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const emoji = "lettuce broccoli carrot onion garlic potato tomato bell_pepper hot_pepper cucumber melon watermelon corn strawberry blueberry grapes olive avocado orange lemon peach cherries apple pear kiwi rice sunflower beans tulip seedling herb cow".split(" ");
+const custom = "almond pistachio walnut date pomegranate wheat alfalfa cotton".split(" ");
+const root = document.getElementById("root");
+const base = "../../site/public/icons/";
+function cell(slug, ext) {
+  const src = base + slug + "." + ext;
+  return `<div class="cell"><div class="big"><img src="${src}"></div><div class="row"><img class="small" src="${src}"><img class="tiny" src="${src}"></div><div>${slug}</div></div>`;
+}
+function band(title, slugs, ext, bg, cls) {
+  return `<h2>${title}</h2><div class="band ${bg} ${cls || ''}">${slugs.map(s => cell(s, ext)).join("")}</div>`;
+}
+const customFirst = custom.map(s => s);
+root.innerHTML =
+  band("Custom SVG icons — light", custom, "svg", "light", "custom") +
+  band("Custom SVG icons — pastel green", custom, "svg", "green", "custom") +
+  band("Fluent 3D emoji — light", emoji, "png", "light") +
+  band("Fluent 3D emoji — pastel green", emoji, "png", "green");
+</script>
+</body>
+</html>

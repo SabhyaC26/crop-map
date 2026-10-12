@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="fruit" cx="0.35" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#e58a2c"/>
+      <stop offset="0.4" stop-color="#b9561a"/>
+      <stop offset="0.8" stop-color="#7d3412"/>
+      <stop offset="1" stop-color="#5a2410"/>
+    </radialGradient>
+    <linearGradient id="stem" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b5844a"/>
+      <stop offset="1" stop-color="#7c5128"/>
+    </linearGradient>
+    <radialGradient id="cap" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#c9a064"/>
+      <stop offset="1" stop-color="#8a5f30"/>
+    </radialGradient>
+    <radialGradient id="sheen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.9"/>
+      <stop offset="0.6" stop-color="#fff" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.5" stop-color="#2a0e04" stop-opacity="0"/>
+      <stop offset="1" stop-color="#2a0e04" stop-opacity="0.4"/>
+    </linearGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3a1a08" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#3a1a08" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="c1"><ellipse cx="0" cy="0" rx="42" ry="82"/></clipPath>
+    <symbol id="date" viewBox="-50 -90 100 180" overflow="visible">
+      <ellipse cx="0" cy="0" rx="42" ry="82" fill="url(#fruit)"/>
+      <g clip-path="url(#c1)">
+        <rect x="-50" y="-90" width="100" height="180" fill="url(#shade)"/>
+        <path d="M-30 -20C-34 20 -26 56 -8 76C-24 70 -40 40 -40 0Z" fill="#3a1204" opacity="0.18"/>
+        <ellipse cx="-17" cy="-30" rx="9" ry="34" fill="url(#sheen)" transform="rotate(8 -17 -30)"/>
+        <ellipse cx="15" cy="48" rx="5" ry="12" fill="#ffd9a0" opacity="0.28" transform="rotate(-10 15 48)"/>
+      </g>
+    </symbol>
+  </defs>
+  <ellipse cx="128" cy="240" rx="82" ry="10" fill="url(#shadow)"/>
+  <path d="M128 12C130 30 134 40 142 50" fill="none" stroke="url(#stem)" stroke-width="12" stroke-linecap="round"/>
+  <g transform="translate(70 148) rotate(18) scale(0.74)"><use href="#date" x="-50" y="-90" width="100" height="180"/></g>
+  <g transform="translate(186 150) rotate(-18) scale(0.74)"><use href="#date" x="-50" y="-90" width="100" height="180"/></g>
+  <path d="M128 40C108 54 90 72 80 88" fill="none" stroke="url(#stem)" stroke-width="9" stroke-linecap="round"/>
+  <path d="M128 40C148 54 170 72 176 90" fill="none" stroke="url(#stem)" stroke-width="9" stroke-linecap="round"/>
+  <g transform="translate(128 160) scale(0.94)"><use href="#date" x="-50" y="-90" width="100" height="180"/></g>
+  <path d="M128 14C128 40 128 48 128 62" fill="none" stroke="url(#stem)" stroke-width="10" stroke-linecap="round"/>
+  <ellipse cx="128" cy="70" rx="15" ry="9" fill="url(#cap)"/>
+  <ellipse cx="80" cy="92" rx="13" ry="8" fill="url(#cap)" transform="rotate(-48 80 92)"/>
+  <ellipse cx="176" cy="94" rx="13" ry="8" fill="url(#cap)" transform="rotate(48 176 94)"/>
+</svg>

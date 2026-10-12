@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="body" cx="0.36" cy="0.32" r="0.85">
+      <stop offset="0" stop-color="#f4606e"/>
+      <stop offset="0.35" stop-color="#d42240"/>
+      <stop offset="0.75" stop-color="#a50f32"/>
+      <stop offset="1" stop-color="#6e0a26"/>
+    </radialGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.5" stop-color="#4a0615" stop-opacity="0"/>
+      <stop offset="1" stop-color="#4a0615" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="crown" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e0425c"/>
+      <stop offset="1" stop-color="#9a1233"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="0.6" stop-color="#fff" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#4a0615" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#4a0615" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#9edb5a"/>
+      <stop offset="1" stop-color="#4fa23a"/>
+    </linearGradient>
+    <clipPath id="clip">
+      <path d="M128 52C176 44 224 76 224 142C224 200 182 238 128 238C74 238 32 200 32 142C32 76 80 44 128 52Z"/>
+    </clipPath>
+  </defs>
+  <ellipse cx="128" cy="240" rx="82" ry="10" fill="url(#shadow)"/>
+  <path d="M128 52C176 44 224 76 224 142C224 200 182 238 128 238C74 238 32 200 32 142C32 76 80 44 128 52Z" fill="url(#body)"/>
+  <g clip-path="url(#clip)">
+    <rect x="20" y="40" width="216" height="206" fill="url(#shade)"/>
+    <path d="M200 90C222 120 226 170 196 210C214 180 214 130 190 96Z" fill="#fff" opacity="0.1"/>
+    <path d="M50 150C52 190 84 224 126 228C80 218 56 190 50 150Z" fill="#5a0a1c" opacity="0.18"/>
+    <ellipse cx="82" cy="108" rx="26" ry="38" fill="url(#sheen)" transform="rotate(32 82 108)"/>
+    <ellipse cx="190" cy="200" rx="10" ry="16" fill="#fff" opacity="0.16" transform="rotate(-40 190 200)"/>
+  </g>
+  <path d="M128 70C104 68 92 50 90 30L110 44L118 14L128 38L138 14L146 44L166 30C164 50 152 68 128 70Z" fill="url(#crown)"/>
+  <path d="M128 68C118 68 110 66 104 60C114 54 142 54 152 60C146 66 138 68 128 68Z" fill="#6e0a26" opacity="0.7"/>
+  <path d="M118 14L110 44L124 38Z" fill="#fff" opacity="0.25"/>
+  <ellipse cx="124" cy="56" rx="22" ry="5" fill="#ff9aa6" opacity="0.2"/>
+  <path d="M170 46C196 26 222 32 232 48C214 62 188 62 170 46Z" fill="url(#leaf)" opacity="0"/>
+</svg>

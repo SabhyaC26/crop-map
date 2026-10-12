@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="body" cx="0.38" cy="0.32" r="0.85">
+      <stop offset="0" stop-color="#fbe8c4"/>
+      <stop offset="0.45" stop-color="#e9c48c"/>
+      <stop offset="0.8" stop-color="#cb9a5c"/>
+      <stop offset="1" stop-color="#a97440"/>
+    </radialGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.55" stop-color="#7a4318" stop-opacity="0"/>
+      <stop offset="1" stop-color="#7a4318" stop-opacity="0.38"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="0.6" stop-color="#fff" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="rim" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.82" stop-color="#6b3a14" stop-opacity="0"/>
+      <stop offset="1" stop-color="#6b3a14" stop-opacity="0.28"/>
+    </radialGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#5b3412" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#5b3412" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="clip">
+      <path id="almond" d="M128 14C158 52 202 100 202 152C202 198 170 236 128 236C86 236 54 198 54 152C54 100 98 52 128 14Z"/>
+    </clipPath>
+  </defs>
+  <ellipse cx="128" cy="238" rx="74" ry="11" fill="url(#shadow)"/>
+  <g transform="rotate(-18 128 128)">
+    <path d="M128 14C158 52 202 100 202 152C202 198 170 236 128 236C86 236 54 198 54 152C54 100 98 52 128 14Z" fill="url(#body)"/>
+    <g clip-path="url(#clip)">
+      <rect x="40" y="10" width="180" height="236" fill="url(#shade)"/>
+      <rect x="40" y="10" width="180" height="236" fill="url(#rim)" opacity="0"/>
+      <g fill="#8c5a28" opacity="0.4">
+        <ellipse cx="108" cy="104" rx="3.4" ry="9" transform="rotate(14 108 104)"/>
+        <ellipse cx="136" cy="92" rx="3" ry="8" transform="rotate(-6 136 92)"/>
+        <ellipse cx="160" cy="124" rx="3.6" ry="10" transform="rotate(8 160 124)"/>
+        <ellipse cx="124" cy="136" rx="3.6" ry="11" transform="rotate(-4 124 136)"/>
+        <ellipse cx="92" cy="146" rx="3.4" ry="10" transform="rotate(12 92 146)"/>
+        <ellipse cx="152" cy="170" rx="3.6" ry="11" transform="rotate(-8 152 170)"/>
+        <ellipse cx="118" cy="182" rx="3.4" ry="10" transform="rotate(6 118 182)"/>
+        <ellipse cx="86" cy="186" rx="3" ry="8" transform="rotate(18 86 186)"/>
+        <ellipse cx="136" cy="205" rx="3" ry="8" transform="rotate(-2 136 205)"/>
+        <ellipse cx="172" cy="158" rx="2.6" ry="7" transform="rotate(-10 172 158)"/>
+      </g>
+      <g fill="#fff3d6" opacity="0.5">
+        <ellipse cx="110" cy="108" rx="1.8" ry="6" transform="rotate(14 110 108)"/>
+        <ellipse cx="126" cy="141" rx="1.8" ry="7" transform="rotate(-4 126 141)"/>
+        <ellipse cx="94" cy="151" rx="1.8" ry="6" transform="rotate(12 94 151)"/>
+        <ellipse cx="154" cy="175" rx="1.8" ry="7" transform="rotate(-8 154 175)"/>
+        <ellipse cx="162" cy="129" rx="1.8" ry="6" transform="rotate(8 162 129)"/>
+      </g>
+      <ellipse cx="96" cy="112" rx="22" ry="52" fill="url(#sheen)" transform="rotate(14 96 112)"/>
+      <ellipse cx="170" cy="190" rx="12" ry="20" fill="#fff" opacity="0.14" transform="rotate(-20 170 190)"/>
+      <path d="M128 14C148 40 168 66 182 92C160 70 140 44 128 14Z" fill="#7a4318" opacity="0.18"/>
+    </g>
+  </g>
+</svg>

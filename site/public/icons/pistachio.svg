@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="shell" cx="0.34" cy="0.3" r="0.95">
+      <stop offset="0" stop-color="#fff4dc"/>
+      <stop offset="0.4" stop-color="#f3dcb0"/>
+      <stop offset="0.8" stop-color="#d9b47a"/>
+      <stop offset="1" stop-color="#bf9158"/>
+    </radialGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.45" stop-color="#7a4c18" stop-opacity="0"/>
+      <stop offset="1" stop-color="#7a4c18" stop-opacity="0.38"/>
+    </linearGradient>
+    <radialGradient id="nut" cx="0.36" cy="0.28" r="0.85">
+      <stop offset="0" stop-color="#e6f98a"/>
+      <stop offset="0.4" stop-color="#a8d84e"/>
+      <stop offset="0.8" stop-color="#63aa30"/>
+      <stop offset="1" stop-color="#3f8a26"/>
+    </radialGradient>
+    <linearGradient id="gap" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7a5524"/>
+      <stop offset="1" stop-color="#a97f44"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="0.6" stop-color="#fff" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#5b3412" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#5b3412" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="clipShell">
+      <path d="M128 12C172 34 206 80 206 142C206 200 172 240 128 240C84 240 50 200 50 142C50 80 84 34 128 12Z"/>
+    </clipPath>
+  </defs>
+  <ellipse cx="128" cy="242" rx="66" ry="10" fill="url(#shadow)"/>
+  <g transform="rotate(22 128 128)">
+    <path d="M128 12C172 34 206 80 206 142C206 200 172 240 128 240C84 240 50 200 50 142C50 80 84 34 128 12Z" fill="url(#shell)"/>
+    <g clip-path="url(#clipShell)">
+      <rect x="40" y="10" width="180" height="236" fill="url(#shade)"/>
+      <g fill="none" stroke="#a87e44" stroke-opacity="0.28" stroke-width="3.5" stroke-linecap="round">
+        <path d="M70 120C66 160 80 200 104 224"/>
+        <path d="M186 120C190 160 176 200 152 224"/>
+        <path d="M90 90C84 130 92 180 112 232"/>
+        <path d="M166 90C172 130 164 180 144 232"/>
+      </g>
+      <path d="M128 12C108 40 96 80 96 120C96 158 108 186 128 206C148 186 160 158 160 120C160 80 148 40 128 12Z" fill="url(#gap)"/>
+      <path d="M128 36C112 62 104 94 104 124C104 156 114 182 128 198C142 182 152 156 152 124C152 94 144 62 128 36Z" fill="#6a4a1c" opacity="0.5" transform="translate(0 4)"/>
+      <path d="M128 46C112 68 102 98 102 128C102 164 112 190 128 204C144 190 154 164 154 128C154 98 144 68 128 46Z" fill="url(#nut)"/>
+      <path d="M128 46C112 68 102 98 102 128C102 164 112 190 128 204C108 186 100 150 108 110C112 88 120 62 128 46Z" fill="#2f6a1c" opacity="0.14"/>
+      <ellipse cx="118" cy="98" rx="9" ry="26" fill="url(#sheen)" transform="rotate(8 118 98)"/>
+      <ellipse cx="82" cy="72" rx="16" ry="36" fill="url(#sheen)" transform="rotate(14 82 72)" opacity="0.85"/>
+      <ellipse cx="184" cy="196" rx="7" ry="18" fill="#fff" opacity="0.1" transform="rotate(-8 182 200)"/>
+    </g>
+  </g>
+</svg>

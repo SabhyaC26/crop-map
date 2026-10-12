@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <radialGradient id="body" cx="0.36" cy="0.3" r="0.9">
+      <stop offset="0" stop-color="#e2b27a"/>
+      <stop offset="0.45" stop-color="#bf8548"/>
+      <stop offset="0.85" stop-color="#8f5a2b"/>
+      <stop offset="1" stop-color="#6f4220"/>
+    </radialGradient>
+    <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0.5" stop-color="#3f200a" stop-opacity="0"/>
+      <stop offset="1" stop-color="#3f200a" stop-opacity="0.42"/>
+    </linearGradient>
+    <radialGradient id="sheen" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.8"/>
+      <stop offset="0.6" stop-color="#fff" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#4a2a0c" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#4a2a0c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="seam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a2810" stop-opacity="0.15"/>
+      <stop offset="0.5" stop-color="#4a2810" stop-opacity="0.65"/>
+      <stop offset="1" stop-color="#4a2810" stop-opacity="0.2"/>
+    </linearGradient>
+    <clipPath id="clip">
+      <path d="M128 26C148 14 188 18 212 52C236 86 236 140 214 184C196 220 160 238 128 238C96 238 60 220 42 184C20 140 20 86 44 52C68 18 108 14 128 26Z"/>
+    </clipPath>
+  </defs>
+  <ellipse cx="128" cy="240" rx="82" ry="10" fill="url(#shadow)"/>
+  <path d="M128 26C148 14 188 18 212 52C236 86 236 140 214 184C196 220 160 238 128 238C96 238 60 220 42 184C20 140 20 86 44 52C68 18 108 14 128 26Z" fill="url(#body)"/>
+  <g clip-path="url(#clip)">
+    <rect x="10" y="10" width="236" height="236" fill="url(#shade)"/>
+    <path d="M120 22C126 70 134 120 128 160C124 196 130 220 128 244L138 244C142 220 136 196 140 160C146 120 138 70 136 22Z" fill="url(#seam)"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="#4a2810" stroke-opacity="0.34" stroke-width="7">
+        <path d="M60 78C74 66 92 74 100 88C108 102 94 112 84 108"/>
+        <path d="M54 134C70 124 90 132 98 148C104 160 92 168 80 164"/>
+        <path d="M70 188C84 180 100 188 108 200"/>
+        <path d="M196 78C182 66 164 74 156 88C148 102 162 112 172 108"/>
+        <path d="M202 134C186 124 166 132 158 148C152 160 164 168 176 164"/>
+        <path d="M186 188C172 180 156 188 148 200"/>
+        <path d="M88 44C98 42 108 46 112 54"/>
+        <path d="M168 44C158 42 148 46 144 54"/>
+      </g>
+      <g stroke="#f3d3a0" stroke-opacity="0.42" stroke-width="3.5" transform="translate(-3 -4)">
+        <path d="M60 78C74 66 92 74 100 88C108 102 94 112 84 108"/>
+        <path d="M54 134C70 124 90 132 98 148C104 160 92 168 80 164"/>
+        <path d="M196 78C182 66 164 74 156 88C148 102 162 112 172 108"/>
+        <path d="M202 134C186 124 166 132 158 148C152 160 164 168 176 164"/>
+      </g>
+    </g>
+    <ellipse cx="84" cy="70" rx="30" ry="44" fill="url(#sheen)" transform="rotate(26 84 70)"/>
+    <ellipse cx="188" cy="64" rx="14" ry="20" fill="url(#sheen)" opacity="0.5" transform="rotate(-30 188 64)"/>
+  </g>
+</svg>
