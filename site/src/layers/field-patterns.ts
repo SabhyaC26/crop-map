@@ -73,28 +73,35 @@ function bands(ctx: Ctx, period: number, light: string, dark: string, sharpness 
 }
 
 function canopy(ctx: Ctx, cx: number, cy: number, radius: number, c: string, lift: number): void {
-  const shadow = ctx.createRadialGradient(cx + 1.6, cy + 2.2, radius * 0.2, cx + 1.6, cy + 2.2, radius * 1.18);
-  shadow.addColorStop(0, rgba(INK, 0.2));
-  shadow.addColorStop(1, rgba(INK, 0));
-  ctx.fillStyle = shadow;
-  ctx.beginPath();
-  ctx.arc(cx + 1.6, cy + 2.2, radius * 1.18, 0, Math.PI * 2);
-  ctx.fill();
+  wrapped(ctx, (w) => {
+    const shadow = w.createRadialGradient(cx + 1.2, cy + 1.7, radius * 0.3, cx + 1.2, cy + 1.7, radius * 1.15);
+    shadow.addColorStop(0, rgba(INK, 0.16));
+    shadow.addColorStop(1, rgba(INK, 0));
+    w.fillStyle = shadow;
+    w.beginPath();
+    w.arc(cx + 1.2, cy + 1.7, radius * 1.15, 0, Math.PI * 2);
+    w.fill();
 
-  const body = ctx.createRadialGradient(cx - radius * 0.32, cy - radius * 0.38, radius * 0.1, cx, cy, radius);
-  body.addColorStop(0, mix(c, '#ffffff', lift));
-  body.addColorStop(0.6, mix(c, INK, 0.06));
-  body.addColorStop(1, mix(c, INK, 0.22));
-  ctx.fillStyle = body;
-  ctx.beginPath();
-  ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-  ctx.fill();
+    const body = w.createRadialGradient(cx - radius * 0.25, cy - radius * 0.3, radius * 0.15, cx, cy, radius);
+    body.addColorStop(0, mix(c, '#ffffff', lift));
+    body.addColorStop(0.7, mix(c, INK, 0.1));
+    body.addColorStop(1, mix(c, INK, 0.2));
+    w.fillStyle = body;
+    w.beginPath();
+    w.arc(cx, cy, radius, 0, Math.PI * 2);
+    w.fill();
+  });
 }
 
+/** Staggered rows of canopies: reads as an orchard block rather than a stud grid. */
 function drawTree(ctx: Ctx, c: string, radius: number, lift: number): void {
   const cell = 16;
-  for (let gx = 0; gx < TILE / cell; gx++) {
-    for (let gy = 0; gy < TILE / cell; gy++) canopy(ctx, gx * cell + cell / 2, gy * cell + cell / 2, radius, c, lift);
+  const n = TILE / cell;
+  for (let gx = 0; gx < n; gx++) {
+    for (let gy = 0; gy < n; gy++) {
+      canopy(ctx, gx * cell, gy * cell, radius, c, lift);
+      canopy(ctx, gx * cell + cell / 2, gy * cell + cell / 2, radius, c, lift);
+    }
   }
 }
 
@@ -107,10 +114,12 @@ function drawVine(ctx: Ctx, c: string, rand: () => number): void {
     const x = row * period + period / 2;
     const shade = ctx.createLinearGradient(x - 3.2, 0, x + 3.2, 0);
     shade.addColorStop(0, rgba(INK, 0));
-    shade.addColorStop(0.5, rgba(INK, 0.1));
+    shade.addColorStop(0.5, rgba(INK, 0.17));
     shade.addColorStop(1, rgba(INK, 0));
     ctx.fillStyle = shade;
     ctx.fillRect(x - 3.2, 0, 6.4, TILE);
+    ctx.fillStyle = rgba(mix(c, INK, 0.3), 0.18);
+    ctx.fillRect(x + 3.4, 0, 1.2, TILE);
     ctx.strokeStyle = rgba(wire, 0.55);
     ctx.lineWidth = 0.9;
     ctx.beginPath();
@@ -178,10 +187,10 @@ function drawKind(ctx: Ctx, kind: FieldTextureKind, crop: Crop, base: string): v
   fillBase(ctx, base);
   switch (kind) {
     case 'tree':
-      drawTree(ctx, c, crop.group === 'Citrus & subtropical' ? 5.9 : 5.3, 0.22);
+      drawTree(ctx, c, crop.group === 'Citrus & subtropical' ? 5.4 : 4.8, 0.08);
       return;
     case 'young-tree':
-      drawTree(ctx, c, 3.1, 0.14);
+      drawTree(ctx, c, 2.6, 0.1);
       return;
     case 'vine':
       drawVine(ctx, c, rand);
