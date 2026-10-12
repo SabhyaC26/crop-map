@@ -9,37 +9,6 @@
     radial-gradient(120% 90% at 50% 45%, rgba(255, 255, 255, 0) 60%, rgba(140, 170, 255, 0.1) 100%);
 }
 
-#title-pill {
-  position: absolute;
-  z-index: var(--z-map-ui);
-  top: var(--safe-top);
-  left: var(--edge);
-  padding: 10px 20px 10px 22px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 244, 252, 0.66));
-  animation: pill-in var(--dur-slow) var(--spring) both;
-}
-
-#title-pill h1 {
-  margin: 0;
-  font-size: clamp(17px, 2.2vw, 22px);
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1.15;
-  white-space: nowrap;
-  background: linear-gradient(100deg, #3a3f7a 10%, #6a54d6 60%, #ff7eb0 110%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-#title-pill .sprout {
-  display: inline-block;
-  color: initial;
-  -webkit-text-fill-color: initial;
-  transform-origin: 50% 90%;
-  animation: sprout 3.2s var(--ease-out) 1s infinite;
-}
-
 #search-slot {
   position: absolute;
   z-index: var(--z-map-ui);
@@ -122,46 +91,7 @@
 }
 
 @media (max-width: 720px) {
-  #title-pill {
-    left: 50%;
-    padding: 8px 16px;
-    transform: translateX(-50%);
-    animation-name: pill-in-center;
-  }
-
-  #search-slot {
-    top: calc(var(--safe-top) + 52px);
-  }
-
   .maplibregl-ctrl-bottom-right {
     bottom: calc(var(--safe-bottom) + 72px);
-  }
-}
-
-@keyframes pill-in {
-  from {
-    opacity: 0;
-    transform: translateY(-14px) scale(0.92);
-  }
-}
-
-@keyframes pill-in-center {
-  from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(-14px) scale(0.92);
-  }
-}
-
-@keyframes sprout {
-  0%,
-  70%,
-  100% {
-    transform: rotate(0) scale(1);
-  }
-  78% {
-    transform: rotate(-12deg) scale(1.2);
-  }
-  88% {
-    transform: rotate(8deg) scale(1.08);
   }
 }
