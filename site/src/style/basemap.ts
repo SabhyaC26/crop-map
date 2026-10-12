@@ -6,6 +6,13 @@ import type {
 } from 'maplibre-gl';
 import { LIGHT, layers, type Flavor } from '@protomaps/basemaps';
 import { BASEMAP_URL, TERRAIN_TILES_URL } from '../config';
+import {
+  OVERVIEW_CITY_MAX_ZOOM,
+  buildGeoLabelLayers,
+  buildOceanDecorLayers,
+  buildSnowLayers,
+  storySources,
+} from './storybook';
 
 export const BASEMAP_SOURCE = 'basemap';
 export const TERRAIN_SOURCE = 'terrain';
@@ -207,18 +214,8 @@ const PATCHES: Record<string, LayerPatch> = {
       'line-width': zoomStops([5, 0], [6, 0.9], [9, 1.5], [12, 2.2], [15, 5], [18, 15]),
     }),
 
-  water_label_ocean: (l) => {
-    layout(l, {
-      'text-size': zoomStops([3, 11], [10, 14]),
-      'text-letter-spacing': 0.18,
-    });
-    paint(l, {
-      'text-color': '#ffffff',
-      'text-halo-color': '#3f9de8',
-      'text-halo-width': 1.4,
-      'text-opacity': 0.9,
-    });
-  },
+  // The hand-placed storybook "Pacific Ocean" label replaces the stock one.
+  water_label_ocean: (l) => layout(l, { visibility: 'none' }),
 
   water_label_lakes: (l) => {
     layout(l, { 'text-size': zoomStops([6, 10], [12, 13]) });
@@ -237,6 +234,7 @@ const PATCHES: Record<string, LayerPatch> = {
   },
 
   places_locality: (l) => {
+    l.minzoom = OVERVIEW_CITY_MAX_ZOOM;
     const layoutProps = l.layout as Record<string, unknown>;
     delete layoutProps['icon-image'];
     delete layoutProps['icon-size'];
@@ -349,10 +347,11 @@ export const buildBasemapLayers = (): LayerSpecification[] => {
     if (DROPPED_LAYERS.has(layer.id)) continue;
     PATCHES[layer.id]?.(layer);
     if (layer.id === 'water_label_ocean') out.push(buildOutsideVeil());
-    if (layer.id === 'roads_runway') out.push(buildHillshade(), buildOceanMask());
+    if (layer.id === 'roads_runway') out.push(buildHillshade(), buildOceanMask(), ...buildSnowLayers(TERRAIN_SOURCE));
     out.push(layer);
-    if (layer.id === 'water_river') out.push(...buildShoreLayers());
+    if (layer.id === 'water_river') out.push(...buildShoreLayers(), ...buildOceanDecorLayers());
   }
+  out.push(...buildGeoLabelLayers());
   return out;
 };
 
@@ -374,6 +373,7 @@ export const buildBasemapStyle = (origin: string, baseUrl: string): StyleSpecifi
       data: `${origin}${baseUrl}data/ocean-mask.geojson`,
       tolerance: 0.5,
     },
+    ...storySources(origin, baseUrl),
     [OUTSIDE_SOURCE]: {
       type: 'geojson',
       data: `${origin}${baseUrl}data/outside-ca.geojson`,
