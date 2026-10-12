@@ -10,3 +10,4 @@ site/public/data/*.pmtiles
 .DS_Store
 test-results/
 playwright-report/
+docs/demo/*.webm
