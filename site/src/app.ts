@@ -1,6 +1,7 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { loadCrops, type CropIndex } from './data/crops';
 import { addFieldsLayers, type FieldsLayer } from './layers/fields';
+import { addOverviewLayers } from './layers/overview';
 import { loadIconManifest, registerCropIcons } from './lib/icons';
 import { FIELDS_BEFORE_LAYER_ID } from './style/basemap';
 import { createFieldPopup, type FieldPopup } from './ui/popup';
@@ -32,6 +33,7 @@ const whenStyleReady = (map: MapLibreMap): Promise<void> =>
 export async function initCropMap(map: MapLibreMap, popupRoot: HTMLElement): Promise<CropMapApp> {
   const [crops, iconManifest] = await Promise.all([loadCrops(), loadIconManifest(), whenStyleReady(map)]);
   await registerCropIcons(map, crops.list);
+  addOverviewLayers(map, crops);
   const fields = addFieldsLayers(map, crops);
   const popup = createFieldPopup({ map, crops, fields, root: popupRoot, iconManifest });
   return { map, crops, fields, popup };
