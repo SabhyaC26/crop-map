@@ -208,9 +208,96 @@ def test_regions_json_search_covers_every_crop():
     search = document["search"]
     assert set(search) == {str(crop.crop_id) for crop in LOOKUP}
     for entry in search.values():
-        assert set(entry) == {"center", "zoom", "label", "acres_total"}
+        assert set(entry) == {"center", "zoom", "label", "acres_total", "places", "bbox"}
         assert len(entry["center"]) == 2 and 10 <= entry["zoom"] <= 12
         assert entry["label"] and entry["acres_total"] >= 0
+
+
+@needs_output
+def test_search_places_schema():
+    search = _load_document()["search"]
+    for crop_id, entry in search.items():
+        listed = entry["places"]
+        assert 1 <= len(listed) <= regions.SEARCH_MAX_PLACES, crop_id
+        assert [p["acres"] for p in listed] == sorted((p["acres"] for p in listed), reverse=True), crop_id
+        assert len({p["label"] for p in listed}) == len(listed), crop_id
+        for place in listed:
+            assert set(place) == {"center", "zoom", "label", "acres"}
+            assert place["label"] and place["acres"] >= 0 and 10 <= place["zoom"] <= 12
+            assert all(c == round(c, 5) for c in place["center"])
+        first = listed[0]
+        assert (entry["center"], entry["zoom"], entry["label"]) == (first["center"], first["zoom"], first["label"])
+        if entry["acres_total"] > 0:
+            assert all(p["acres"] >= regions.SEARCH_MIN_SHARE * entry["acres_total"] for p in listed[1:]), crop_id
+        for i, place in enumerate(listed):
+            for other in listed[i + 1 :]:
+                km = float(
+                    regions.haversine_km(
+                        place["center"][1], place["center"][0], other["center"][1], other["center"][0]
+                    )
+                )
+                assert km >= regions.SEARCH_SPACING_KM - 0.05, (crop_id, place["label"], other["label"])
+
+
+@needs_output
+def test_search_bbox_contains_every_place():
+    for crop_id, entry in _load_document()["search"].items():
+        west, south, east, north = entry["bbox"]
+        assert west < east and south < north
+        for place in entry["places"]:
+            lon, lat = place["center"]
+            assert west <= lon <= east and south <= lat <= north, crop_id
+        assert entry["bbox"] == regions.search_bbox([p["center"] for p in entry["places"]])
+
+
+@needs_output
+def test_search_known_multi_destination_crops():
+    search = _load_document()["search"]
+    by_name = {crop.name: str(crop.crop_id) for crop in LOOKUP}
+    avocado_labels = {p["label"] for p in search[by_name["Avocados"]]["places"]}
+    assert avocado_labels & {"Temecula Valley", "Escondido"} and avocado_labels & {"Oxnard Plain", "Ventura"}
+    date_labels = {p["label"] for p in search[by_name["Dates"]]["places"]}
+    assert "Coachella Valley" in date_labels
+
+
+def _hotspot_points(rows: list[tuple[float, float, float]]) -> pd.DataFrame:
+    frame = pd.DataFrame(rows, columns=["lon", "lat", "acres"])
+    frame["county"] = "Testland"
+    frame["cell6"] = regions.cell_ids(frame, 6)
+    return frame
+
+
+def test_find_hotspots_spacing_and_share_rule():
+    rows = [
+        (-120.0, 37.0, 1000.0),
+        (-120.02, 37.01, 500.0),  # joins the first hotspot
+        (-119.0, 37.0, 600.0),  # ~89 km away, 600 / 2250 > 5%
+        (-118.0, 37.0, 50.0),  # < 5% of the crop
+    ]
+    found = regions.find_hotspots(_hotspot_points(rows))
+    assert [round(h.acres) for h in found] == [1500, 600]
+    assert float(regions.haversine_km(found[0].lat, found[0].lon, found[1].lat, found[1].lon)) >= 25.0
+
+
+def test_find_hotspots_always_keeps_one():
+    found = regions.find_hotspots(_hotspot_points([(-120.0, 37.0, 10.0)]))
+    assert len(found) == 1 and found[0].acres == 10.0
+
+
+def test_label_hotspots_dedups_and_merges():
+    places = [regions.Place("Only City", -120.0, 37.0, "town", 1)]
+    spots = [regions.Hotspot(-120.0 + 0.3 * i, 37.0, 100.0 - 10 * i, "Fresno") for i in range(3)]
+    kept = regions.label_hotspots(spots, places)
+    assert [h.label for h in kept] == ["Fresno County", "Only City"]
+    assert kept[0].acres == 90.0 + 80.0  # third hotspot merged into the county-labelled one
+    assert kept[1].acres == 100.0
+
+
+def test_hotspot_zoom_thresholds():
+    assert regions.hotspot_zoom(60_001) == 10
+    assert regions.hotspot_zoom(60_000) == 11
+    assert regions.hotspot_zoom(1_499) == 12
+    assert regions.hotspot_zoom(1_500) == 11
 
 
 @needs_output

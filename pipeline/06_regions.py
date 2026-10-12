@@ -35,8 +35,16 @@ SPECIALTY_EXPONENT = 0.15
 SEARCH_RES = 6
 SEARCH_ZOOM = 11
 SEARCH_ZOOM_WIDE = 10
-# A crop covering at least this many coarse cells (each >= COARSE.min_acres of it) is "wide".
-WIDE_FOOTPRINT_CELLS = 8
+SEARCH_ZOOM_TIGHT = 12
+SEARCH_WIDE_ACRES = 60_000.0  # hotspots bigger than this fly to zoom 10
+SEARCH_TIGHT_ACRES = 1_500.0  # hotspots smaller than this fly to zoom 12
+SEARCH_MAX_PLACES = 5
+SEARCH_MIN_SHARE = 0.05  # a later hotspot needs this share of the crop's statewide acres
+SEARCH_HOTSPOT_KM = 20.0  # cells within this distance of the densest cell join its hotspot
+SEARCH_SPACING_KM = 25.0  # hotspot centres stay at least this far apart
+SEARCH_PROMINENT_KM = 30.0
+SEARCH_OTHER_KM = 25.0
+BBOX_PAD_DEG = 0.15
 PLACE_MAX_KM = 35.0
 COARSE_PROMINENT_KM = 45.0
 PROMINENT = 1
@@ -420,38 +428,111 @@ def assign_parents(fine: list[Region], coarse: list[Region]) -> None:
         region.parent = min(pool, key=lambda c: float(haversine_km(region.lat, region.lon, c.lat, c.lon))).id
 
 
-def wide_crops(top_coarse: pd.DataFrame) -> set[int]:
-    counts = top_coarse["crop_id"].value_counts()
-    return {int(crop_id) for crop_id, count in counts.items() if count >= WIDE_FOOTPRINT_CELLS}
+@dataclass
+class Hotspot:
+    lon: float
+    lat: float
+    acres: float
+    county: str
+    label: str = ""
 
 
-def compute_search(
-    points: pd.DataFrame, crop_ids: list[int], wide: set[int], places: list[Place]
-) -> dict[str, dict]:
-    """Fly-to target per crop: densest res-6 cell (acreage-weighted point snapped to a field)."""
-    search: dict[str, dict] = {}
+def find_hotspots(crop_points: pd.DataFrame) -> list[Hotspot]:
+    """Greedy hotspots for one crop: densest res-6 cell, fields within SEARCH_HOTSPOT_KM of it, then suppress
+    everything within SEARCH_SPACING_KM of the hotspot centre. Stops at SEARCH_MAX_PLACES or when the next
+    hotspot holds < SEARCH_MIN_SHARE of the crop's statewide acres; the largest hotspot is always kept."""
+    total = float(crop_points["acres"].sum())
     cell_col = f"cell{SEARCH_RES}"
-    for crop_id in crop_ids:
-        crop_points = points[points["crop_id"] == crop_id]
-        if crop_points.empty:
-            lon, lat = FALLBACK_CENTER
-            search[str(crop_id)] = {
-                "center": [round(lon, COORD_DECIMALS), round(lat, COORD_DECIMALS)],
-                "zoom": SEARCH_ZOOM_WIDE,
-                "label": "California",
-                "acres_total": 0.0,
-            }
+    remaining = crop_points
+    hotspots: list[Hotspot] = []
+    while len(hotspots) < SEARCH_MAX_PLACES and not remaining.empty:
+        densest = remaining.groupby(cell_col)["acres"].sum().idxmax()
+        seed_lat, seed_lon = h3.cell_to_latlng(densest)
+        dist = haversine_km(seed_lat, seed_lon, remaining["lat"].to_numpy(), remaining["lon"].to_numpy())
+        members = remaining[dist <= SEARCH_HOTSPOT_KM]
+        acres = float(members["acres"].sum())
+        if hotspots and acres < SEARCH_MIN_SHARE * total:
+            break
+        lon, lat = weighted_point(members)
+        lon, lat, _ = snap_to_field(lon, lat, members)
+        county = str(members.groupby("county")["acres"].sum().idxmax())
+        hotspots.append(Hotspot(lon, lat, acres, county))
+        far = haversine_km(lat, lon, remaining["lat"].to_numpy(), remaining["lon"].to_numpy()) >= SEARCH_SPACING_KM
+        remaining = remaining[far]
+    # The densest-cell seed isn't always the biggest hotspot: keep the largest plus any other >= the share floor.
+    largest = max(hotspots, key=lambda h: h.acres)
+    return [h for h in hotspots if h is largest or h.acres >= SEARCH_MIN_SHARE * total]
+
+
+def hotspot_label_candidates(hotspot: Hotspot, places: list[Place]) -> list[str]:
+    """Prominence-1 places within SEARCH_PROMINENT_KM, then prominence-2 within SEARCH_OTHER_KM, nearest first."""
+    ranked = sorted((float(haversine_km(hotspot.lat, hotspot.lon, p.lat, p.lon)), p) for p in places)
+    first = [p.name for km, p in ranked if p.prominence == PROMINENT and km <= SEARCH_PROMINENT_KM]
+    second = [p.name for km, p in ranked if p.prominence != PROMINENT and km <= SEARCH_OTHER_KM]
+    return [*first, *second, county_label(hotspot.county)]
+
+
+def label_hotspots(hotspots: list[Hotspot], places: list[Place]) -> list[Hotspot]:
+    """Largest first, labels unique per crop; a hotspot whose every candidate (county included) is taken merges into
+    the hotspot that holds the label."""
+    kept: dict[str, Hotspot] = {}
+    for hotspot in sorted(hotspots, key=lambda h: -h.acres):
+        candidates = hotspot_label_candidates(hotspot, places)
+        free = next((name for name in candidates if name not in kept), None)
+        if free is None:
+            kept[candidates[-1]].acres += hotspot.acres
             continue
-        densest = crop_points.groupby(cell_col)["acres"].sum().idxmax()
-        in_cell = crop_points[crop_points[cell_col] == densest]
-        lon, lat = weighted_point(in_cell)
-        lon, lat, _ = snap_to_field(lon, lat, in_cell)
-        county = in_cell.groupby("county")["acres"].sum().idxmax()
+        hotspot.label = free
+        kept[free] = hotspot
+    return sorted(kept.values(), key=lambda h: -h.acres)
+
+
+def hotspot_zoom(acres: float) -> int:
+    if acres > SEARCH_WIDE_ACRES:
+        return SEARCH_ZOOM_WIDE
+    return SEARCH_ZOOM_TIGHT if acres < SEARCH_TIGHT_ACRES else SEARCH_ZOOM
+
+
+def search_bbox(centers: list[list[float]]) -> list[float]:
+    lons, lats = [c[0] for c in centers], [c[1] for c in centers]
+    return [
+        round(min(lons) - BBOX_PAD_DEG, COORD_DECIMALS),
+        round(min(lats) - BBOX_PAD_DEG, COORD_DECIMALS),
+        round(max(lons) + BBOX_PAD_DEG, COORD_DECIMALS),
+        round(max(lats) + BBOX_PAD_DEG, COORD_DECIMALS),
+    ]
+
+
+def compute_search(points: pd.DataFrame, crop_ids: list[int], places: list[Place]) -> dict[str, dict]:
+    """Fly-to targets per crop: up to 5 hotspots (`places`), the largest doubling as the primary center/zoom/label."""
+    search: dict[str, dict] = {}
+    by_crop = {int(crop_id): group for crop_id, group in points.groupby("crop_id")}
+    for crop_id in crop_ids:
+        crop_points = by_crop.get(crop_id)
+        if crop_points is None or crop_points.empty:
+            lon, lat = FALLBACK_CENTER
+            hotspots = [Hotspot(lon, lat, 0.0, "", "California")]
+            total = 0.0
+        else:
+            hotspots = label_hotspots(find_hotspots(crop_points), places)
+            total = round(float(crop_points["acres"].sum()), 1)
+        listed = [
+            {
+                "center": [round(h.lon, COORD_DECIMALS), round(h.lat, COORD_DECIMALS)],
+                "zoom": SEARCH_ZOOM_WIDE if total == 0.0 else hotspot_zoom(h.acres),
+                "label": h.label,
+                "acres": round(h.acres, 1),
+            }
+            for h in hotspots
+        ]
+        primary = listed[0]
         search[str(crop_id)] = {
-            "center": [round(lon, COORD_DECIMALS), round(lat, COORD_DECIMALS)],
-            "zoom": SEARCH_ZOOM_WIDE if crop_id in wide else SEARCH_ZOOM,
-            "label": label_point(lon, lat, county, places),
-            "acres_total": round(float(crop_points["acres"].sum()), 1),
+            "center": primary["center"],
+            "zoom": primary["zoom"],
+            "label": primary["label"],
+            "acres_total": total,
+            "places": listed,
+            "bbox": search_bbox([p["center"] for p in listed]),
         }
     return search
 
@@ -496,8 +577,7 @@ def run(points: pd.DataFrame, crops: list[Crop], places: list[Place]) -> tuple[d
     coarse = compute_coarse(points, coarse_weights, places)
     fine = compute_fine(points, weights, places, counties)
     assign_parents(fine, coarse)
-    top_coarse = top_crop_per_cell(points, f"cell{COARSE.res}", coarse_weights, COARSE.min_acres)
-    search = compute_search(points, [c.crop_id for c in crops], wide_crops(top_coarse), places)
+    search = compute_search(points, [c.crop_id for c in crops], places)
     return regions_document(coarse, fine, search), coarse, fine, search
 
 
@@ -612,8 +692,16 @@ def write_doc(coarse: list[Region], fine: list[Region], crops: list[Crop], place
         f"   Fine labels: nearest place within {PLACE_MAX_KM:g} km (valleys count at x{FINE.valley_bias} distance), unique per level",
         "   (next-nearest place, else a compass prefix), else `<County> County`.",
         "8. `parent` (fine): the nearest coarse marker among those in the fine marker's res-4 neighbourhood, else the nearest overall.",
-        "9. `search`: per crop the densest res-6 cell (~36 km2), centre = acreage-weighted point snapped to a field; zoom 11,",
-        f"   or 10 for crops that top at least {WIDE_FOOTPRINT_CELLS} coarse cells (huge contiguous footprints).",
+        "9. `search` (per crop, all crops): up to 5 `places` (hotspots). Crop acres are summed on res-6 H3 cells (~36 km2);",
+        f"   the densest cell seeds a hotspot of all its fields within {SEARCH_HOTSPOT_KM:g} km, centre = acreage-weighted point snapped",
+        f"   to the nearest of those fields; every field within {SEARCH_SPACING_KM:g} km of the centre is then suppressed and the",
+        f"   next-densest cell seeds the next hotspot. Stops at {SEARCH_MAX_PLACES} hotspots or when the next one holds",
+        f"   < {SEARCH_MIN_SHARE:.0%} of the crop's statewide acres (the largest is always kept). Hotspots are sorted by acres.",
+        f"   Zoom 11; 10 above {SEARCH_WIDE_ACRES:,.0f} ac; 12 below {SEARCH_TIGHT_ACRES:,.0f} ac. Label: nearest prominence-1 place within",
+        f"   {SEARCH_PROMINENT_KM:g} km, else nearest other place within {SEARCH_OTHER_KM:g} km, else `<County> County`; labels are unique per",
+        "   crop (next candidate, else the hotspot merges into the one holding the county label).",
+        "   `places[0]` is also the entry's primary `center`/`zoom`/`label`; `bbox` = [w, s, e, n] around all place centres padded",
+        f"   {BBOX_PAD_DEG}\u00b0.",
         "",
         "## Coarse regions",
         "",
