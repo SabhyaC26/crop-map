@@ -16,7 +16,16 @@ download:
 inspect:
 	$(UV) run python pipeline/02_inspect.py --year $(YEAR)
 
-lookup process tiles regions basemap:
+lookup:
+	$(UV) run python pipeline/03_lookup.py
+
+process:
+	$(UV) run python pipeline/04_process.py --year $(YEAR) --region $(REGION)
+
+tiles:
+	YEAR=$(YEAR) REGION=$(REGION) pipeline/05_tiles.sh
+
+regions basemap:
 	@echo "$@: not yet"
 
 all: lookup process tiles regions basemap

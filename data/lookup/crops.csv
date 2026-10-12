@@ -1,0 +1,54 @@
+dwr_code,crop_id,name,icon,color,group,harvest,source
+D12,1,Almonds,almond,#f7a8c4,Tree nuts,000000011100,UC ANR almond production manual
+V,2,Grapes,grapes,#a98ae6,Vineyards,000000111100,UC ANR grape production manual (wine/raisin Aug-Oct; table grapes start earlier)
+F16,3,Corn & sorghum,corn,#ffe566,Field crops,000001111110,CDFA California Agricultural Statistics Review (sweet corn Jun-Sep; field/silage Aug-Nov)
+D14,4,Pistachios,pistachio,#a8d672,Tree nuts,000000011100,UC ANR pistachio production manual
+P1,5,Alfalfa,alfalfa,#5fd4b6,Hay & forage,000111111100,UC ANR alfalfa production manual (cut every 28-35 days Apr-Oct; Imperial cuts nearly year-round)
+P3,6,Mixed pasture,cow,#b5cc98,Pasture,,harvest season not meaningful for this class
+R1,7,Rice,rice,#4fc3d9,Rice,000000001110,UC ANR rice production manual
+G6,8,Grain & hay,wheat,#e6d794,Grains & hay,000111100000,"approx., general knowledge"
+D13,9,Walnuts,walnut,#d9a066,Tree nuts,000000001110,UC ANR walnut production manual
+C,10,Citrus,orange,#ffb347,Citrus & subtropical,111100000011,CDFA California Agricultural Statistics Review (navel season Nov-Apr; Valencias run later)
+T32,11,Tomatoes,tomato,#f2574a,Vegetables,000000111100,UC ANR processing tomato production manual
+G2,12,Wheat,wheat,#ecc86a,Grains & hay,000011100000,UC ANR small grains production manual
+P4,13,Native pasture,cow,#c9d3c2,Pasture,,harvest season not meaningful for this class
+P6,14,Pasture grasses,herb,#a3b88a,Pasture,,harvest season not meaningful for this class
+T30,15,Lettuce & leafy greens,lettuce,#8be05a,Leafy greens,000111111110,"approx., general knowledge (Salinas Valley season; Imperial Valley winter crop not shown)"
+F1,16,Cotton,cotton,#cfd0e8,Field crops,000000001110,UC ANR cotton production manual
+T4,17,"Cole crops (broccoli, cauliflower…)",broccoli,#74cf95,Vegetables,000111111110,"approx., general knowledge (Salinas Valley season)"
+T18,18,Mixed vegetables,seedling,#9bdcd0,Vegetables,,"approx., general knowledge (mixed truck crops; no single season)"
+T10,19,Onions & garlic,onion,#e0a3d4,Vegetables,000001111100,UC ANR onion and garlic production manuals
+D5,20,Peaches & nectarines,peach,#ffb38a,Stone fruit,000011111000,UC ANR peach production manual
+YP,21,Young orchards,seedling,#bfe3a8,Tree nuts,,harvest season not meaningful for this class
+T9,22,Melons & squash,melon,#ffdcae,Vegetables,000001111100,UC ANR melon production manual
+C6,23,Olives,olive,#9aa56a,Citrus & subtropical,000000000111,UC ANR olive production manual
+C5,24,Avocados,avocado,#5aa878,Citrus & subtropical,011111111000,CDFA California Agricultural Statistics Review
+T20,25,Strawberries,strawberry,#ff7b8f,Berries,011111111110,UC ANR strawberry production manual
+D8,26,Prunes,cherries,#a07cae,Stone fruit,000000011000,UC ANR prune production manual
+T6,27,Carrots,carrot,#ff8b5c,Vegetables,111111111111,CDFA California Agricultural Statistics Review (Kern County harvests carrots year-round)
+D3,28,Cherries,cherries,#e0507a,Stone fruit,000111000000,UC ANR cherry production manual
+T16,29,Flowers & nursery,tulip,#f58fd8,Nursery & flowers,,harvest season not meaningful for this class
+F12,30,Sunflowers,sunflower,#ffcc2f,Field crops,000000011100,"approx., general knowledge"
+T12,31,Potatoes,potato,#dcc29a,Vegetables,000111001100,"approx., general knowledge (Kern spring crop Apr-Jun; Tulelake fall crop Sep-Oct)"
+F2,32,Safflower,sunflower,#f6b26b,Field crops,000000111000,UC ANR safflower production manual
+D15,33,Pomegranates,pomegranate,#c75b7e,Tree fruit,000000001111,UC ANR pomegranate production manual
+T19,34,Blueberries & bush berries,blueberry,#6c8ae4,Berries,000111111000,"approx., general knowledge"
+F5,35,Sugar beets,seedling,#c98ab0,Field crops,000111111100,"approx., general knowledge"
+T13,36,Sweet potatoes,potato,#e39a73,Vegetables,000000001110,UC ANR sweet potato production manual
+D10,37,Other deciduous fruits,seedling,#e3b6a0,Tree fruit,,"approx., general knowledge (mixed species; no single season)"
+F10,38,Dry beans,beans,#bfa27c,Field crops,000000011100,"approx., general knowledge"
+D7,39,Plums,cherries,#c47fb0,Stone fruit,000001111000,UC ANR plum production manual
+C4,40,Dates,date,#cf8f7a,Citrus & subtropical,000000001111,"approx., general knowledge (Coachella Valley)"
+C10,41,Eucalyptus,herb,#8fb8a8,Other,,harvest season not meaningful for this class
+R2,42,Wild rice,rice,#3aa6c4,Rice,000000001100,"approx., general knowledge"
+T21,43,Peppers,bell_pepper,#48c78e,Vegetables,000000111100,"approx., general knowledge"
+P7,44,Turf farms,herb,#7fd16b,Nursery & flowers,,harvest season not meaningful for this class
+D6,45,Pears,pear,#d6e68a,Tree fruit,000000111100,UC ANR pear production manual
+D1,46,Apples,apple,#ee7f7f,Tree fruit,000000011110,UC ANR apple production manual
+D17,47,Pecans,walnut,#b98a63,Tree nuts,000000000111,"approx., general knowledge"
+C8,48,Kiwis,kiwi,#c7d96a,Citrus & subtropical,000000000110,"approx., general knowledge"
+D2,49,Apricots,peach,#ffcf9e,Stone fruit,000011100000,UC ANR apricot production manual
+T27,50,Greenhouse,seedling,#cde6f2,Nursery & flowers,,harvest season not meaningful for this class
+F11,51,Other field crops,seedling,#cbb9a0,Field crops,,"approx., general knowledge (mixed field crops; no single season)"
+C7,52,Other subtropical fruits,lemon,#f5ec8a,Citrus & subtropical,,"approx., general knowledge (mixed species; no single season)"
+P5,53,Wet pasture,herb,#a6c8e0,Pasture,,harvest season not meaningful for this class
