@@ -11,11 +11,15 @@ export const BASEMAP_SOURCE = 'basemap';
 export const TERRAIN_SOURCE = 'terrain';
 export const OCEAN_SOURCE = 'ocean-mask';
 export const OUTSIDE_SOURCE = 'outside-ca';
+export const STICKER_SOURCE = 'ca-sticker';
+export const SHADOW_SOURCE = 'ca-shadow';
+export const BANDS_SOURCE = 'ocean-bands';
+export const WATERLINES_SOURCE = 'ocean-lines';
 
 /** Later layers (fields) are inserted below this id so roads and labels stay on top. */
 export const FIELDS_BEFORE_LAYER_ID = 'roads_tunnels_other_casing';
 
-const OUTSIDE_VEIL_OPACITY = 0.9;
+const OUTSIDE_VEIL_OPACITY = 1;
 const LABEL_TRACKING = 0.03;
 const LABEL_HALO = 1.4;
 
@@ -48,8 +52,8 @@ export const pastelFlavor: Flavor = {
   park_b: PALETTE.parkSoft,
   wood_a: '#c8ecb8',
   wood_b: PALETTE.parkDeep,
-  scrub_a: '#e8f2cf',
-  scrub_b: '#dcecc2',
+  scrub_a: '#eaf3cb',
+  scrub_b: '#dfeeb9',
   glacier: '#ffffff',
   sand: '#faf0d4',
   beach: '#fbf1d3',
@@ -124,13 +128,13 @@ export const pastelFlavor: Flavor = {
 
   pois: undefined,
   landcover: {
-    grassland: '#d2efb4',
-    barren: '#fcefd0',
+    grassland: '#cdef9f',
+    barren: '#fdecc6',
     urban_area: '#f0e6d8',
-    farmland: '#c9eda6',
+    farmland: '#c2ec96',
     glacier: '#ffffff',
-    scrub: '#e6efc4',
-    forest: '#b4e8a6',
+    scrub: '#e5efbb',
+    forest: '#a6e695',
   },
 };
 
@@ -151,7 +155,7 @@ const DROPPED_LAYERS = new Set([
 const zoomStops = (...stops: [number, unknown][]): ExpressionSpecification =>
   ['interpolate', ['linear'], ['zoom'], ...stops.flat()] as ExpressionSpecification;
 
-const OCEAN_COLOR = zoomStops([3, PALETTE.waterDeep], [8, PALETTE.water], [13, PALETTE.waterLight]);
+const OCEAN_COLOR = zoomStops([3, '#3282e4'], [6.5, '#3282e4'], [9, PALETTE.water], [13, PALETTE.waterLight]);
 
 const rankSize = (rank: number, size: number): ExpressionSpecification => [
   'case',
@@ -159,6 +163,17 @@ const rankSize = (rank: number, size: number): ExpressionSpecification => [
   size,
   0,
 ];
+
+// Neighbouring-state/Mexico towns that would compete with California at the overview zoom.
+const OUTSIDE_CA_PLACES = [
+  'Reno', 'Las Vegas', 'Mexicali', 'Tijuana', 'Eugene', 'Boise', 'Carson City', 'Phoenix', 'Salt Lake City',
+  'Portland', 'Medford', 'Henderson', 'Ensenada', 'Tecate', 'Yuma', 'Klamath Falls', 'Bend', 'Salem', 'Corvallis',
+  'Roseburg', 'Sparks', 'Lake Havasu City', 'Bullhead City', 'Kingman', 'Flagstaff', 'Tucson', 'Mesa',
+  'Rosarito', 'San Luis Rio Colorado', 'Winnemucca', 'Elko', 'Coos Bay', 'Seattle', 'Spokane', 'Victoria', 'Vancouver', 'Tacoma', 'Olympia',
+];
+
+const outsideCaLabelOpacity = (inside: number): ExpressionSpecification =>
+  ['case', ['in', ['get', 'name'], ['literal', OUTSIDE_CA_PLACES]], inside, 1] as ExpressionSpecification;
 
 type LayerPatch = (layer: LayerSpecification) => void;
 
@@ -259,6 +274,7 @@ const PATCHES: Record<string, LayerPatch> = {
       'text-halo-width': LABEL_HALO,
       'text-halo-blur': 0.5,
       'text-color': PALETTE.ink,
+      'text-opacity': zoomStops([6, outsideCaLabelOpacity(0)], [8.5, 1]),
     });
   },
 };
@@ -318,6 +334,98 @@ const buildOutsideVeil = (): LayerSpecification => ({
   },
 });
 
+
+// Ocean depth bands (coast distance in degrees, from make-sticker-masks.py), widest/deepest first.
+const BAND_DISTANCES = [5.0, 3.4, 2.3, 1.55, 1.1, 0.8, 0.58, 0.42, 0.3, 0.2, 0.12, 0.06] as const;
+const BAND_GRADIENT = ['#3282e4', '#4ea6f3', '#7cd5f2', '#c9f7ee'] as const;
+
+const hexToRgb = (hex: string): [number, number, number] => {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+
+const gradientAt = (stops: readonly string[], t: number): string => {
+  const x = Math.min(Math.max(t, 0), 1) * (stops.length - 1);
+  const i = Math.min(Math.floor(x), stops.length - 2);
+  const [r1, g1, b1] = hexToRgb(stops[i]!);
+  const [r2, g2, b2] = hexToRgb(stops[i + 1]!);
+  const f = x - i;
+  const ch = (u: number, v: number): string => Math.round(u + (v - u) * f).toString(16).padStart(2, '0');
+  return `#${ch(r1, r2)}${ch(g1, g2)}${ch(b1, b2)}`;
+};
+
+const OCEAN_BANDS: readonly [number, string][] = BAND_DISTANCES.map((d, i) => [
+  d,
+  gradientAt(BAND_GRADIENT, (i / (BAND_DISTANCES.length - 1)) ** 0.9),
+]);
+
+const STICKER_FADE = zoomStops([6.5, 1], [9, 0]);
+
+const buildOceanBands = (): LayerSpecification[] => [
+  ...OCEAN_BANDS.map(
+    ([d, color]): LayerSpecification => ({
+      id: `ocean_band_${d}`,
+      type: 'fill',
+      source: BANDS_SOURCE,
+      filter: ['==', ['get', 'd'], d],
+      paint: { 'fill-color': color, 'fill-antialias': false, 'fill-opacity': STICKER_FADE },
+    }),
+  ),
+  {
+    id: 'ocean_waterlines',
+    type: 'line',
+    source: WATERLINES_SOURCE,
+    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    paint: {
+      'line-color': '#ffffff',
+      'line-opacity': zoomStops([6.5, 0.42], [9, 0]),
+      'line-width': zoomStops([4, 0.8], [7, 1.4]),
+      'line-blur': 0.4,
+      'line-dasharray': [0.1, 2.2],
+    },
+  },
+];
+
+// Soft raised shadow (stacked offset rings with CA cut out) + glossy white die-cut edge.
+const buildStickerLayers = (): LayerSpecification[] => [
+  {
+    id: 'ca_sticker_shadow',
+    type: 'fill',
+    source: SHADOW_SOURCE,
+    paint: {
+      'fill-color': '#2d3a8c',
+      'fill-antialias': true,
+      'fill-opacity': zoomStops([6.5, 0.062], [9, 0]),
+    },
+  },
+  {
+    id: 'ca_sticker_edge_soft',
+    type: 'line',
+    source: STICKER_SOURCE,
+    layout: { 'line-join': 'round' },
+    paint: {
+      'line-color': '#ffffff',
+      'line-opacity': zoomStops([6.5, 0.55], [9, 0]),
+      'line-width': zoomStops([3, 9], [6, 13]),
+      'line-offset': zoomStops([3, 4.5], [6, 6.5]),
+      'line-blur': 5,
+    },
+  },
+  {
+    id: 'ca_sticker_edge',
+    type: 'line',
+    source: STICKER_SOURCE,
+    layout: { 'line-join': 'round' },
+    paint: {
+      'line-color': '#ffffff',
+      'line-opacity': zoomStops([6.5, 1], [9, 0]),
+      'line-width': zoomStops([3, 4], [6, 6.5]),
+      'line-offset': zoomStops([3, 2], [6, 3.25]),
+      'line-blur': 0.5,
+    },
+  },
+];
+
 const buildHillshade = (): LayerSpecification => ({
   id: 'hillshade',
   type: 'hillshade',
@@ -325,10 +433,10 @@ const buildHillshade = (): LayerSpecification => ({
   paint: {
     'hillshade-method': 'standard',
     'hillshade-illumination-direction': 315,
-    'hillshade-exaggeration': zoomStops([4, 0.34], [9, 0.36], [13, 0.28]),
-    'hillshade-shadow-color': '#948fbf',
-    'hillshade-highlight-color': '#fffbee',
-    'hillshade-accent-color': '#b3aed4',
+    'hillshade-exaggeration': zoomStops([4, 0.62], [9, 0.5], [13, 0.34]),
+    'hillshade-shadow-color': '#7468b4',
+    'hillshade-highlight-color': '#fff1cf',
+    'hillshade-accent-color': '#a79bd6',
   },
 });
 
@@ -348,10 +456,10 @@ export const buildBasemapLayers = (): LayerSpecification[] => {
   for (const layer of base) {
     if (DROPPED_LAYERS.has(layer.id)) continue;
     PATCHES[layer.id]?.(layer);
-    if (layer.id === 'water_label_ocean') out.push(buildOutsideVeil());
+    if (layer.id === 'water_label_ocean') out.push(buildOutsideVeil(), ...buildStickerLayers());
     if (layer.id === 'roads_runway') out.push(buildHillshade(), buildOceanMask());
     out.push(layer);
-    if (layer.id === 'water_river') out.push(...buildShoreLayers());
+    if (layer.id === 'water_river') out.push(...buildShoreLayers(), ...buildOceanBands());
   }
   return out;
 };
@@ -379,6 +487,10 @@ export const buildBasemapStyle = (origin: string, baseUrl: string): StyleSpecifi
       data: `${origin}${baseUrl}data/outside-ca.geojson`,
       tolerance: 0.5,
     },
+    [STICKER_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/ca-sticker.geojson`, tolerance: 0.1 },
+    [SHADOW_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/ca-shadow.geojson`, tolerance: 0.2 },
+    [BANDS_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/ocean-bands.geojson`, tolerance: 0.3 },
+    [WATERLINES_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/ocean-lines.geojson`, tolerance: 0.3 },
     [TERRAIN_SOURCE]: {
       type: 'raster-dem',
       tiles: [TERRAIN_TILES_URL],
