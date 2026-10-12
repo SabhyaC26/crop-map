@@ -39,7 +39,7 @@ MULTIUSE_MEANING = {
 COLUMN_NOTES = {
     COL_MAIN_CROP: "**Primary crop code** chosen by Land IQ; one value per polygon, never null. Drives color/icon.",
     "CROPTYP1": "First crop in the sequence for multi-cropped polygons; `****` for single-crop polygons.",
-    "CROPTYP2": "Crop of a single-crop polygon (CROPTYP1 is empty then); second crop of a multi-crop polygon.",
+    "CROPTYP2": "Crop of a single-crop polygon (CROPTYP1 is `****` then); second crop of a multi-crop polygon.",
     "CROPTYP3": "Third crop (triple/quad cropping, or a trailing `X` fallow on single-crop polygons).",
     "CROPTYP4": "Fourth crop (quad cropping only).",
     COL_SEN_CROP: "Crop that senesced (was harvested/died back) early in the year; `****` when none.",
@@ -158,7 +158,7 @@ def build_doc(year: int) -> str:
     stats = multicrop_stats(df)
     bounds = monterey_bounds(shp)
     monterey = df[df[COL_COUNTY] == "Monterey"]
-    cols = {c: c for c in CROP_CODE_COLUMNS}
+    real_counties = df.loc[df[COL_COUNTY] != NULL_TOKEN, COL_COUNTY].nunique()
 
     out: list[str] = []
     out.append(f"# DWR Statewide Crop Mapping {year}: columns and crop codes\n")
@@ -240,7 +240,7 @@ def build_doc(year: int) -> str:
         f"- Monterey County: **{fmt_int(len(monterey))} polygons**, {fmt_acres(monterey[COL_ACRES].sum())} acres, "
         f"bbox (lon/lat WGS84) `{bounds}`.\n"
         f"- {fmt_int((df[COL_COUNTY] == NULL_TOKEN).sum())} polygons have `COUNTY = '{NULL_TOKEN}'` "
-        f"(urban `U`/`UL2` areas outside county assignment); {df[COL_COUNTY].nunique() - 1} real counties otherwise appear by name.\n"
+        f"(urban `U`/`UL2` areas outside county assignment); {fmt_int(real_counties)} real counties otherwise appear by name.\n"
     )
     out.append(county_table(df) + "\n")
 
@@ -252,7 +252,7 @@ def build_doc(year: int) -> str:
         "Polygon counts and acres are per code appearing in that column (a multi-crop polygon's full `ACRES` "
         "is counted under each of its codes; acres are not split between crops).\n"
     )
-    for col in cols:
+    for col in CROP_CODE_COLUMNS:
         out.append(f"### `{col}`\n")
         out.append(f"{COLUMN_NOTES[col]} Distinct values: {df[col].nunique()}.\n")
         out.append(code_table(df, col, legend) + "\n")

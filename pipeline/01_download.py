@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import zipfile
 from pathlib import Path
@@ -11,13 +12,15 @@ from common import DEFAULT_YEAR, LEGEND_URL, legend_path, raw_dir, year_source, 
 
 
 def fetch(url: str, dest: Path) -> None:
-    """Resumable download via curl; no-op when the server says the file is already complete."""
+    """Resumable download via curl into `<dest>.part`; renamed to `dest` only after curl succeeds."""
     dest.parent.mkdir(parents=True, exist_ok=True)
+    part = dest.with_name(dest.name + ".part")
     subprocess.run(
         ["curl", "--fail", "--location", "--silent", "--show-error", "--retry", "5",
-         "--retry-delay", "3", "-C", "-", "-o", str(dest), url],
+         "--retry-delay", "3", "-C", "-", "-o", str(part), url],
         check=True,
     )
+    os.replace(part, dest)
 
 
 def zip_is_valid(path: Path) -> bool:
@@ -28,12 +31,30 @@ def zip_is_valid(path: Path) -> bool:
         return False
 
 
+def extraction_complete(archive: Path, out: Path) -> bool:
+    """True only when every file member of `archive` is present under `out` at its full size.
+
+    An interrupted extractall leaves some members missing or short, so a single *.shp
+    existing is not proof that the extraction finished.
+    """
+    try:
+        with zipfile.ZipFile(archive) as zf:
+            members = [info for info in zf.infolist() if not info.is_dir()]
+            for info in members:
+                target = out / info.filename
+                if not target.is_file() or target.stat().st_size != info.file_size:
+                    return False
+            return True
+    except (zipfile.BadZipFile, FileNotFoundError):
+        return False
+
+
 def download_year(year: int) -> None:
     source = year_source(year)
     out = raw_dir(year)
     archive = zip_path(year)
 
-    if list(out.glob("*.shp")):
+    if extraction_complete(archive, out):
         print(f"[skip] shapefile already present in {out}")
     else:
         print(f"[get ] {source.url}")
@@ -44,10 +65,12 @@ def download_year(year: int) -> None:
             raise SystemExit(f"{archive} is not a valid zip after download; re-run to retry")
         with zipfile.ZipFile(archive) as zf:
             zf.extractall(out)
+        if not extraction_complete(archive, out):
+            raise SystemExit(f"extraction of {archive} into {out} is incomplete; re-run to retry")
         print(f"[ok  ] extracted to {out}")
 
     legend = legend_path(year)
-    if legend.exists() and legend.stat().st_size > 0:
+    if legend.is_file() and legend.stat().st_size > 0:
         print(f"[skip] {legend.name} already present")
     else:
         print(f"[get ] {LEGEND_URL}")

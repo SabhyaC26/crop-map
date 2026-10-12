@@ -1,8 +1,11 @@
 import importlib.util
 from pathlib import Path
 
+import geopandas as gpd
 import pandas as pd
+import pyogrio
 import pytest
+from shapely.geometry import box
 
 import common
 
@@ -47,6 +50,41 @@ def test_multicrop_stats_flags_x_hiding_a_crop():
     stats = inspect_mod.multicrop_stats(_frame())
     assert stats["x_main_hides_crop"] == 1
     assert stats["with_other_crops"] == 1
+
+
+@pytest.fixture
+def synthetic_inputs(tmp_path, monkeypatch):
+    """Write a tiny real shapefile and patch build_doc's inputs so it runs without the 2023 data."""
+    monkeypatch.setattr(inspect_mod, "REPO_ROOT", tmp_path)
+    shp = tmp_path / "synthetic.shp"
+    frame = _frame().assign(
+        SEN_CROP=["****"] * 4,
+        EMRG_CROP=["****"] * 4,
+        UniqueID=range(4),
+        COUNTY=["Monterey", "Monterey", "Fresno", "Fresno"],
+    )
+    gdf = gpd.GeoDataFrame(frame, geometry=[box(i, 0, i + 1, 1) for i in range(4)], crs="EPSG:3310")
+    pyogrio.write_dataframe(gdf, shp)
+    monkeypatch.setattr(inspect_mod, "shapefile_path", lambda year: shp)
+    monkeypatch.setattr(inspect_mod, "parse_legend", lambda pdf: LEGEND)
+    return shp
+
+
+def test_build_doc_renders_codes_table_and_column_names(synthetic_inputs):
+    doc = inspect_mod.build_doc(2023)
+    assert "## Column names to use" in doc
+    assert "| Primary crop code | `MAIN_CROP` |" in doc
+    assert "### `MAIN_CROP`" in doc
+    assert "| code | name (from legend) | polygons | total acres |" in doc
+    assert "| `D12` | Deciduous fruits and nuts: Almonds | 2 | 15.5 |" in doc
+    assert "| `V` | Grapes | 1 | 3.0 |" in doc
+    assert "(CROPTYP1 is `****` then)" in doc
+
+
+def test_build_doc_counts_real_counties_excluding_null_token(synthetic_inputs):
+    # No `****` county in the fixture: a `nunique() - 1` count would wrongly report 1.
+    doc = inspect_mod.build_doc(2023)
+    assert "2 real counties otherwise appear by name" in doc
 
 
 def test_committed_doc_has_codes_table():
