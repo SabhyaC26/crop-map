@@ -4,7 +4,7 @@
 }
 
 .crop-marker {
-  --bob-lift: 7px;
+  --bob-lift: 3px;
   display: block;
   padding: 0;
   margin: 0;
@@ -86,20 +86,6 @@
   height: var(--size);
   transform-origin: 50% 100%;
   animation: crop-squash var(--bob-dur) ease-in-out var(--bob-delay) infinite;
-}
-
-.crop-marker__halo {
-  position: absolute;
-  inset: -14%;
-  border-radius: 50%;
-  background: radial-gradient(
-    closest-side,
-    color-mix(in srgb, var(--crop-color) 38%, white) 0%,
-    color-mix(in srgb, var(--crop-color) 18%, white) 48%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
 }
 
 .crop-marker__img {
@@ -208,10 +194,6 @@
     opacity: 1;
     transform: translate(-50%, 0) scale(1);
   }
-
-  .crop-marker:hover .crop-marker__halo {
-    opacity: 1;
-  }
 }
 
 .crop-marker:focus-visible .crop-marker__gate {
@@ -248,11 +230,11 @@
 @keyframes crop-squash {
   0%,
   100% {
-    transform: scale(1.04, 0.96);
+    transform: scale(1.02, 0.98);
   }
   22%,
   78% {
-    transform: scale(0.985, 1.025);
+    transform: scale(0.992, 1.012);
   }
   50% {
     transform: scale(1, 1);

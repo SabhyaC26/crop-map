@@ -1,6 +1,7 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import '../styles/places.css';
 import type { Crop } from '../data/crops';
+import { flyTo, type FlyTarget } from '../lib/fly';
 import { solveFrame, type FramePadding } from '../lib/frame';
 import { prefersReducedMotion } from '../lib/motion';
 import type { IconManifest, SearchPlace, SearchTarget } from './emphasis';
@@ -76,13 +77,14 @@ export function createDestinations({ map, manifest, cropPoints, slot }: Destinat
       [w - dLng, n + dLat],
     ];
     const camera = solveFrame(map, [corners[0], corners[2]], corners, padding, FIT_MAX_ZOOM);
-    map.flyTo({ ...camera, pitch: 0, bearing: 0, curve: 1.5, speed: 0.85, duration: duration(2200) });
+    void flyTo(map, camera);
   };
 
-  const flyToPlace = (place: SearchPlace): void => {
+  const flyToPlace = (place: SearchPlace): Promise<void> => {
     // Land the place in the open area below the card instead of dead centre.
     const offsetY = Math.max(0, topInset() / 2 - 8);
-    map.flyTo({ center: place.center, zoom: place.zoom, curve: 1.6, speed: 1.1, offset: [0, offsetY], essential: false });
+    const target: FlyTarget = { center: place.center, zoom: place.zoom, offset: [0, offsetY] };
+    return flyTo(map, target);
   };
 
   const buildRow = (
@@ -111,6 +113,7 @@ export function createDestinations({ map, manifest, cropPoints, slot }: Destinat
   const teardownSession = (): void => {
     if (!session) return;
     const { card } = session;
+    flightToken++;
     session = null;
     card.classList.add('is-leaving');
     window.setTimeout(() => card.remove(), duration(LEAVE_MS));
@@ -245,12 +248,23 @@ export function createDestinations({ map, manifest, cropPoints, slot }: Destinat
     return s;
   };
 
+  let flightToken = 0;
+
+  /** Marks the destination row as "on its way" until the camera lands (or another flight replaces it). */
+  const markFlying = (s: Session, index: number | null): void => {
+    s.rows.forEach((row, i) => row.classList.toggle('is-flying', i === index));
+  };
+
   function select(index: number): void {
     const s = session;
     const place = s?.places[index];
     if (!s || !place) return;
     s.setActive(index);
-    flyToPlace(place);
+    const flight = ++flightToken;
+    markFlying(s, index);
+    void flyToPlace(place).then(() => {
+      if (flight === flightToken) markFlying(s, null);
+    });
   }
 
   const onKeyDown = (e: KeyboardEvent): void => {
@@ -269,8 +283,7 @@ export function createDestinations({ map, manifest, cropPoints, slot }: Destinat
       session = s;
       s.setActive(null);
       if (s.places.length === 1 && s.places[0]) {
-        s.setActive(0);
-        flyToPlace(s.places[0]);
+        select(0);
       } else {
         fitOverview(s);
       }

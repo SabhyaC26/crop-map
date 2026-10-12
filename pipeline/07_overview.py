@@ -32,6 +32,7 @@ OUT_PMTILES = REPO_ROOT / "site" / "public" / "data" / "overview.pmtiles"
 MIN_ZOOM = 4
 FULL_ZOOM = 8  # every dot is visible from this zoom up
 MAX_ZOOM = 9
+LOW_DETAIL = 10  # tippecanoe -D (default 12): a 1024-unit grid is <0.5 px even at z4 and shrinks tiles ~10%
 ZOOM_RATIO = 1.6  # dot count grows 1.6x per zoom level (screen density falls slowly as you zoom in)
 SEED = 20231012
 
@@ -97,13 +98,7 @@ def load_outline():
     return shapely.union_all([shapely.geometry.shape(f["geometry"]) for f in data["features"]])
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--year", type=int, default=DEFAULT_YEAR)
-    ap.add_argument("--region", default="statewide")
-    ap.add_argument("--acres-per-dot", type=float, default=60.0)
-    args = ap.parse_args()
-
+def write_dots(args: argparse.Namespace, dots_path: Path) -> None:
     work = WORK_DIR / str(args.year) / args.region
     fields = gpd.read_file(work / "fields.fgb", columns=["crop_id", "acres"])
     fields = fields[fields["crop_id"].notna() & (fields["acres"] > 0)]
@@ -120,8 +115,6 @@ def main() -> None:
         f"{int((density < DENSE_MIN).sum())} sparse (of {len(xs)})"
     )
 
-    tmp = tempfile.TemporaryDirectory(prefix="overview-")
-    dots_path = Path(tmp.name) / "dots.geojsonl"
     with dots_path.open("w") as fh:
         for crop, x, y, zmin in zip(crops, xs, ys, floor_zoom, strict=True):
             feature = {
@@ -133,13 +126,32 @@ def main() -> None:
             fh.write(json.dumps(feature, separators=(",", ":")) + "\n")
     print(f"{len(xs)} dots -> {dots_path}")
 
-    OUT_PMTILES.parent.mkdir(parents=True, exist_ok=True)
-    if OUT_PMTILES.is_symlink():
-        raise SystemExit(f"{OUT_PMTILES} is a symlink; refusing to write through it")
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--year", type=int, default=DEFAULT_YEAR)
+    ap.add_argument("--region", default="statewide")
+    ap.add_argument("--acres-per-dot", type=float, default=60.0)
+    ap.add_argument("--out", type=Path, default=OUT_PMTILES, help="output .pmtiles (default: site/public/data/overview.pmtiles)")
+    ap.add_argument("--keep-dots", type=Path, help="write the dot GeoJSONL here and reuse it if it already exists (tuning tippecanoe flags is then instant)")
+    ap.add_argument("--low-detail", type=int, default=LOW_DETAIL, help="tippecanoe -D: tile grid bits below the max zoom")
+    args = ap.parse_args()
+
+    tmp = tempfile.TemporaryDirectory(prefix="overview-")
+    dots_path = args.keep_dots or Path(tmp.name) / "dots.geojsonl"
+    if args.keep_dots and dots_path.exists():
+        print(f"reusing {dots_path}")
+    else:
+        write_dots(args, dots_path)
+
+    out = args.out
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if out.is_symlink():
+        raise SystemExit(f"{out} is a symlink; refusing to write through it")
     subprocess.run(
         [
-            "tippecanoe", "-o", str(OUT_PMTILES), "--force", "-Q",
-            f"-Z{MIN_ZOOM}", f"-z{MAX_ZOOM}", "-r1",
+            "tippecanoe", "-o", str(out), "--force", "-Q",
+            f"-Z{MIN_ZOOM}", f"-z{MAX_ZOOM}", "-r1", f"-D{args.low_detail}",
             "--drop-densest-as-needed",
             "-l", "overview",
             str(dots_path),
@@ -147,7 +159,7 @@ def main() -> None:
         check=True,
     )
     tmp.cleanup()
-    print(f"{OUT_PMTILES} ({Path(OUT_PMTILES).stat().st_size / 1e6:.1f} MB)")
+    print(f"{out} ({out.stat().st_size / 1e6:.2f} MB)")
 
 
 if __name__ == "__main__":

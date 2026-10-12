@@ -4,7 +4,9 @@ import './styles/base.css';
 import './styles/shell.css';
 import './styles/popup.css';
 import './styles/markers.css';
+import './styles/boot.css';
 import { initCropMap, type CropMapApp } from './app';
+import { showMapWhenIdle } from './lib/ready';
 import { createMap } from './map';
 
 const container = document.getElementById('map');
@@ -23,7 +25,6 @@ const slots = {
 };
 
 const map = createMap(container);
-map.once('idle', () => document.documentElement.classList.add('map-ready'));
 
 declare global {
   interface Window {
@@ -33,8 +34,11 @@ declare global {
 }
 window.__map = map;
 
-initCropMap(map, slots)
+const ready = initCropMap(map, slots)
   .then((app) => {
     window.__app = app;
   })
   .catch((err: unknown) => console.error('crop layers failed to initialise', err));
+
+// Skeleton until the crop layers are in and the map has painted once more, then fade the map in.
+showMapWhenIdle(map, ready);

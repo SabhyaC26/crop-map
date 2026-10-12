@@ -30,6 +30,8 @@ DATA = Path(__file__).resolve().parent.parent / "public" / "data"
 LON_SCALE = math.cos(math.radians(37.0))
 EDGE_FADE_PX = 0.8  # antialiasing width of the coastline / shadow cut-out, in pixels
 ISLAND_AREA = 0.5  # square degrees: smaller ocean holes are islands (they get no glow of their own)
+EDGE_FEATHER_DEG = 3.0  # alpha falloff towards the image border, so the box never shows as an edge
+CLIP_MARGIN_DEG = 9.0  # the ocean is clipped well outside the image: the clip line must not read as a coast
 
 
 @dataclass(frozen=True)
@@ -41,7 +43,8 @@ class Bounds:
     px_per_deg: int
 
 
-OCEAN_BOUNDS = Bounds(-148.0, -112.0, 24.0, 51.0, 36)
+# Wider than California needs: the map's maxBounds keeps every allowed view inside this box.
+OCEAN_BOUNDS = Bounds(-152.0, -104.0, 18.0, 54.0, 34)
 SHADOW_BOUNDS = Bounds(-127.0, -112.0, 31.0, 43.5, 70)
 
 # Ocean ramp: (distance from the mainland coast in degrees, colour), shore -> deep.
@@ -141,7 +144,8 @@ def load_union(path: Path):
 
 def ocean_gradient() -> None:
     b = OCEAN_BOUNDS
-    ocean = load_union(DATA / "ocean-mask.geojson").intersection(shapely.box(b.west - 1, b.south - 1, b.east + 1, b.north + 1))
+    m = CLIP_MARGIN_DEG
+    ocean = load_union(DATA / "ocean-mask.geojson").intersection(shapely.box(b.west - m, b.south - m, b.east + m, b.north + m))
     ocean = scaled(ocean)
     parts = list(ocean.geoms) if ocean.geom_type == "MultiPolygon" else [ocean]
     filled = shapely.union_all([Polygon(p.exterior, [h for h in p.interiors if Polygon(h).area > ISLAND_AREA]) for p in parts])
@@ -153,6 +157,11 @@ def ocean_gradient() -> None:
     rgba = np.zeros((grid.x.size, 4), dtype=np.uint8)
     for c in range(3):
         rgba[:, c] = np.round(np.interp(depth, [s[0] for s in OCEAN_STOPS], [s[1][c] for s in OCEAN_STOPS]))
+    # Feather towards the border; the deep tone matches the map's base water colour, so it dissolves into it.
+    lon = grid.x / LON_SCALE
+    edge = np.minimum.reduce([lon - b.west, b.east - lon, grid.y - b.south, b.north - grid.y])
+    t = np.clip(edge / EDGE_FEATHER_DEG, 0, 1)
+    alpha = alpha * (t * t * (3 - 2 * t))
     rgba[:, 3] = np.round(alpha * 255)
     write_png("ocean-gradient.png", rgba, grid)
 

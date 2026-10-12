@@ -1,7 +1,6 @@
 import type {
   ExpressionSpecification,
   LayerSpecification,
-  SkySpecification,
   StyleSpecification,
 } from 'maplibre-gl';
 import { LIGHT, layers, type Flavor } from '@protomaps/basemaps';
@@ -43,8 +42,6 @@ export const PALETTE = {
   ink: '#4a4e7a',
   inkSoft: '#8b88b3',
   lavender: '#8f88b8',
-  skyTop: '#a9d8ff',
-  skyHorizon: '#e6f5ff',
 } as const;
 
 const FONT_REGULAR = 'Figtree SemiBold';
@@ -287,7 +284,7 @@ const buildShoreLayers = (): LayerSpecification[] => [
     layout: { 'line-join': 'round' },
     paint: {
       'line-color': PALETTE.shore,
-      'line-opacity': 0.75,
+      'line-opacity': zoomStops([5.5, 0], [7, 0.75]),
       'line-width': zoomStops([4, 3], [8, 5], [12, 8], [16, 14]),
       'line-blur': zoomStops([4, 3], [12, 6], [16, 10]),
     },
@@ -301,7 +298,7 @@ const buildShoreLayers = (): LayerSpecification[] => [
     layout: { 'line-join': 'round' },
     paint: {
       'line-color': '#ffffff',
-      'line-opacity': 0.85,
+      'line-opacity': zoomStops([5.5, 0], [7, 0.85]),
       'line-width': zoomStops([4, 0.6], [10, 1.2], [16, 2.4]),
       'line-blur': 0.4,
     },
@@ -320,6 +317,17 @@ const buildOceanMask = (): LayerSpecification => ({
   },
 });
 
+// Natural Earth ocean at the very bottom: the CA extract ends near the state, and this keeps the Pacific blue (not cream) beyond it at every zoom.
+const buildOceanBase = (): LayerSpecification => ({
+  id: 'ocean_base',
+  type: 'fill',
+  source: OCEAN_SOURCE,
+  paint: {
+    'fill-color': OCEAN_COLOR,
+    'fill-antialias': false,
+  },
+});
+
 // Soft veil over everything that is not California so the state pops and the extract edge never shows.
 const buildOutsideVeil = (): LayerSpecification => ({
   id: 'outside_ca_veil',
@@ -334,7 +342,7 @@ const buildOutsideVeil = (): LayerSpecification => ({
 
 
 // Smooth shore-to-deep ocean gradient and soft drop shadow, rendered once by scripts/make-sticker-rasters.py (keep bounds in sync).
-const OCEAN_GRADIENT_BOUNDS = { west: -148, east: -112, south: 24, north: 51 } as const;
+const OCEAN_GRADIENT_BOUNDS = { west: -152, east: -104, south: 18, north: 54 } as const;
 const SHADOW_BOUNDS = { west: -127, east: -112, south: 31, north: 43.5 } as const;
 
 type ImageCorners = [[number, number], [number, number], [number, number], [number, number]];
@@ -389,22 +397,13 @@ const buildHillshade = (): LayerSpecification => ({
   },
 });
 
-export const SKY: SkySpecification = {
-  'sky-color': PALETTE.skyTop,
-  'horizon-color': PALETTE.skyHorizon,
-  'fog-color': '#ffffff',
-  'sky-horizon-blend': 0.6,
-  'horizon-fog-blend': 0.7,
-  'fog-ground-blend': 0.2,
-  'atmosphere-blend': zoomStops([0, 1], [3.5, 0.6], [4.4, 0]) as never,
-};
-
 export const buildBasemapLayers = (): LayerSpecification[] => {
   const base = layers(BASEMAP_SOURCE, pastelFlavor, { lang: 'en' }) as LayerSpecification[];
   const out: LayerSpecification[] = [];
   for (const layer of base) {
     if (DROPPED_LAYERS.has(layer.id)) continue;
     PATCHES[layer.id]?.(layer);
+    if (layer.id === 'earth') out.push(buildOceanBase());
     if (layer.id === 'water_label_ocean') out.push(buildOutsideVeil(), ...buildStickerLayers());
     if (layer.id === 'roads_runway') out.push(buildHillshade(), buildOceanMask(), ...buildSnowLayers(TERRAIN_SOURCE));
     out.push(layer);
@@ -417,8 +416,8 @@ export const buildBasemapLayers = (): LayerSpecification[] => {
 export const buildBasemapStyle = (origin: string, baseUrl: string): StyleSpecification => ({
   version: 8,
   name: 'ca-crop-map-pastel',
-  projection: { type: 'globe' },
-  sky: SKY,
+  // Flat Web Mercator: the globe ignores minZoom/maxBounds, and the world beyond California is never meant to be seen.
+  projection: { type: 'mercator' },
   glyphs: `${origin}${baseUrl}fonts/{fontstack}/{range}.pbf`,
   sources: {
     [BASEMAP_SOURCE]: {

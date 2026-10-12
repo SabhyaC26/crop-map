@@ -16,8 +16,8 @@ const REFINE_PASSES = 3;
 const MAX_ZOOM = 22;
 
 /**
- * Jumps the camera so `points` fill the free area inside `pad`. fitBounds assumes a Mercator camera and the
- * globe renders larger, so it only seeds the camera; the zoom is then refined from projected points.
+ * Jumps the camera so `points` fill the free area inside `pad`. fitBounds frames the bounding box, so it only
+ * seeds the camera; the zoom is then refined from where the points really project (diagonal shapes fit tighter).
  */
 export function frameInstant(
   map: MapLibreMap,

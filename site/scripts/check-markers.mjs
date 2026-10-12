@@ -41,7 +41,17 @@ const idle = (page) => page.waitForFunction(() => !window.__map.isMoving(), null
   const page = await open(context);
 
   let c = await counts(page);
+  const calm = await page.evaluate(() => {
+    const on = [...document.querySelectorAll('.crop-marker[data-level=coarse][data-gate=on][data-state=shown]')];
+    const icons = on.map((e) => e.querySelector('.crop-marker__img')?.getAttribute('src'));
+    const labelsShown = on.filter((e) => Number(getComputedStyle(e.querySelector('.crop-marker__name')).opacity) > 0.05).length;
+    const maxIcon = Math.max(...on.map((e) => e.querySelector('.crop-marker__icon').getBoundingClientRect().height));
+    const halos = document.querySelectorAll('.crop-marker__halo').length;
+    return { on: on.length, distinctIcons: new Set(icons).size, labelsShown, maxIcon, halos };
+  });
   check('intro: coarse markers shown, fine hidden', c.coarse >= 20 && c.fine === 0, JSON.stringify(c));
+  check('intro: visible coarse markers capped at ~12', calm.on >= 6 && calm.on <= 12, JSON.stringify(calm));
+  check('intro: coarse labels hidden by default, no halo, icons <= 50px', calm.labelsShown === 0 && calm.halos === 0 && calm.maxIcon <= 50.5, JSON.stringify(calm));
   check(
     'aria-label format',
     await page.evaluate(() =>
@@ -58,6 +68,11 @@ const idle = (page) => page.waitForFunction(() => !window.__map.isMoving(), null
   }, el);
   await page.mouse.move(box.x + 120, box.y + 160);
   await page.mouse.move(box.x, box.y, { steps: 5 });
+  await page.waitForTimeout(500);
+  check(
+    'coarse label appears on hover',
+    await page.evaluate((id) => Number(getComputedStyle(document.querySelector(`.crop-marker[data-id=${id}] .crop-marker__name`)).opacity) > 0.9, box.id),
+  );
   await page.waitForTimeout(900);
   const hover = await page.evaluate((id) => {
     const root = document.querySelector(`.crop-marker[data-id=${id}]`);

@@ -3,9 +3,26 @@
   inset: 0;
   pointer-events: none;
   z-index: 1;
+  /* Eased (not linear) falloff: a linear ramp ends in a visible line against flat ocean blue. */
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 12%),
-    linear-gradient(0deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 14%),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.15) 2.5%,
+      rgba(255, 255, 255, 0.09) 5.5%,
+      rgba(255, 255, 255, 0.04) 9%,
+      rgba(255, 255, 255, 0.012) 13%,
+      rgba(255, 255, 255, 0) 17%
+    ),
+    linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.2) 0%,
+      rgba(255, 255, 255, 0.14) 3%,
+      rgba(255, 255, 255, 0.08) 6.5%,
+      rgba(255, 255, 255, 0.035) 10.5%,
+      rgba(255, 255, 255, 0.01) 14.5%,
+      rgba(255, 255, 255, 0) 19%
+    ),
     radial-gradient(120% 90% at 50% 45%, rgba(255, 255, 255, 0) 60%, rgba(140, 170, 255, 0.1) 100%);
 }
 

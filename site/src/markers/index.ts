@@ -1,6 +1,8 @@
 import { Marker, type Map as MapLibreMap } from 'maplibre-gl';
 import type { CropIndex } from '../data/crops';
+import { flyTo } from '../lib/fly';
 import { iconUrl } from '../lib/icons';
+import { mapShown } from '../lib/ready';
 import {
   cancelAll,
   drop,
@@ -19,7 +21,20 @@ import { GLYPH_INSET, resolveCollisions, type Rect } from './collision';
 import { createGeoLabelGuard } from './geo-labels';
 import { buildMarkerElement, estimateLabelWidth } from './element';
 import type { Region, RegionLevel, RegionSet } from './regions';
-import { bandOpacity, bandScale, GROUND_GAP, inBand, LABEL_HEIGHT, MERGE_ZOOM, sizeScale, SPLIT_ZOOM } from './zoom';
+import {
+  bandOpacity,
+  bandScale,
+  COARSE_MERGE_BELOW_ZOOM,
+  COARSE_MERGE_KM,
+  coarseCap,
+  distanceKm,
+  GROUND_GAP,
+  inBand,
+  LABEL_HEIGHT,
+  MERGE_ZOOM,
+  sizeScale,
+  SPLIT_ZOOM,
+} from './zoom';
 
 export { loadRegions } from './regions';
 export type { RegionSet } from './regions';
@@ -195,10 +210,40 @@ export function createRegionMarkers(
     return rects;
   };
 
+  /**
+   * Far out, the coarse level would be a wall of emoji: the same icon within ~120 km collapses into the
+   * larger marker, and only the top few (by rank) on screen are shown.
+   */
+  const declutterCoarse = (zoom: number): Set<MarkerItem> => {
+    const out = new Set<MarkerItem>();
+    const { clientWidth: w, clientHeight: h } = map.getContainer();
+    const cap = coarseCap(zoom, window.innerWidth < 640);
+    const kept: MarkerItem[] = [];
+    let visible = 0;
+    for (const item of byLevel.coarse) {
+      const collapsed =
+        zoom < COARSE_MERGE_BELOW_ZOOM &&
+        kept.some((k) => k.crop.icon === item.crop.icon && distanceKm(k.region.lngLat, item.region.lngLat) < COARSE_MERGE_KM);
+      const p = map.project(item.region.lngLat);
+      const onScreen = p.x > 0 && p.x < w && p.y > 0 && p.y < h;
+      if (collapsed || (onScreen && visible >= cap)) {
+        out.add(item);
+        continue;
+      }
+      kept.push(item);
+      if (onScreen) visible++;
+    }
+    return out;
+  };
+
   const collide = (): void => {
     lastCollide = performance.now();
     const obstacles = uiObstacles();
-    const { changed, placed } = resolveCollisions(map, byLevel[mode], map.getZoom(), obstacles);
+    const coarse = mode === 'coarse';
+    const { changed, placed } = resolveCollisions(map, byLevel[mode], map.getZoom(), obstacles, {
+      excluded: coarse ? declutterCoarse(map.getZoom()) : undefined,
+      hideLabels: coarse,
+    });
     for (const item of changed) refreshInteractive(item);
     // Hidden markers must not keep suppressing the place names underneath them.
     geoLabels.update(hidden ? obstacles : placed);
@@ -313,13 +358,7 @@ export function createRegionMarkers(
   for (const item of all) {
     item.parts.root.addEventListener('click', (e) => {
       e.stopPropagation();
-      map.flyTo({
-        center: item.region.lngLat,
-        zoom: CLICK_ZOOM[item.region.level],
-        speed: 0.85,
-        curve: 1.55,
-        essential: false,
-      });
+      void flyTo(map, { center: item.region.lngLat, zoom: CLICK_ZOOM[item.region.level] });
     });
   }
 
@@ -330,8 +369,11 @@ export function createRegionMarkers(
     collide();
   });
   applyZoom(true);
-  if (map.loaded() && !map.isMoving()) requestAnimationFrame(reveal);
-  else map.once('idle', reveal);
+  // The emoji drop in only after the skeleton has faded and the map is visible.
+  void mapShown.then(() => {
+    if (map.loaded() && !map.isMoving()) requestAnimationFrame(reveal);
+    else map.once('idle', reveal);
+  });
 
   return {
     setHidden(next) {

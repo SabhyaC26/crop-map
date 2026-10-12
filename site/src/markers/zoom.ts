@@ -8,7 +8,7 @@ export const MERGE_ZOOM = 7.34;
 const COARSE_DIM_START = 7.2;
 const FINE_FADE: readonly [number, number] = [9.8, 10.4];
 
-export const COARSE_SIZE: readonly [number, number] = [44, 76];
+export const COARSE_SIZE: readonly [number, number] = [30, 50];
 export const FINE_SIZE: readonly [number, number] = [32, 52];
 
 export const LABEL_HEIGHT = 26;
@@ -43,7 +43,7 @@ export function bandOpacity(level: RegionLevel, zoom: number): number {
 export function bandScale(level: RegionLevel, zoom: number, opacity: number): number {
   switch (level) {
     case 'coarse':
-      return lerp(0.66, 1.1, clamp01((zoom - 4.6) / (SPLIT_ZOOM - 4.6))) * (0.9 + 0.1 * opacity);
+      return lerp(0.88, 1.1, clamp01((zoom - 4.6) / (SPLIT_ZOOM - 4.6))) * (0.9 + 0.1 * opacity);
     case 'fine':
       return lerp(0.86, 1.2, clamp01((zoom - SPLIT_ZOOM) / (10 - SPLIT_ZOOM))) * (0.88 + 0.12 * opacity);
     default: {
@@ -74,4 +74,26 @@ export function sizeScale(regions: readonly Region[], level: RegionLevel): (r: R
   const min = Math.min(...roots);
   const span = Math.max(...roots) - min || 1;
   return (r) => Math.round(lerp(lo, hi, (Math.sqrt(r.acres) - min) / span));
+}
+
+/** Same-icon coarse markers closer than this (km) collapse into the larger one while zoomed far out. */
+export const COARSE_MERGE_KM = 120;
+export const COARSE_MERGE_BELOW_ZOOM = 6.5;
+
+/** Most coarse markers shown at once (by rank, among those on screen): the whole-state view stays calm. */
+export function coarseCap(zoom: number, compact: boolean): number {
+  const scale = compact ? 10 / 12 : 1;
+  if (zoom < 6.2) return Math.round(12 * scale);
+  if (zoom < 6.8) return Math.round(18 * scale);
+  return Infinity;
+}
+
+const EARTH_KM = 6371;
+
+export function distanceKm(a: readonly [number, number], b: readonly [number, number]): number {
+  const rad = Math.PI / 180;
+  const dLat = (b[1] - a[1]) * rad;
+  const dLng = (b[0] - a[0]) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * rad) * Math.cos(b[1] * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_KM * Math.asin(Math.sqrt(h));
 }

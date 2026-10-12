@@ -1,6 +1,6 @@
 import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
-import { frameInstant, type FramePadding } from './lib/frame';
+import { frameInstant, solveFrame, type FramePadding } from './lib/frame';
 import { buildBasemapStyle } from './style/basemap';
 import { mountCompassRose } from './ui/compass-rose';
 
@@ -32,6 +32,34 @@ function frameCalifornia(map: maplibregl.Map, container: HTMLElement): void {
   frameInstant(map, CA_BOUNDS, CA_EXTREMES, framePadding(container.clientWidth));
 }
 
+/** How far below the whole-California framing people may zoom out. */
+const MIN_ZOOM_BELOW_DEFAULT = 0.6;
+/** Extra room to pan past the minimum-zoom viewport, in degrees. */
+const PAN_ALLOWANCE = { lng: 3.5, lat: 2.5 } as const;
+/** The baked ocean raster (see make-sticker-rasters.py) covers this box; views never leave it. */
+const RASTER_LIMITS = { west: -151, east: -105, south: 19, north: 53 } as const;
+const UNLIMITED_ZOOM = 0;
+
+/**
+ * Zoom floor and pan limits derived from the whole-California framing of the current viewport:
+ * the world beyond the baked ocean (flat cream continents, the whole world) is never reachable.
+ */
+function applyViewLimits(map: maplibregl.Map, container: HTMLElement): void {
+  const start = { center: map.getCenter(), zoom: map.getZoom() };
+  map.setMaxBounds(null);
+  map.setMinZoom(UNLIMITED_ZOOM);
+  const fit = solveFrame(map, CA_BOUNDS, CA_EXTREMES, framePadding(container.clientWidth));
+  const minZoom = fit.zoom - MIN_ZOOM_BELOW_DEFAULT;
+  map.jumpTo({ center: fit.center, zoom: minZoom });
+  const view = map.getBounds();
+  map.setMaxBounds([
+    [Math.max(RASTER_LIMITS.west, view.getWest() - PAN_ALLOWANCE.lng), Math.max(RASTER_LIMITS.south, view.getSouth() - PAN_ALLOWANCE.lat)],
+    [Math.min(RASTER_LIMITS.east, view.getEast() + PAN_ALLOWANCE.lng), Math.min(RASTER_LIMITS.north, view.getNorth() + PAN_ALLOWANCE.lat)],
+  ]);
+  map.setMinZoom(minZoom);
+  map.jumpTo(start);
+}
+
 const protocol = new Protocol();
 maplibregl.addProtocol('pmtiles', protocol.tile);
 
@@ -39,15 +67,30 @@ export function createMap(container: HTMLElement): maplibregl.Map {
   const map = new maplibregl.Map({
     container,
     style: buildBasemapStyle(window.location.origin, import.meta.env.BASE_URL),
-    minZoom: 4.2,
+    minZoom: UNLIMITED_ZOOM,
     maxZoom: 18,
-    maxPitch: 60,
+    maxPitch: 0,
+    pitchWithRotate: false,
+    touchPitch: false,
     attributionControl: false,
     renderWorldCopies: false,
   });
 
   map.once('style.load', () => {
     frameCalifornia(map, container);
+    applyViewLimits(map, container);
+  });
+
+  let lastSize = `${container.clientWidth}x${container.clientHeight}`;
+  let resizeTimer: number | undefined;
+  map.on('resize', () => {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => {
+      const size = `${container.clientWidth}x${container.clientHeight}`;
+      if (size === lastSize || !map.isStyleLoaded()) return;
+      lastSize = size;
+      applyViewLimits(map, container);
+    }, 250);
   });
 
   map.once('load', () => {
@@ -58,7 +101,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
   });
 
   map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
-  map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
+  map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }), 'bottom-right');
 
   return map;
 }

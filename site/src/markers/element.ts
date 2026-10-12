@@ -46,7 +46,7 @@ export function buildMarkerElement(region: Region, crop: Crop, iconSrc: string, 
   root.dataset.id = region.id;
   root.setAttribute('aria-label', `${crop.name} in ${region.label}, ${formatAcres(region.acres)}`);
 
-  const duration = 2.6 + hash01(`${region.id}:d`) * 1.0;
+  const duration = 3.5 + hash01(`${region.id}:d`) * 1.0;
   const delay = -hash01(`${region.id}:p`) * duration;
   root.style.setProperty('--size', `${size}px`);
   root.style.setProperty('--crop-color', crop.color);
@@ -64,7 +64,7 @@ export function buildMarkerElement(region: Region, crop: Crop, iconSrc: string, 
   img.src = iconSrc;
 
   const icon = span('crop-marker__icon');
-  icon.append(span('crop-marker__halo'), img);
+  icon.append(img);
 
   const label = span('crop-marker__label');
   const name = span('crop-marker__name', region.label);

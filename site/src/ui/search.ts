@@ -218,7 +218,7 @@ export function createSearch({ map, crops, regionsSearch, cropPoints, manifest, 
   const bar = el('div', 'cs-bar');
   const input = el('input', 'cs-input');
   input.type = 'text';
-  input.placeholder = 'Search a crop… (try avocado)';
+  input.placeholder = 'Avocados, almonds, grapes…';
   input.autocomplete = 'off';
   input.spellcheck = false;
   input.enterKeyHint = 'search';

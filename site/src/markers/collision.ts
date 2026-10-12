@@ -37,11 +37,19 @@ function boxes(item: MarkerItem, x: number, y: number, scale: number): [icon: Re
  * already placed icon or label is hidden; otherwise it stays, and only its label is dropped when that
  * label would collide. Returns the items whose gate or label flipped and the screen boxes that ended up occupied.
  */
+export interface CollisionOptions {
+  /** Items that must stay hidden (declutter rules above the pixel-level check); they claim no space. */
+  excluded?: ReadonlySet<MarkerItem>;
+  /** Labels only appear on hover / focus: they neither show nor reserve space. */
+  hideLabels?: boolean;
+}
+
 export function resolveCollisions(
   map: MapLibreMap,
   ordered: readonly MarkerItem[],
   zoom: number,
   obstacles: readonly Rect[] = [],
+  { excluded, hideLabels = false }: CollisionOptions = {},
 ): { changed: MarkerItem[]; placed: Rect[] } {
   const { clientWidth: w, clientHeight: h } = map.getContainer();
   const placed: Rect[] = [...obstacles];
@@ -50,14 +58,14 @@ export function resolveCollisions(
     if (isCovered(item)) continue;
     const projected = map.project(item.region.lngLat);
     const p = { x: projected.x, y: projected.y + item.nudgeY };
-    let gateOn = true;
-    let labelOn = true;
+    let gateOn = !excluded?.has(item);
+    let labelOn = !hideLabels && gateOn;
     const onScreen = p.x > -VIEW_MARGIN && p.x < w + VIEW_MARGIN && p.y > -VIEW_MARGIN && p.y < h + VIEW_MARGIN;
-    if (onScreen) {
+    if (onScreen && gateOn) {
       const [icon, label] = boxes(item, p.x, p.y, bandScale(item.region.level, zoom, 1));
       gateOn = !placed.some((q) => overlaps(icon, q));
       if (gateOn) {
-        labelOn = !placed.some((q) => overlaps(label, q));
+        labelOn = !hideLabels && !placed.some((q) => overlaps(label, q));
         placed.push(icon);
         if (labelOn) placed.push(label);
       }

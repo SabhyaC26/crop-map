@@ -1,0 +1,107 @@
+/* Pastel shimmer skeleton shown until the map has painted, then a ~400ms cross-fade into the map. */
+#map {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+html.map-ready #map {
+  opacity: 1;
+}
+
+#boot {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 62% 48%, rgba(255, 243, 214, 0.9), rgba(255, 243, 214, 0) 70%),
+    radial-gradient(70% 70% at 22% 60%, rgba(150, 205, 255, 0.85), rgba(150, 205, 255, 0) 72%),
+    linear-gradient(160deg, #cfe8ff 0%, #e4eeff 48%, #f7f0e1 100%);
+  transition: opacity 0.4s ease;
+}
+
+html.map-ready #boot {
+  opacity: 0;
+}
+
+/* A soft diagonal sheen sweeping across. */
+#boot::before {
+  content: '';
+  position: absolute;
+  inset: -20% -60%;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0) 38%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0) 62%
+  );
+  transform: translateX(-60%);
+  animation: boot-sheen 1.9s ease-in-out infinite;
+}
+
+/* A hint of California: the state silhouette as a breathing pastel blob. */
+.boot-state {
+  position: absolute;
+  left: 50%;
+  top: 52%;
+  width: min(34vw, 300px);
+  aspect-ratio: 0.82;
+  translate: -48% -50%;
+  background: linear-gradient(160deg, rgba(190, 232, 170, 0.75), rgba(255, 225, 186, 0.8));
+  clip-path: polygon(3% 1%, 42% 1%, 42% 32%, 93% 73%, 93% 80%, 92% 97%, 70% 99%, 57% 86%, 38% 78%, 25% 57%, 19% 44%, 7% 28%, 1% 17%);
+  filter: drop-shadow(0 12px 18px rgba(80, 100, 180, 0.22));
+  animation: boot-breathe 2.4s ease-in-out infinite;
+}
+
+.boot-pill,
+.boot-controls {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-sm, 0 3px 8px rgba(70, 76, 130, 0.1));
+  animation: boot-breathe 2.4s ease-in-out infinite;
+}
+
+.boot-pill {
+  top: var(--safe-top, 14px);
+  left: 50%;
+  width: min(345px, calc(100vw - 32px));
+  height: 38px;
+  border-radius: 999px;
+  translate: -50% 0;
+}
+
+.boot-controls {
+  right: var(--edge, 16px);
+  bottom: var(--safe-bottom, 16px);
+  width: 38px;
+  height: 114px;
+  border-radius: 18px;
+  animation-delay: 0.3s;
+}
+
+@keyframes boot-sheen {
+  to {
+    transform: translateX(60%);
+  }
+}
+
+@keyframes boot-breathe {
+  50% {
+    opacity: 0.72;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #map,
+  #boot {
+    transition: none;
+  }
+
+  #boot::before,
+  .boot-state,
+  .boot-pill,
+  .boot-controls {
+    animation: none;
+  }
+}

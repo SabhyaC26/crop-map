@@ -1,5 +1,5 @@
 // Screenshots of the main views (default CA, mobile, search highlights, handoff, legend).
-// Usage: URL=http://127.0.0.1:5196/ node scripts/shot-main.mjs [ca|mobile|almonds|avocados|z10|legend|all]
+// Usage: URL=http://127.0.0.1:5196/ node scripts/shot-main.mjs [ca|mobile|min|loading|almonds|avocados|z11|legend|all]
 import { chromium } from 'playwright';
 
 const url = process.env.URL ?? 'http://127.0.0.1:5196/';
@@ -28,7 +28,7 @@ const settle = async (page, ms = 1800) => {
 
 const shot = async (page, name) => {
   await page.screenshot({ path: `${outDir}${name}.png` });
-  console.log('saved', name, JSON.stringify(await page.evaluate(() => ({ z: window.__map.getZoom(), c: window.__map.getCenter() }))));
+  console.log('saved', name, JSON.stringify(await page.evaluate(() => (window.__map ? { z: window.__map.getZoom(), c: window.__map.getCenter() } : null))));
 };
 
 async function searchCrop(page, query) {
@@ -71,16 +71,41 @@ for (const [name, query] of [
   await page.context().close();
 }
 
-if (want('z10')) {
+if (want('z11')) {
   const page = await open({ width: 1440, height: 1000 });
   await searchCrop(page, 'almond');
   await settle(page, 3000);
   await page.locator('.dc-row', { hasText: 'Modesto' }).click();
   await page.waitForFunction(() => window.__map.isMoving(), null, { timeout: 5000 }).catch(() => undefined);
   await page.waitForFunction(() => !window.__map.isMoving(), null, { timeout: 60000 });
+  await page.evaluate(() => window.__map.easeTo({ zoom: 11, duration: 700 }));
+  await page.waitForTimeout(900);
   await settle(page, 3500);
-  await shot(page, 'search-almonds-z10');
+  await shot(page, 'search-almonds-z11');
   await page.context().close();
+}
+
+if (want('min')) {
+  const page = await open({ width: 1440, height: 1000 });
+  await settle(page, 2500);
+  // Ask for far more than allowed, towards the west / north: the limits clamp it.
+  await page.evaluate(() => window.__map.jumpTo({ center: [-200, 80], zoom: 0.5 }));
+  await settle(page, 3500);
+  await shot(page, 'zoomed-out-min');
+  console.log('minZoom', await page.evaluate(() => window.__map.getMinZoom()));
+  await page.context().close();
+}
+
+if (want('loading')) {
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 });
+  const page = await ctx.newPage();
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  await page.goto(url, { waitUntil: 'commit' });
+  await page.waitForFunction(() => document.getElementById('boot') && getComputedStyle(document.getElementById('boot')).position === 'absolute', null, { timeout: 30000 });
+  await page.waitForTimeout(Number(process.env.LOADING_DELAY ?? 450));
+  console.log('map-ready yet?', await page.evaluate(() => document.documentElement.classList.contains('map-ready')));
+  await shot(page, 'loading-shimmer').catch((e) => console.log(e.message));
+  await ctx.close();
 }
 
 if (want('legend')) {
