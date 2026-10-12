@@ -7,7 +7,7 @@ import type {
 } from 'maplibre-gl';
 import { FIELDS_URL } from '../config';
 import type { CropIndex } from '../data/crops';
-import { darken, mix } from '../lib/color';
+import { mix } from '../lib/color';
 import { iconImageId } from '../lib/icons';
 import { FIELDS_BEFORE_LAYER_ID } from '../style/basemap';
 
@@ -24,8 +24,8 @@ export const FIELD_ICONS_LAYER_ID = 'field-icons';
 
 /** Fields are only interactive once their fill is clearly visible. */
 const INTERACTIVE_MIN_ZOOM = 10.2;
-const FILL_OPACITY = 0.8;
-const OUTLINE_DARKEN = 0.25;
+const FILL_OPACITY = 0.85;
+const MIN_BADGE_ACRES = 20;
 const HOVER_WHITE_MIX = 0.2;
 const HOVER_GLOW_WHITE_MIX = 0.7;
 const HOVER_EXTRA_OPACITY = 0.16;
@@ -79,22 +79,21 @@ function fillOpacity(ids: readonly number[] | null, dim: number): ExpressionSpec
   const lit = Math.min(0.96, FILL_OPACITY + HOVER_EXTRA_OPACITY);
   const at = (base: number): ExpressionSpecification =>
     ['case', LIT, lit, emphasisOpacity(base, ids, dim)] as ExpressionSpecification;
-  return zoomCurve([9, 0], [10.5, at(FILL_OPACITY)], [14, at(FILL_OPACITY)], [16, at(0.7)]);
+  return zoomCurve([9, 0], [10.5, at(0.78)], [12, at(FILL_OPACITY)], [14, at(FILL_OPACITY)], [16, at(0.75)]);
 }
 
 function outlineOpacity(ids: readonly number[] | null, dim: number): ExpressionSpecification {
-  return zoomCurve([9.6, 0], [10.6, emphasisOpacity(0.45, ids, dim)], [13.5, emphasisOpacity(0.85, ids, dim)]);
+  return zoomCurve([9.6, 0], [10.6, emphasisOpacity(0.5, ids, dim)], [12.5, emphasisOpacity(0.7, ids, dim)]);
 }
 
 function iconOpacity(ids: readonly number[] | null, dim: number): ExpressionSpecification {
-  return zoomCurve([12.6, 0], [13.4, emphasisOpacity(1, ids, dim)]);
+  return zoomCurve([12.4, 0], [13, emphasisOpacity(1, ids, dim)]);
 }
 
 function buildLayers(crops: CropIndex): LayerSpecification[] {
   const base = cropMatch(crops, (hex) => hex, FALLBACK_COLOR);
   const bright = cropMatch(crops, (hex) => mix(hex, '#ffffff', HOVER_WHITE_MIX), FALLBACK_COLOR);
   const glow = cropMatch(crops, (hex) => mix(hex, '#ffffff', HOVER_GLOW_WHITE_MIX), '#ffffff');
-  const outline = cropMatch(crops, (hex) => darken(hex, OUTLINE_DARKEN), '#a9a392');
   const iconMatch = cropMatch(crops, (_, icon) => iconImageId(icon), FALLBACK_ICON);
 
   return [
@@ -133,8 +132,8 @@ function buildLayers(crops: CropIndex): LayerSpecification[] {
       minzoom: 9.5,
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: {
-        'line-color': outline,
-        'line-width': zoomCurve([10, 0.3], [14, 1.6], [18, 2.6]),
+        'line-color': '#ffffff',
+        'line-width': zoomCurve([10, 0.2], [14, 1.4], [18, 2.6]),
         'line-opacity': outlineOpacity(null, DEFAULT_DIM),
       },
     },
@@ -173,12 +172,13 @@ function buildLayers(crops: CropIndex): LayerSpecification[] {
       source: FIELDS_SOURCE,
       'source-layer': FIELD_POINTS_LAYER,
       minzoom: 12,
+      filter: ['>=', ['get', 'acres'], MIN_BADGE_ACRES],
       layout: {
         'icon-image': iconMatch,
-        'icon-size': zoomCurve([13, 0.95], [14, 1.15], [16, 1.4], [18, 1.7]),
+        'icon-size': zoomCurve([13, 1.05], [14.5, 1.36], [16, 1.55], [18, 1.9]),
         'icon-allow-overlap': false,
         'icon-ignore-placement': false,
-        'icon-padding': 6,
+        'icon-padding': 10,
         'icon-anchor': 'center',
         'symbol-sort-key': ['-', 0, ['get', 'acres']] as ExpressionSpecification,
       },

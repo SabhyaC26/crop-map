@@ -93,15 +93,22 @@ function buildHarvestStrip(crop: Crop, harvest: readonly boolean[]): HTMLElement
   const wrap = el('section', 'fp-harvest');
   const months = el('div', 'fp-months');
   months.setAttribute('role', 'list');
+  const yearRound = harvest.every(Boolean);
+  const pale = mix(crop.color, '#ffffff', 0.5);
   harvest.forEach((on, i) => {
     const chip = el('span', on ? 'fp-month is-on' : 'fp-month', MONTH_LETTERS[i]);
+    if (yearRound) {
+      chip.style.setProperty('--ga', mix(pale, crop.color, i / 12));
+      chip.style.setProperty('--gb', mix(pale, crop.color, (i + 1) / 12));
+      chip.classList.add('is-ramp');
+    }
     chip.style.setProperty('--i', String(i));
     chip.setAttribute('role', 'listitem');
     chip.title = `${MONTH_NAMES[i]}${on ? ': harvest' : ''}`;
     chip.setAttribute('aria-label', `${MONTH_NAMES[i]}${on ? ', harvest season' : ''}`);
     months.append(chip);
   });
-  wrap.append(months, el('p', 'fp-caption', 'Harvest (approx.)'));
+  wrap.append(months, el('p', 'fp-caption', yearRound ? 'Harvested year-round (approx.)' : 'Harvest (approx.)'));
   wrap.setAttribute('aria-label', `${crop.name} harvest months`);
   return wrap;
 }

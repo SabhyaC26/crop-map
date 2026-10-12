@@ -1,54 +1,54 @@
 dwr_code,crop_id,name,icon,color,group,harvest,source
-D12,1,Almonds,almond,#f7a8c4,Tree nuts,000000011100,Almond Board of California
-V,2,Grapes,grapes,#a98ae6,Vineyards,000011111111,California Table Grape Commission; UC Davis raisin cost study
-F16,3,Corn & sorghum,corn,#ffe566,Field crops,000111111110,USDA NASS Ag Handbook 628 (2010); USDA NASS Ag Handbook 507 (2007)
-D14,4,Pistachios,pistachio,#a8d672,Tree nuts,000000001100,acpistachios.org Good Agricultural Practices Manual; UC California Agriculture 2020
-P1,5,Alfalfa,alfalfa,#5fd4b6,Hay & forage,011111111110,USDA NASS Ag Handbook 628 (2010)
-P3,6,Mixed pasture,cow,#b5cc98,Pasture,,harvest season not meaningful for this class
-R1,7,Rice,rice,#4fc3d9,Rice,000000001110,USDA NASS Ag Handbook 628 (2010)
-G6,8,Grain & hay,wheat,#e6d794,Grains & hay,000011111000,USDA NASS Ag Handbook 628 (2010)
-D13,9,Walnuts,walnut,#d9a066,Tree nuts,000000001110,California Walnuts (walnuts.org); UC ANR
-C,10,Citrus,orange,#ffb347,Citrus & subtropical,111111111111,UC ANR citrus bearing seasons; AgWest Farm Credit 2025 lemon & orange perspective
-T32,11,Tomatoes,tomato,#f2574a,Vegetables,000011111110,USDA NASS Ag Handbook 507 (2007)
-G2,12,Wheat,wheat,#ecc86a,Grains & hay,000011100000,USDA NASS Ag Handbook 628 (2010)
-P4,13,Native pasture,cow,#c9d3c2,Pasture,,harvest season not meaningful for this class
-P6,14,Pasture grasses,herb,#a3b88a,Pasture,,harvest season not meaningful for this class
-T30,15,Lettuce & leafy greens,lettuce,#8be05a,Leafy greens,111111111111,USDA NASS Ag Handbook 507 (2007)
-F1,16,Cotton,cotton,#cfd0e8,Field crops,000000000110,USDA NASS Ag Handbook 628 (2010)
-T4,17,"Cole crops (broccoli, cauliflower…)",broccoli,#74cf95,Vegetables,111111111111,USDA NASS Ag Handbook 507 (2007)
-T18,18,Mixed vegetables,seedling,#9bdcd0,Vegetables,,"approx., general knowledge (mixed truck crops; no single season)"
-T10,19,Onions & garlic,onion,#e0a3d4,Vegetables,001111111110,USDA NASS Ag Handbook 507 (2007)
-D5,20,Peaches & nectarines,peach,#ffb38a,Stone fruit,000011111000,UC Davis Postharvest Center; Sun Met Fruit harvest dates
-YP,21,Young orchards,seedling,#bfe3a8,Tree nuts,,harvest season not meaningful for this class
-T9,22,Melons & squash,melon,#ffdcae,Vegetables,001111111111,USDA NASS Ag Handbook 507 (2007)
-C6,23,Olives,olive,#9aa56a,Citrus & subtropical,000000001111,UC ANR table olive guide; UC California Agriculture (Manzanillo timing)
-C5,24,Avocados,avocado,#5aa878,Citrus & subtropical,001111111110,Hass Avocado Board California profile; California Avocado Commission
-T20,25,Strawberries,strawberry,#ff7b8f,Berries,111111111111,California Strawberry Commission; Intl J Fruit Science 2024
-D8,26,Prunes,cherries,#a07cae,Stone fruit,000000011000,California Prune Board
-T6,27,Carrots,carrot,#ff8b5c,Vegetables,111111111111,USDA NASS Ag Handbook 507 (2007)
-D3,28,Cherries,cherries,#e0507a,Stone fruit,000111000000,California Cherry Board
-T16,29,Flowers & nursery,tulip,#f58fd8,Nursery & flowers,,harvest season not meaningful for this class
-F12,30,Sunflowers,sunflower,#ffcc2f,Field crops,000001111000,USDA NASS Ag Handbook 628 (2010)
-T12,31,Potatoes,potato,#dcc29a,Vegetables,001111001100,CDFA FREP potato production guide (UC Davis)
-F2,32,Safflower,sunflower,#f6b26b,Field crops,000000110000,IPM Centers safflower crop profile (2016)
-D15,33,Pomegranates,pomegranate,#c75b7e,Tree fruit,000000001110,UC ANR Fruit & Nut Research Information Center
-T19,34,Blueberries & bush berries,blueberry,#6c8ae4,Berries,000111100000,California Blueberry Commission; California Grown
-F5,35,Sugar beets,seedling,#c98ab0,Field crops,000111110000,USDA NASS Ag Handbook 628 (2010)
-T13,36,Sweet potatoes,potato,#e39a73,Vegetables,000000001100,UC ANR Sweetpotato Production in California (pub 7237)
-D10,37,Other deciduous fruits,seedling,#e3b6a0,Tree fruit,,"approx., general knowledge (mixed species; no single season)"
-F10,38,Dry beans,beans,#bfa27c,Field crops,000000001100,California Beans (calbeans.org)
-D7,39,Plums,cherries,#c47fb0,Stone fruit,000011111000,UC ANR Fruit & Nut Research Information Center
-C4,40,Dates,date,#cf8f7a,Citrus & subtropical,000000001111,UC ANR Topics in Subtropics (2025); californiadates.com
-C10,41,Eucalyptus,herb,#8fb8a8,Other,,harvest season not meaningful for this class
-R2,42,Wild rice,rice,#3aa6c4,Rice,000000011100,LA Times 1999 (D. Karp); IPM Centers CA wild rice PMSP (2025)
-T21,43,Peppers,bell_pepper,#48c78e,Vegetables,000111111110,USDA NASS Ag Handbook 507 (2007)
-P7,44,Turf farms,herb,#7fd16b,Nursery & flowers,,harvest season not meaningful for this class
-D6,45,Pears,pear,#d6e68a,Tree fruit,000000111100,AgWest Farm Credit pear perspective (2023); Haul Produce
-D1,46,Apples,apple,#ee7f7f,Tree fruit,000000111100,California Apple Commission
-D17,47,Pecans,walnut,#b98a63,Tree nuts,000000000111,UC ANR Fruit & Nut Research Information Center
-C8,48,Kiwis,kiwi,#c7d96a,Citrus & subtropical,000000000110,UC ANR Kiwifruit; California Agriculture kiwifruit marketing paper
-D2,49,Apricots,peach,#ffcf9e,Stone fruit,000011100000,UC ANR Fruit & Nut Research Information Center
-T27,50,Greenhouse,seedling,#cde6f2,Nursery & flowers,,harvest season not meaningful for this class
-F11,51,Other field crops,seedling,#cbb9a0,Field crops,,"approx., general knowledge (mixed field crops; no single season)"
-C7,52,Other subtropical fruits,lemon,#f5ec8a,Citrus & subtropical,,"approx., general knowledge (mixed species; no single season)"
-P5,53,Wet pasture,herb,#a6c8e0,Pasture,,harvest season not meaningful for this class
+D12,1,Almonds,almond,#f0b5ca,Tree nuts,000000011100,Almond Board of California
+V,2,Grapes,grapes,#b29bdf,Vineyards,000011111111,California Table Grape Commission; UC Davis raisin cost study
+F16,3,Corn & sorghum,corn,#f1dd7f,Field crops,000111111110,USDA NASS Ag Handbook 628 (2010); USDA NASS Ag Handbook 507 (2007)
+D14,4,Pistachios,pistachio,#add085,Tree nuts,000000001100,acpistachios.org Good Agricultural Practices Manual; UC California Agriculture 2020
+P1,5,Alfalfa,alfalfa,#75ccb6,Hay & forage,011111111110,USDA NASS Ag Handbook 628 (2010)
+P3,6,Mixed pasture,cow,#bacba4,Pasture,,harvest season not meaningful for this class
+R1,7,Rice,rice,#68becf,Rice,000000001110,USDA NASS Ag Handbook 628 (2010)
+G6,8,Grain & hay,wheat,#e0d5a3,Grains & hay,000011111000,USDA NASS Ag Handbook 628 (2010)
+D13,9,Walnuts,walnut,#d1a77b,Tree nuts,000000001110,California Walnuts (walnuts.org); UC ANR
+C,10,Citrus,orange,#eeb565,Citrus & subtropical,111111111111,UC ANR citrus bearing seasons; AgWest Farm Credit 2025 lemon & orange perspective
+T32,11,Tomatoes,tomato,#ee6a4e,Vegetables,000011111110,USDA NASS Ag Handbook 507 (2007)
+G2,12,Wheat,wheat,#e1c681,Grains & hay,000011100000,USDA NASS Ag Handbook 628 (2010)
+P4,13,Native pasture,cow,#cdd4c8,Pasture,,harvest season not meaningful for this class
+P6,14,Pasture grasses,herb,#a9b996,Pasture,,harvest season not meaningful for this class
+T30,15,Lettuce & greens,lettuce,#a8e46e,Leafy greens,111111111111,USDA NASS Ag Handbook 507 (2007)
+F1,16,Cotton,cotton,#d5d5e7,Field crops,000000000110,USDA NASS Ag Handbook 628 (2010)
+T4,17,Broccoli & cole crops,broccoli,#72c6e2,Vegetables,111111111111,USDA NASS Ag Handbook 507 (2007)
+T18,18,Mixed vegetables,seedling,#b8c6ee,Vegetables,,"approx., general knowledge (mixed truck crops; no single season)"
+T10,19,Onions & garlic,onion,#e4b5d9,Vegetables,001111111110,USDA NASS Ag Handbook 507 (2007)
+D5,20,Peaches & nectarines,peach,#f4bc9d,Stone fruit,000011111000,UC Davis Postharvest Center; Sun Met Fruit harvest dates
+YP,21,Young orchards,seedling,#c5dfb4,Tree nuts,,harvest season not meaningful for this class
+T9,22,Melons & squash,melon,#f7ddbb,Vegetables,001111111111,USDA NASS Ag Handbook 507 (2007)
+C6,23,Olives,olive,#9ea67a,Citrus & subtropical,000000001111,UC ANR table olive guide; UC California Agriculture (Manzanillo timing)
+C5,24,Avocados,avocado,#6da783,Citrus & subtropical,001111111110,Hass Avocado Board California profile; California Avocado Commission
+T20,25,Strawberries,strawberry,#ff7fa3,Berries,111111111111,California Strawberry Commission; Intl J Fruit Science 2024
+D8,26,Prunes,cherries,#a58aaf,Stone fruit,000000011000,California Prune Board
+T6,27,Carrots,carrot,#f09a77,Vegetables,111111111111,USDA NASS Ag Handbook 507 (2007)
+D3,28,Cherries,cherries,#d56a89,Stone fruit,000111000000,California Cherry Board
+T16,29,Flowers & nursery,tulip,#f27fd9,Nursery & flowers,,harvest season not meaningful for this class
+F12,30,Sunflowers,sunflower,#ecc651,Field crops,000001111000,USDA NASS Ag Handbook 628 (2010)
+T12,31,Potatoes,potato,#d8c5a7,Vegetables,001111001100,CDFA FREP potato production guide (UC Davis)
+F2,32,Safflower,sunflower,#eab782,Field crops,000000110000,IPM Centers safflower crop profile (2016)
+D15,33,Pomegranates,pomegranate,#c1718b,Tree fruit,000000001110,UC ANR Fruit & Nut Research Information Center
+T19,34,Blueberries & berries,blueberry,#7a86e6,Berries,000111100000,California Blueberry Commission; California Grown
+F5,35,Sugar beets,seedling,#c798b4,Field crops,000111110000,USDA NASS Ag Handbook 628 (2010)
+T13,36,Sweet potatoes,potato,#dba487,Vegetables,000000001100,UC ANR Sweetpotato Production in California (pub 7237)
+D10,37,Other orchard fruit,seedling,#dfbdad,Tree fruit,,"approx., general knowledge (mixed species; no single season)"
+F10,38,Dry beans,beans,#bda88b,Field crops,000000001100,California Beans (calbeans.org)
+D7,39,Plums,cherries,#c28eb3,Stone fruit,000011111000,UC ANR Fruit & Nut Research Information Center
+C4,40,Dates,date,#ca9b8b,Citrus & subtropical,000000001111,UC ANR Topics in Subtropics (2025); californiadates.com
+C10,41,Eucalyptus,herb,#9bb9ad,Other,,harvest season not meaningful for this class
+R2,42,Wild rice,rice,#54a5bc,Rice,000000011100,LA Times 1999 (D. Karp); IPM Centers CA wild rice PMSP (2025)
+T21,43,Peppers,bell_pepper,#61bf95,Vegetables,000111111110,USDA NASS Ag Handbook 507 (2007)
+P7,44,Turf farms,herb,#8ecb7f,Nursery & flowers,,harvest season not meaningful for this class
+D6,45,Pears,pear,#d3df9b,Tree fruit,000000111100,AgWest Farm Credit pear perspective (2023); Haul Produce
+D1,46,Apples,apple,#e59292,Tree fruit,000000111100,California Apple Commission
+D17,47,Pecans,walnut,#b69376,Tree nuts,000000000111,UC ANR Fruit & Nut Research Information Center
+C8,48,Kiwis,kiwi,#c4d17f,Citrus & subtropical,000000000110,UC ANR Kiwifruit; California Agriculture kiwifruit marketing paper
+D2,49,Apricots,peach,#f6d2ae,Stone fruit,000011100000,UC ANR Fruit & Nut Research Information Center
+T27,50,Greenhouse,seedling,#d4e7ef,Nursery & flowers,,harvest season not meaningful for this class
+F11,51,Other field crops,seedling,#cbbdab,Field crops,,"approx., general knowledge (mixed field crops; no single season)"
+C7,52,Other subtropicals,lemon,#ece59c,Citrus & subtropical,,"approx., general knowledge (mixed species; no single season)"
+P5,53,Wet pasture,herb,#b2cbdd,Pasture,,harvest season not meaningful for this class

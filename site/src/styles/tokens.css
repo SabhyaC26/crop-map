@@ -1,5 +1,13 @@
+@font-face {
+  font-family: 'Figtree';
+  font-style: normal;
+  font-weight: 300 900;
+  font-display: swap;
+  src: url('/webfonts/Figtree-Variable.woff2') format('woff2');
+}
+
 :root {
-  --font: 'Nunito Variable', 'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+  --font: 'Figtree', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
 
   --ink: #33365c;
   --ink-soft: #7a7da6;

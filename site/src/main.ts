@@ -1,5 +1,4 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
-import '@fontsource-variable/nunito';
 import './styles/tokens.css';
 import './styles/base.css';
 import './styles/shell.css';

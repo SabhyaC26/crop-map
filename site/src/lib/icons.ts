@@ -5,10 +5,13 @@ import type { Crop } from '../data/crops';
 type IconManifest = Record<string, string>;
 
 const CANVAS_PX = 128;
-const GLYPH_PX = 96;
-const GLYPH_OFFSET_X = (CANVAS_PX - GLYPH_PX) / 2;
-const GLYPH_OFFSET_Y = 10;
-/** 128px canvas shown at 32 css px for icon-size 1. */
+const DISC_RADIUS = 50;
+const DISC_CENTER_X = CANVAS_PX / 2;
+const DISC_CENTER_Y = 59;
+const GLYPH_PX = 72;
+const GLYPH_OFFSET_X = DISC_CENTER_X - GLYPH_PX / 2;
+const GLYPH_OFFSET_Y = DISC_CENTER_Y - GLYPH_PX / 2 - 1;
+/** 128px canvas shown at 32 css px for icon-size 1; the 100px badge disc reads as ~25px. */
 const PIXEL_RATIO = 4;
 
 let manifestPromise: Promise<IconManifest> | undefined;
@@ -45,9 +48,24 @@ function rasterize(img: HTMLImageElement): ImageData {
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) throw new Error('2d canvas unavailable');
   ctx.imageSmoothingQuality = 'high';
-  ctx.shadowColor = 'rgba(58, 52, 110, 0.32)';
+
+  ctx.save();
+  ctx.shadowColor = 'rgba(58, 52, 110, 0.30)';
   ctx.shadowBlur = 9;
   ctx.shadowOffsetY = 5;
+  const disc = ctx.createRadialGradient(DISC_CENTER_X - 14, DISC_CENTER_Y - 18, 4, DISC_CENTER_X, DISC_CENTER_Y, DISC_RADIUS);
+  disc.addColorStop(0, '#ffffff');
+  disc.addColorStop(0.7, '#fffefb');
+  disc.addColorStop(1, '#f1eefb');
+  ctx.fillStyle = disc;
+  ctx.beginPath();
+  ctx.arc(DISC_CENTER_X, DISC_CENTER_Y, DISC_RADIUS, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.shadowColor = 'rgba(58, 52, 110, 0.18)';
+  ctx.shadowBlur = 3;
+  ctx.shadowOffsetY = 2;
   ctx.drawImage(img, GLYPH_OFFSET_X, GLYPH_OFFSET_Y, GLYPH_PX, GLYPH_PX);
   return ctx.getImageData(0, 0, CANVAS_PX, CANVAS_PX);
 }

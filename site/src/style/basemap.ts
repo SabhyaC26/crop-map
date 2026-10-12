@@ -16,6 +16,8 @@ export const OUTSIDE_SOURCE = 'outside-ca';
 export const FIELDS_BEFORE_LAYER_ID = 'roads_tunnels_other_casing';
 
 const OUTSIDE_VEIL_OPACITY = 0.9;
+const LABEL_TRACKING = 0.03;
+const LABEL_HALO = 1.4;
 
 export const PALETTE = {
   cream: '#f7f3e1',
@@ -34,9 +36,9 @@ export const PALETTE = {
   skyHorizon: '#e6f5ff',
 } as const;
 
-const FONT_REGULAR = 'Nunito Bold';
-const FONT_BOLD = 'Nunito ExtraBold';
-const FONT_SOFT = 'Nunito SemiBold';
+const FONT_REGULAR = 'Figtree SemiBold';
+const FONT_BOLD = 'Figtree Bold';
+const FONT_SOFT = 'Figtree Medium';
 
 export const pastelFlavor: Flavor = {
   ...LIGHT,
@@ -230,8 +232,8 @@ const PATCHES: Record<string, LayerPatch> = {
   roads_labels_major: (l) => {
     l.minzoom = 10;
     Object.assign(l, { filter: ['==', ['get', 'kind'], 'highway'] });
-    layout(l, { 'text-size': 11 });
-    paint(l, { 'text-halo-width': 2, 'text-color': PALETTE.lavender });
+    layout(l, { 'text-size': 11, 'text-letter-spacing': LABEL_TRACKING });
+    paint(l, { 'text-halo-width': LABEL_HALO, 'text-halo-blur': 0.5, 'text-color': PALETTE.lavender });
   },
 
   places_locality: (l) => {
@@ -251,10 +253,11 @@ const PATCHES: Record<string, LayerPatch> = {
         [16, rankSize(0, 22)],
       ),
       'text-max-width': 7,
+      'text-letter-spacing': LABEL_TRACKING,
     });
     paint(l, {
-      'text-halo-width': 2.2,
-      'text-halo-blur': 0.6,
+      'text-halo-width': LABEL_HALO,
+      'text-halo-blur': 0.5,
       'text-color': PALETTE.ink,
     });
   },

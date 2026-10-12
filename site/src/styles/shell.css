@@ -22,7 +22,7 @@
 #title-pill h1 {
   margin: 0;
   font-size: clamp(17px, 2.2vw, 22px);
-  font-weight: 900;
+  font-weight: 800;
   letter-spacing: -0.01em;
   line-height: 1.15;
   white-space: nowrap;
@@ -115,7 +115,7 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--r-pill);
   box-shadow: var(--shadow-sm);
-  font: 700 11px/1.2 var(--font);
+  font: 600 11px/1.2 var(--font);
 }
 
 .maplibregl-ctrl-attrib.maplibregl-compact-show {

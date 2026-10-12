@@ -1,4 +1,4 @@
-// Usage: node scripts/shot-fields.mjs <scenario> [out.png]   scenarios: z11 | icons | popup | mobile | ca
+// Usage: node scripts/shot-fields.mjs <scenario> [out.png]   scenarios: z11 | icons | popup | mobile | ca | labels
 import { chromium } from 'playwright';
 
 const [scenario, outArg] = process.argv.slice(2);
@@ -34,6 +34,9 @@ const jump = (c, z) => page.evaluate(([c, z]) => window.__map.jumpTo({ center: c
 
 if (scenario === 'ca') {
   await page.evaluate(() => window.__map.fire('resize'));
+  await settle();
+} else if (scenario === 'labels') {
+  await jump([-122.3, 37.7], 10.5);
   await settle();
 } else if (scenario === 'z11') {
   await jump(SAL, 11);
