@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.pytest_cache/
+data/raw/
+data/work/
+site/node_modules/
+site/dist/
+site/public/data/*.pmtiles
+.superpowers/
+.DS_Store
+test-results/
+playwright-report/
