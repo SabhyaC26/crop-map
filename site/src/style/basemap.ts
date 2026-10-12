@@ -6,16 +6,28 @@ import type {
 } from 'maplibre-gl';
 import { LIGHT, layers, type Flavor } from '@protomaps/basemaps';
 import { BASEMAP_URL, TERRAIN_TILES_URL } from '../config';
+import {
+  OVERVIEW_CITY_MAX_ZOOM,
+  buildGeoLabelLayers,
+  buildOceanDecorLayers,
+  buildSnowLayers,
+  storySources,
+} from './storybook';
 
 export const BASEMAP_SOURCE = 'basemap';
 export const TERRAIN_SOURCE = 'terrain';
 export const OCEAN_SOURCE = 'ocean-mask';
 export const OUTSIDE_SOURCE = 'outside-ca';
+export const STICKER_SOURCE = 'ca-sticker';
+export const SHADOW_SOURCE = 'ca-shadow';
+export const GRADIENT_SOURCE = 'ocean-gradient';
+/** Confetti is inserted below this layer: the gradient is transparent over land but covers glow that spills offshore. */
+export const OCEAN_GRADIENT_LAYER_ID = 'ocean_gradient';
 
 /** Later layers (fields) are inserted below this id so roads and labels stay on top. */
 export const FIELDS_BEFORE_LAYER_ID = 'roads_tunnels_other_casing';
 
-const OUTSIDE_VEIL_OPACITY = 0.9;
+const OUTSIDE_VEIL_OPACITY = 1;
 const LABEL_TRACKING = 0.03;
 const LABEL_HALO = 1.4;
 
@@ -48,8 +60,8 @@ export const pastelFlavor: Flavor = {
   park_b: PALETTE.parkSoft,
   wood_a: '#c8ecb8',
   wood_b: PALETTE.parkDeep,
-  scrub_a: '#e8f2cf',
-  scrub_b: '#dcecc2',
+  scrub_a: '#eaf3cb',
+  scrub_b: '#dfeeb9',
   glacier: '#ffffff',
   sand: '#faf0d4',
   beach: '#fbf1d3',
@@ -124,13 +136,13 @@ export const pastelFlavor: Flavor = {
 
   pois: undefined,
   landcover: {
-    grassland: '#d2efb4',
-    barren: '#fcefd0',
+    grassland: '#cdef9f',
+    barren: '#fdecc6',
     urban_area: '#f0e6d8',
-    farmland: '#c9eda6',
+    farmland: '#c2ec96',
     glacier: '#ffffff',
-    scrub: '#e6efc4',
-    forest: '#b4e8a6',
+    scrub: '#e5efbb',
+    forest: '#a6e695',
   },
 };
 
@@ -151,7 +163,7 @@ const DROPPED_LAYERS = new Set([
 const zoomStops = (...stops: [number, unknown][]): ExpressionSpecification =>
   ['interpolate', ['linear'], ['zoom'], ...stops.flat()] as ExpressionSpecification;
 
-const OCEAN_COLOR = zoomStops([3, PALETTE.waterDeep], [8, PALETTE.water], [13, PALETTE.waterLight]);
+const OCEAN_COLOR = zoomStops([3, '#3282e4'], [6.5, '#3282e4'], [9, PALETTE.water], [13, PALETTE.waterLight]);
 
 const rankSize = (rank: number, size: number): ExpressionSpecification => [
   'case',
@@ -159,6 +171,17 @@ const rankSize = (rank: number, size: number): ExpressionSpecification => [
   size,
   0,
 ];
+
+// Neighbouring-state/Mexico towns that would compete with California at the overview zoom.
+const OUTSIDE_CA_PLACES = [
+  'Reno', 'Las Vegas', 'Mexicali', 'Tijuana', 'Eugene', 'Boise', 'Carson City', 'Phoenix', 'Salt Lake City',
+  'Portland', 'Medford', 'Henderson', 'Ensenada', 'Tecate', 'Yuma', 'Klamath Falls', 'Bend', 'Salem', 'Corvallis',
+  'Roseburg', 'Sparks', 'Lake Havasu City', 'Bullhead City', 'Kingman', 'Flagstaff', 'Tucson', 'Mesa',
+  'Rosarito', 'San Luis Rio Colorado', 'Winnemucca', 'Elko', 'Coos Bay', 'Seattle', 'Spokane', 'Victoria', 'Vancouver', 'Tacoma', 'Olympia',
+];
+
+const outsideCaLabelOpacity = (inside: number): ExpressionSpecification =>
+  ['case', ['in', ['get', 'name'], ['literal', OUTSIDE_CA_PLACES]], inside, 1] as ExpressionSpecification;
 
 type LayerPatch = (layer: LayerSpecification) => void;
 
@@ -207,18 +230,8 @@ const PATCHES: Record<string, LayerPatch> = {
       'line-width': zoomStops([5, 0], [6, 0.9], [9, 1.5], [12, 2.2], [15, 5], [18, 15]),
     }),
 
-  water_label_ocean: (l) => {
-    layout(l, {
-      'text-size': zoomStops([3, 11], [10, 14]),
-      'text-letter-spacing': 0.18,
-    });
-    paint(l, {
-      'text-color': '#ffffff',
-      'text-halo-color': '#3f9de8',
-      'text-halo-width': 1.4,
-      'text-opacity': 0.9,
-    });
-  },
+  // The hand-placed storybook "Pacific Ocean" label replaces the stock one.
+  water_label_ocean: (l) => layout(l, { visibility: 'none' }),
 
   water_label_lakes: (l) => {
     layout(l, { 'text-size': zoomStops([6, 10], [12, 13]) });
@@ -237,6 +250,7 @@ const PATCHES: Record<string, LayerPatch> = {
   },
 
   places_locality: (l) => {
+    l.minzoom = OVERVIEW_CITY_MAX_ZOOM;
     const layoutProps = l.layout as Record<string, unknown>;
     delete layoutProps['icon-image'];
     delete layoutProps['icon-size'];
@@ -259,6 +273,7 @@ const PATCHES: Record<string, LayerPatch> = {
       'text-halo-width': LABEL_HALO,
       'text-halo-blur': 0.5,
       'text-color': PALETTE.ink,
+      'text-opacity': zoomStops([6, outsideCaLabelOpacity(0)], [8.5, 1]),
     });
   },
 };
@@ -318,6 +333,75 @@ const buildOutsideVeil = (): LayerSpecification => ({
   },
 });
 
+
+// Smooth shore-to-deep ocean gradient and soft drop shadow, rendered once by scripts/make-sticker-rasters.py (keep bounds in sync).
+const OCEAN_GRADIENT_BOUNDS = { west: -148, east: -112, south: 24, north: 51 } as const;
+const SHADOW_BOUNDS = { west: -127, east: -112, south: 31, north: 43.5 } as const;
+
+type ImageCorners = [[number, number], [number, number], [number, number], [number, number]];
+
+const imageCorners = (b: { west: number; east: number; south: number; north: number }): ImageCorners => [
+  [b.west, b.north],
+  [b.east, b.north],
+  [b.east, b.south],
+  [b.west, b.south],
+];
+
+const STICKER_FADE = zoomStops([6.5, 1], [9, 0]);
+
+const buildOceanGradient = (): LayerSpecification[] => [
+  {
+    id: OCEAN_GRADIENT_LAYER_ID,
+    type: 'raster',
+    source: GRADIENT_SOURCE,
+    paint: {
+      'raster-opacity': STICKER_FADE,
+      'raster-resampling': 'linear',
+      'raster-fade-duration': 0,
+    },
+  },
+];
+
+// Soft raised shadow (baked gaussian raster with CA cut out) + glossy white die-cut edge.
+const buildStickerLayers = (): LayerSpecification[] => [
+  {
+    id: 'ca_sticker_shadow',
+    type: 'raster',
+    source: SHADOW_SOURCE,
+    paint: {
+      'raster-opacity': STICKER_FADE,
+      'raster-resampling': 'linear',
+      'raster-fade-duration': 0,
+    },
+  },
+  {
+    id: 'ca_sticker_edge_soft',
+    type: 'line',
+    source: STICKER_SOURCE,
+    layout: { 'line-join': 'round' },
+    paint: {
+      'line-color': '#ffffff',
+      'line-opacity': zoomStops([6.5, 0.55], [9, 0]),
+      'line-width': zoomStops([3, 9], [6, 13]),
+      'line-offset': zoomStops([3, 4.5], [6, 6.5]),
+      'line-blur': 5,
+    },
+  },
+  {
+    id: 'ca_sticker_edge',
+    type: 'line',
+    source: STICKER_SOURCE,
+    layout: { 'line-join': 'round' },
+    paint: {
+      'line-color': '#ffffff',
+      'line-opacity': zoomStops([6.5, 1], [9, 0]),
+      'line-width': zoomStops([3, 4], [6, 6.5]),
+      'line-offset': zoomStops([3, 2], [6, 3.25]),
+      'line-blur': 0.5,
+    },
+  },
+];
+
 const buildHillshade = (): LayerSpecification => ({
   id: 'hillshade',
   type: 'hillshade',
@@ -325,10 +409,10 @@ const buildHillshade = (): LayerSpecification => ({
   paint: {
     'hillshade-method': 'standard',
     'hillshade-illumination-direction': 315,
-    'hillshade-exaggeration': zoomStops([4, 0.34], [9, 0.36], [13, 0.28]),
-    'hillshade-shadow-color': '#948fbf',
-    'hillshade-highlight-color': '#fffbee',
-    'hillshade-accent-color': '#b3aed4',
+    'hillshade-exaggeration': zoomStops([4, 0.62], [9, 0.5], [13, 0.34]),
+    'hillshade-shadow-color': '#7468b4',
+    'hillshade-highlight-color': '#fff1cf',
+    'hillshade-accent-color': '#a79bd6',
   },
 });
 
@@ -339,7 +423,7 @@ export const SKY: SkySpecification = {
   'sky-horizon-blend': 0.6,
   'horizon-fog-blend': 0.7,
   'fog-ground-blend': 0.2,
-  'atmosphere-blend': zoomStops([0, 1], [5, 1], [7, 0]) as never,
+  'atmosphere-blend': zoomStops([0, 1], [3.5, 0.6], [4.4, 0]) as never,
 };
 
 export const buildBasemapLayers = (): LayerSpecification[] => {
@@ -348,11 +432,12 @@ export const buildBasemapLayers = (): LayerSpecification[] => {
   for (const layer of base) {
     if (DROPPED_LAYERS.has(layer.id)) continue;
     PATCHES[layer.id]?.(layer);
-    if (layer.id === 'water_label_ocean') out.push(buildOutsideVeil());
-    if (layer.id === 'roads_runway') out.push(buildHillshade(), buildOceanMask());
+    if (layer.id === 'water_label_ocean') out.push(buildOutsideVeil(), ...buildStickerLayers());
+    if (layer.id === 'roads_runway') out.push(buildHillshade(), buildOceanMask(), ...buildSnowLayers(TERRAIN_SOURCE));
     out.push(layer);
-    if (layer.id === 'water_river') out.push(...buildShoreLayers());
+    if (layer.id === 'water_river') out.push(...buildShoreLayers(), ...buildOceanGradient(), ...buildOceanDecorLayers());
   }
+  out.push(...buildGeoLabelLayers());
   return out;
 };
 
@@ -374,10 +459,22 @@ export const buildBasemapStyle = (origin: string, baseUrl: string): StyleSpecifi
       data: `${origin}${baseUrl}data/ocean-mask.geojson`,
       tolerance: 0.5,
     },
+    ...storySources(origin, baseUrl),
     [OUTSIDE_SOURCE]: {
       type: 'geojson',
       data: `${origin}${baseUrl}data/outside-ca.geojson`,
       tolerance: 0.5,
+    },
+    [STICKER_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/ca-sticker.geojson`, tolerance: 0.1 },
+    [SHADOW_SOURCE]: {
+      type: 'image',
+      url: `${origin}${baseUrl}data/ca-shadow.png`,
+      coordinates: imageCorners(SHADOW_BOUNDS),
+    },
+    [GRADIENT_SOURCE]: {
+      type: 'image',
+      url: `${origin}${baseUrl}data/ocean-gradient.png`,
+      coordinates: imageCorners(OCEAN_GRADIENT_BOUNDS),
     },
     [TERRAIN_SOURCE]: {
       type: 'raster-dem',

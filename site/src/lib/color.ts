@@ -51,6 +51,12 @@ function hslToRgb(h: number, s: number, l: number): Rgb {
   return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
 }
 
+/** Same hue and lightness, richer: `amount` 0.3 = +30% saturation (clamped). */
+export function saturate(hex: string, amount: number): string {
+  const [h, s, l] = rgbToHsl(hexToRgb(hex));
+  return rgbToHex(hslToRgb(h, Math.min(1, s * (1 + amount)), l));
+}
+
 /** Same hue, lower lightness, slightly richer: keeps outlines saturated instead of muddy grey. */
 export function darken(hex: string, amount: number): string {
   const [h, s, l] = rgbToHsl(hexToRgb(hex));

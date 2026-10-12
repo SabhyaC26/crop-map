@@ -1,6 +1,7 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { loadCrops, type CropIndex } from './data/crops';
 import { addFieldsLayers, type FieldsLayer } from './layers/fields';
+import { addOverviewLayers } from './layers/overview';
 import { loadIconManifest, registerCropIcons } from './lib/icons';
 import { createRegionMarkers, loadRegions, type RegionMarkers } from './markers';
 import { FIELDS_BEFORE_LAYER_ID } from './style/basemap';
@@ -47,6 +48,7 @@ export async function initCropMap(map: MapLibreMap, slots: CropMapSlots): Promis
     whenStyleReady(map),
   ]);
   await registerCropIcons(map, crops.list);
+  addOverviewLayers(map, crops);
   const fields = addFieldsLayers(map, crops);
   const popup = createFieldPopup({ map, crops, fields, root: slots.popupRoot, iconManifest });
   const markers = createRegionMarkers(map, regions, crops, iconManifest);

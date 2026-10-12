@@ -2,17 +2,17 @@ import type { Map as MapLibreMap } from 'maplibre-gl';
 import type { MarkerItem } from './choreography';
 import { bandScale, GROUND_GAP, LABEL_HEIGHT } from './zoom';
 
-interface Rect {
+
+export interface Rect {
   x0: number;
   y0: number;
   x1: number;
   y1: number;
 }
 
-
 const PAD = 1;
 /** The glyph fills roughly this much of the icon box; the rest is transparent margin. */
-const GLYPH_INSET = 0.14;
+export const GLYPH_INSET = 0.14;
 const VIEW_MARGIN = 140;
 
 const overlaps = (a: Rect, b: Rect): boolean =>
@@ -35,15 +35,21 @@ function boxes(item: MarkerItem, x: number, y: number, scale: number): [icon: Re
 /**
  * Greedy screen-space declutter of one level, highest priority first. A marker whose icon overlaps an
  * already placed icon or label is hidden; otherwise it stays, and only its label is dropped when that
- * label would collide. Returns the items whose gate or label flipped.
+ * label would collide. Returns the items whose gate or label flipped and the screen boxes that ended up occupied.
  */
-export function resolveCollisions(map: MapLibreMap, ordered: readonly MarkerItem[], zoom: number): MarkerItem[] {
+export function resolveCollisions(
+  map: MapLibreMap,
+  ordered: readonly MarkerItem[],
+  zoom: number,
+  obstacles: readonly Rect[] = [],
+): { changed: MarkerItem[]; placed: Rect[] } {
   const { clientWidth: w, clientHeight: h } = map.getContainer();
-  const placed: Rect[] = [];
+  const placed: Rect[] = [...obstacles];
   const changed: MarkerItem[] = [];
   for (const item of ordered) {
     if (isCovered(item)) continue;
-    const p = map.project(item.region.lngLat);
+    const projected = map.project(item.region.lngLat);
+    const p = { x: projected.x, y: projected.y + item.nudgeY };
     let gateOn = true;
     let labelOn = true;
     const onScreen = p.x > -VIEW_MARGIN && p.x < w + VIEW_MARGIN && p.y > -VIEW_MARGIN && p.y < h + VIEW_MARGIN;
@@ -62,5 +68,5 @@ export function resolveCollisions(map: MapLibreMap, ordered: readonly MarkerItem
       changed.push(item);
     }
   }
-  return changed;
+  return { changed, placed: placed.slice(obstacles.length) };
 }

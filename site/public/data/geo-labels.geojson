@@ -1,0 +1,407 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "PACIFIC OCEAN",
+    "kind": "ocean",
+    "rank": 1,
+    "view": "full"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -128.4,
+      30.8
+     ],
+     [
+      -127.3,
+      34.5
+     ],
+     [
+      -126.5,
+      38.2
+     ],
+     [
+      -126.1,
+      42.2
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "SIERRA NEVADA",
+    "kind": "mountain",
+    "rank": 2,
+    "view": "full"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -121.4,
+      40.6
+     ],
+     [
+      -120.6,
+      39.3
+     ],
+     [
+      -119.8,
+      38.0
+     ],
+     [
+      -119.1,
+      36.9
+     ],
+     [
+      -118.5,
+      36.0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "SIERRA NEVADA",
+    "kind": "mountain",
+    "rank": 2,
+    "view": "compact"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -121.0,
+      40.2
+     ],
+     [
+      -119.9,
+      38.6
+     ],
+     [
+      -118.9,
+      37.0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "COAST RANGES",
+    "kind": "range_note",
+    "rank": 4
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.2,
+     40.1
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "MOJAVE DESERT",
+    "kind": "desert",
+    "rank": 3
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -119.165,
+      35.736
+     ],
+     [
+      -112.835,
+      34.664
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "DEATH VALLEY",
+    "kind": "desert_small",
+    "rank": 6
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -119.027,
+      37.605
+     ],
+     [
+      -115.573,
+      35.295
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Lake Tahoe",
+    "kind": "lake",
+    "rank": 8
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.04,
+     39.1
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Channel Islands",
+    "kind": "island",
+    "rank": 9
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.75,
+     33.55
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Mt. Shasta",
+    "kind": "peak",
+    "rank": 10
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.25,
+     40.85
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "REDWOODS",
+    "kind": "forest",
+    "rank": 11
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -123.75,
+     40.85
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "JOSHUA TREE",
+    "kind": "desert_note",
+    "rank": 12
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -115.7,
+     34.55
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "NEVADA",
+    "kind": "state",
+    "rank": 20
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -117.6,
+     39.4
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "OREGON",
+    "kind": "state",
+    "rank": 21
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -121.0,
+     43.5
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "ARIZONA",
+    "kind": "state",
+    "rank": 22
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -113.4,
+     34.0
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "MEXICO",
+    "kind": "state",
+    "rank": 23
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -115.9,
+     31.9
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "PACIFIC OCEAN",
+    "kind": "ocean",
+    "rank": 1,
+    "view": "compact"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -124.6,
+      31.5
+     ],
+     [
+      -122.4,
+      31.3
+     ],
+     [
+      -120.4,
+      31.2
+     ],
+     [
+      -118.4,
+      31.1
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "San Francisco",
+    "kind": "city",
+    "rank": 30
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.42,
+     37.77
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Los Angeles",
+    "kind": "city",
+    "rank": 31
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -118.24,
+     34.05
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "San Diego",
+    "kind": "city",
+    "rank": 32
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -117.16,
+     32.72
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Sacramento",
+    "kind": "city",
+    "rank": 33
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -121.49,
+     38.58
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Fresno",
+    "kind": "city",
+    "rank": 34
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.79,
+     36.74
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Bakersfield",
+    "kind": "city",
+    "rank": 35
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.02,
+     35.37
+    ]
+   }
+  }
+ ]
+}

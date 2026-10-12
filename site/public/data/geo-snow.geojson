@@ -1,0 +1,215 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Mt. Shasta",
+    "kind": "snowpeak",
+    "w": 1.5
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.19,
+     41.41
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Lassen",
+    "kind": "snowpeak",
+    "w": 0.9
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -121.5,
+     40.49
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Whitney",
+    "kind": "snowpeak",
+    "w": 0.9
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -118.29,
+     36.58
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "San Gorgonio",
+    "kind": "snowpeak",
+    "w": 0.8
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -116.82,
+     34.1
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "San Jacinto",
+    "kind": "snowpeak",
+    "w": 0.55
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -116.68,
+     33.81
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Carson",
+    "kind": "snowpeak",
+    "w": 0.5
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.95,
+     38.85
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Emigrant",
+    "kind": "snowpeak",
+    "w": 0.55
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.7,
+     38.4
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Dana",
+    "kind": "snowpeak",
+    "w": 0.7
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.25,
+     37.8
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Ritter",
+    "kind": "snowpeak",
+    "w": 0.6
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -119.15,
+     37.55
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Humphreys",
+    "kind": "snowpeak",
+    "w": 0.75
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -118.65,
+     37.25
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Palisades",
+    "kind": "snowpeak",
+    "w": 0.7
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -118.5,
+     37.0
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Kings",
+    "kind": "snowpeak",
+    "w": 0.65
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -118.4,
+     36.8
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Trinity",
+    "kind": "snowpeak",
+    "w": 0.5
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -122.85,
+     41.05
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "name": "Warner",
+    "kind": "snowpeak",
+    "w": 0.4
+   },
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.3,
+     41.3
+    ]
+   }
+  }
+ ]
+}

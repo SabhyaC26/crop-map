@@ -95,3 +95,27 @@
     bottom: calc(var(--safe-bottom) + 72px);
   }
 }
+
+/* Storybook overview: engraved compass rose on the Pacific (desktop only). */
+.compass-rose {
+  position: absolute;
+  z-index: var(--z-map-ui);
+  left: calc(var(--edge) + 18px);
+  bottom: calc(var(--safe-bottom) + 14px);
+  width: 92px;
+  height: 103px;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1.5px rgba(30, 90, 170, 0.35));
+}
+
+.compass-rose__dial {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 55%;
+}
+
+@media (max-width: 720px) {
+  .compass-rose {
+    display: none;
+  }
+}
