@@ -1,6 +1,8 @@
-// Records the ~30 s feature demo as WebM (then convert with scripts/encode-demo.sh).
-//   node scripts/record-demo.mjs --device laptop|mobile [--url http://127.0.0.1:5180/] [--out ../docs/demo/]
-import { mkdirSync, renameSync } from 'node:fs';
+// Records the ~15 s feature demo: overview -> one continuous flight into Salinas -> legend filter -> field popup
+// -> almond search finale. The route is played once to warm every tile, then captured frame-by-frame over CDP.
+//   node scripts/record-demo.mjs --device laptop|mobile [--url http://127.0.0.1:5180/]
+//   then: scripts/encode-demo.sh laptop|mobile  (MP4 only)
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 
 const arg = (name, fallback) => {
@@ -9,168 +11,171 @@ const arg = (name, fallback) => {
 };
 const device = arg('device', 'laptop');
 const url = arg('url', 'http://127.0.0.1:5180/');
-const outDir = arg('out', new URL('../../docs/demo/', import.meta.url).pathname);
 const mobile = device === 'mobile';
-const viewport = mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 };
+// Laptop is framed 4:5 (still the desktop layout) so the legend and popup stay readable in a phone feed.
+const viewport = mobile ? { width: 390, height: 844 } : { width: 960, height: 1200 };
+const scale = Number(arg("scale", "1.5"));
+const framesDir = `/tmp/demo-frames-${device}`;
 
-mkdirSync(outDir, { recursive: true });
-const browser = await chromium.launch({ args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
-const context = await browser.newContext({
-  viewport,
-  deviceScaleFactor: mobile ? 3 : 2,
-  isMobile: mobile,
-  hasTouch: mobile,
-  recordVideo: { dir: outDir, size: viewport },
+const SALINAS = { center: [-121.64, 36.68], zoom: 12.3 };
+const FLIGHT_MS = 3600;
+
+rmSync(framesDir, { recursive: true, force: true });
+mkdirSync(framesDir, { recursive: true });
+
+// The CDP screencast only returns device-pixel frames when Chrome itself runs at the scale factor.
+const browser = await chromium.launch({
+  args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', `--force-device-scale-factor=${scale}`],
 });
+const context = await browser.newContext({ viewport, deviceScaleFactor: scale, isMobile: mobile, hasTouch: mobile });
 
-// A touch dot on mobile so viewers can follow the taps (the laptop recording shows no pointer).
+// Mobile shows a soft touch dot on each tap; the laptop cut shows no pointer.
 await context.addInitScript((isMobile) => {
   if (!isMobile) return;
   window.addEventListener('DOMContentLoaded', () => {
     const dot = document.createElement('div');
-    dot.id = 'demo-cursor';
-    const size = isMobile ? 34 : 22;
+    const size = 34;
     Object.assign(dot.style, {
       position: 'fixed', left: '0', top: '0', width: `${size}px`, height: `${size}px`, borderRadius: '50%',
-      background: isMobile ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.9)',
-      border: isMobile ? '2px solid rgba(90,80,160,0.55)' : '2px solid rgba(70,60,140,0.85)',
-      boxShadow: '0 4px 14px rgba(40,30,90,0.35)', pointerEvents: 'none', zIndex: '99999',
-      transform: 'translate(-200px,-200px)', transition: 'width .15s, height .15s, opacity .2s',
-      opacity: isMobile ? '0' : '1',
+      background: 'rgba(255,255,255,0.55)', border: '2px solid rgba(90,80,160,0.55)',
+      boxShadow: '0 4px 14px rgba(40,30,90,0.35)', pointerEvents: 'none', zIndex: '99999', opacity: '0',
+      transition: 'opacity .25s',
     });
     document.body.append(dot);
-    const place = (x, y) => (dot.style.transform = `translate(${x - size / 2}px, ${y - size / 2}px)`);
-    window.addEventListener('pointermove', (e) => place(e.clientX, e.clientY), true);
     window.addEventListener('pointerdown', (e) => {
-      place(e.clientX, e.clientY);
+      dot.style.transform = `translate(${e.clientX - size / 2}px, ${e.clientY - size / 2}px)`;
       dot.style.opacity = '1';
       dot.animate([{ scale: 1 }, { scale: 0.75 }, { scale: 1 }], { duration: 260 });
     }, true);
-    window.addEventListener('pointerup', () => {
-      if (isMobile) setTimeout(() => (dot.style.opacity = '0'), 380);
-    }, true);
+    window.addEventListener('pointerup', () => setTimeout(() => (dot.style.opacity = '0'), 380), true);
   });
 }, mobile);
 
 const page = await context.newPage();
 const wait = (ms) => page.waitForTimeout(ms);
-let pointer = { x: viewport.width * 0.7, y: viewport.height * 0.75 };
-const glide = async (x, y, ms = 700) => {
-  const steps = Math.max(8, Math.round(ms / 16));
-  await page.mouse.move(x, y, { steps });
-  pointer = { x, y };
-};
+const idle = () =>
+  page.waitForFunction(() => !window.__map.isMoving() && window.__map.areTilesLoaded(), null, { timeout: 60000 });
+
 const tap = async (x, y) => {
   if (mobile) await page.touchscreen.tap(x, y);
   else {
-    await glide(x, y, 500);
+    await page.mouse.move(x, y, { steps: 24 });
     await page.mouse.click(x, y);
   }
 };
 const tapEl = async (locator) => {
   const box = await locator.boundingBox();
-  if (!box) throw new Error('element not visible');
+  if (!box) return false;
   await tap(box.x + box.width / 2, box.y + box.height / 2);
+  return true;
 };
-const camera = (fn, opts) => page.evaluate(([f, o]) => window.__map[f](o), [fn, opts]);
-const settle = async (extra = 300) => {
-  await page.waitForFunction(() => !window.__map.isMoving() && window.__map.areTilesLoaded(), null, { timeout: 30000 });
-  await wait(extra);
-};
-const type = async (text) => {
-  for (const ch of text) {
-    await page.keyboard.type(ch);
-    await wait(95);
-  }
-};
+const fly = (target, duration) =>
+  page.evaluate(([t, d]) => new Promise((resolve) => {
+    window.__map.once('moveend', () => resolve());
+    window.__map.flyTo({ ...t, duration: d, curve: 1.42, essential: true });
+  }), [target, duration]);
 
 await page.goto(url);
-await page.waitForFunction(() => window.__app?.controls, null, { timeout: 90000 });
+await page.waitForFunction(() => window.__app?.controls && document.querySelector('.crop-marker[data-state=shown]'), null, { timeout: 90000 });
+await idle();
 const home = await page.evaluate(() => ({ center: window.__map.getCenter().toArray(), zoom: window.__map.getZoom() }));
-await glide(pointer.x, pointer.y, 50);
-await page.waitForFunction(() => document.querySelector('.crop-marker[data-state=shown]'), null, { timeout: 60000 });
-await wait(1800);
+const park = mobile ? null : { x: viewport.width - 4, y: 4 };
+if (park) await page.mouse.move(park.x, park.y);
 
-// 1. Hover a region emoji, then dive into the San Joaquin Valley (markers spring apart).
-if (!mobile) {
-  const marker = page.locator('.crop-marker[data-state=shown] .crop-marker__img').nth(2);
-  const box = await marker.boundingBox();
-  if (box) {
-    await glide(box.x + box.width / 2, box.y + box.height / 2, 800);
-    await wait(900);
-  }
-}
-await camera('flyTo', { center: [-120.3, 36.85], zoom: 7.9, speed: 1.1, curve: 1.2 });
-await settle(1300);
-
-// 2. Into the Salinas Valley: real fields, textures, the "What's in view" legend.
-await camera('flyTo', { center: [-121.62, 36.66], zoom: 12.4, speed: 1.4, curve: 1.3 });
-await settle(500);
-
-// 3. Legend filter: strawberries only, then everything back.
-const legendRow = page.locator('.lg-item', { hasText: 'Strawberries' }).first();
-if (mobile) {
-  const pill = page.locator('.lg-root').first();
-  if (await pill.isVisible()) await tapEl(pill);
-  await wait(700);
-}
-if (await legendRow.isVisible()) {
-  await tapEl(legendRow);
-  await wait(1700);
-  const clear = page.locator('.lg-clear').first();
-  if (await clear.isVisible()) await tapEl(clear);
+const reset = async () => {
+  await page.keyboard.press('Escape');
+  const chip = page.locator('.cs-chip-clear');
+  if (await chip.isVisible()) await chip.click();
+  await page.evaluate((h) => window.__map.jumpTo(h), home);
+  if (park) await page.mouse.move(park.x, park.y);
   await wait(600);
-}
-if (mobile) {
-  const close = page.locator('.lg-close').first();
-  if (await close.isVisible()) await tapEl(close);
-  await wait(400);
-}
+  await idle();
+  await wait(1500);
+};
 
-// 4. Tap a field: the popup card / bottom sheet.
-const hit = await page.evaluate(() => {
-  const { clientWidth: w, clientHeight: h } = window.__map.getContainer();
-  for (let r = 0; r < 260; r += 24) {
-    for (const [dx, dy] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r], [r, r], [-r, -r]]) {
-      const p = [w / 2 + dx, h * 0.45 + dy];
-      if (window.__app.fields.queryAt(p)) return p;
+const fieldPoint = () =>
+  page.evaluate(() => {
+    const { clientWidth: w, clientHeight: h } = window.__map.getContainer();
+    for (let r = 0; r < 300; r += 20) {
+      for (const [dx, dy] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r], [r, r], [-r, r]]) {
+        const p = [w / 2 + dx, h * 0.6 + dy];
+        const hit = window.__app.fields.queryAt(p);
+        if (hit && hit.cropId === 15) return p;
+      }
     }
+    return [w / 2, h * 0.6];
+  });
+
+const take = async () => {
+  await wait(900);
+  // One continuous flight from the statewide emoji view down the valley into Salinas (markers split on the way).
+  await fly(SALINAS, FLIGHT_MS);
+  await wait(500);
+
+  // Legend: strawberries only, then everything back.
+  if (mobile) {
+    await tapEl(page.locator('.lg-root').first());
+    await wait(500);
   }
-  return [w / 2, h / 2];
+  if (await tapEl(page.locator('.lg-item', { hasText: 'Strawberries' }).first())) {
+    await wait(1500);
+    await tapEl(page.locator('.lg-clear').first());
+    await wait(450);
+  }
+  if (mobile) {
+    await tapEl(page.locator('.lg-close').first());
+    await wait(300);
+  }
+
+  // A lettuce field: popup card (bottom sheet on mobile).
+  const [x, y] = await fieldPoint();
+  await tap(x, y);
+  await wait(2100);
+  await page.keyboard.press('Escape');
+  await wait(300);
+
+  // Finale: search almonds -> the camera glides out and the almond belt lights up statewide.
+  await tapEl(page.locator('.cs-input'));
+  if (park) await page.mouse.move(park.x, park.y, { steps: 10 });
+  for (const ch of 'almond') {
+    await page.keyboard.type(ch);
+    await wait(70);
+  }
+  await wait(250);
+  await page.keyboard.press('Enter');
+  await wait(2900);
+};
+
+// Warm-up pass: loads every tile, glyph and icon along the route so the captured take never pops in.
+await take();
+await reset();
+
+const cdp = await context.newCDPSession(page);
+const frames = [];
+cdp.on('Page.screencastFrame', ({ data, metadata, sessionId }) => {
+  frames.push({ data, t: metadata.timestamp });
+  void cdp.send('Page.screencastFrameAck', { sessionId });
 });
-await tap(hit[0], hit[1]);
-await wait(2000);
-await page.keyboard.press('Escape');
-await wait(500);
-
-// 5. Back out to California, then search: the crop lights up statewide and the rest of the map goes quiet.
-await camera('flyTo', { center: home.center, zoom: home.zoom, speed: 1.6, curve: 1.4 });
-await settle(500);
-await tapEl(page.locator('.cs-input'));
-await wait(250);
-await type('almond');
-await wait(350);
-await page.keyboard.press('Enter');
-await wait(2600);
-
-// 6. Jump to a destination from "Where it grows".
-const dest = page.locator('.dc-row').nth(1);
-if (await dest.isVisible()) {
-  await tapEl(dest);
-  await wait(2300);
-}
-
-// 7. Clear and land back on the bobbing emoji overview.
-await tapEl(page.locator('.cs-chip-clear'));
-await camera('flyTo', { center: home.center, zoom: home.zoom, speed: 1.6, curve: 1.4 });
-await wait(2600);
-if (!mobile) await glide(viewport.width * 0.78, viewport.height * 0.8, 600);
-await wait(400);
-
-const video = page.video();
-await context.close();
+await cdp.send('Page.startScreencast', {
+  format: 'jpeg',
+  quality: Number(arg("quality", "90")),
+  maxWidth: Math.round(viewport.width * scale),
+  maxHeight: Math.round(viewport.height * scale),
+  everyNthFrame: 1,
+});
+await take();
+await cdp.send('Page.stopScreencast');
 await browser.close();
-const raw = await video.path();
-const target = `${outDir}demo-${device}.webm`;
-renameSync(raw, target);
-console.log(target);
+
+// ffmpeg concat list with each frame's real on-screen duration (screencast frames arrive only on change).
+const lines = [];
+frames.forEach((f, i) => {
+  const name = `${framesDir}/${String(i).padStart(5, '0')}.jpg`;
+  writeFileSync(name, Buffer.from(f.data, 'base64'));
+  const next = frames[i + 1];
+  lines.push(`file '${name}'`, `duration ${(next ? next.t - f.t : 0.5).toFixed(4)}`);
+});
+lines.push(`file '${framesDir}/${String(frames.length - 1).padStart(5, '0')}.jpg'`);
+writeFileSync(`${framesDir}/list.txt`, lines.join('\n'));
+const span = frames.length ? frames[frames.length - 1].t - frames[0].t : 0;
+console.log(`${frames.length} frames over ${span.toFixed(1)} s -> ${framesDir}/list.txt`);

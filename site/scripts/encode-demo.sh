@@ -1,18 +1,15 @@
 #!/usr/bin/env bash
-# Turns docs/demo/demo-<device>.webm into an MP4 (H.264) and a GIF.
-#   scripts/encode-demo.sh laptop|mobile [trim-start-seconds] [speed]
+# Encodes the frames captured by record-demo.mjs into docs/demo/demo-<device>.mp4 at full capture resolution.
+#   scripts/encode-demo.sh laptop|mobile
 set -euo pipefail
 DEVICE="${1:?laptop|mobile}"
-TRIM="${2:-0}"
-SPEED="${3:-1}"
+LIST="/tmp/demo-frames-$DEVICE/list.txt"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../docs/demo" && pwd)"
-IN="$DIR/demo-$DEVICE.webm"
 
-if [[ "$DEVICE" == "mobile" ]]; then GIF_W=360; MP4_W=780; else GIF_W=720; MP4_W=1440; fi
-
-ffmpeg -y -loglevel error -ss "$TRIM" -i "$IN" -vf "setpts=PTS/${SPEED},scale=${MP4_W}:-2:flags=lanczos" -an -c:v libx264 -preset slow -crf 18 -pix_fmt yuv420p -movflags +faststart -r 30 "$DIR/demo-$DEVICE.mp4"
-ffmpeg -y -loglevel error -ss "$TRIM" -i "$IN" \
-  -vf "setpts=PTS/${SPEED},fps=12,scale=${GIF_W}:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle" \
-  "$DIR/demo-$DEVICE.gif"
-ls -lh "$DIR/demo-$DEVICE".*
-ffprobe -v error -show_entries format=duration -of csv=p=0 "$DIR/demo-$DEVICE.mp4"
+# 60 fps CFR keeps the variable-rate screencast frames evenly paced; high-quality x264 keeps text and field edges crisp.
+ffmpeg -y -loglevel error -f concat -safe 0 -i "$LIST" \
+  -vf "fps=60,scale=trunc(iw/2)*2:trunc(ih/2)*2:flags=lanczos" \
+  -c:v libx264 -preset slower -crf 12 -tune animation -profile:v high -pix_fmt yuv420p -movflags +faststart \
+  "$DIR/demo-$DEVICE.mp4"
+ls -lh "$DIR/demo-$DEVICE.mp4"
+ffprobe -v error -select_streams v:0 -show_entries stream=width,height:format=duration -of default=nw=1 "$DIR/demo-$DEVICE.mp4"
