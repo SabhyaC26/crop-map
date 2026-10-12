@@ -9,6 +9,7 @@ interface SearchOptions {
   map: MapLibreMap;
   crops: CropIndex;
   regionsSearch: RegionsSearch;
+  cropPoints(cropId: number): readonly [number, number][];
   manifest: IconManifest;
   emphasis: EmphasisController;
   slot: HTMLElement;
@@ -205,12 +206,12 @@ export interface SearchControl {
   destroy(): void;
 }
 
-export function createSearch({ map, crops, regionsSearch, manifest, emphasis, slot }: SearchOptions): SearchControl {
+export function createSearch({ map, crops, regionsSearch, cropPoints, manifest, emphasis, slot }: SearchOptions): SearchControl {
   const entries = buildEntries(crops, regionsSearch);
   const uid = `cs-${Math.random().toString(36).slice(2, 7)}`;
   const listId = `${uid}-list`;
 
-  const destinations = createDestinations({ map, manifest, slot });
+  const destinations = createDestinations({ map, manifest, cropPoints, slot });
 
   const root = el('div', 'cs-root');
   const box = el('div', 'cs-search glass');

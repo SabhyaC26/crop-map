@@ -52,9 +52,14 @@
     filter 0.4s ease;
 }
 
-.crop-marker[data-dim] .crop-marker__gate {
-  opacity: 0.25;
-  filter: saturate(0.35);
+.crop-marker[data-suppressed] {
+  pointer-events: none;
+}
+
+/* Search / legend lights the crop up on the map itself, so the emoji markers step aside. */
+.crop-marker[data-suppressed] .crop-marker__gate {
+  opacity: 0;
+  scale: 0.82;
 }
 
 .crop-marker[data-gate='off'] .crop-marker__gate {

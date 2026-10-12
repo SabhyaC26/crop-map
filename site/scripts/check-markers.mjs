@@ -49,7 +49,7 @@ const idle = (page) => page.waitForFunction(() => !window.__map.isMoving(), null
     ),
   );
   check('markers are buttons', await page.evaluate(() => document.querySelector('.crop-marker')?.tagName === 'BUTTON'));
-  check('window.__app.markers exposed', await page.evaluate(() => typeof window.__app.markers.setEmphasis === 'function' && typeof window.__app.markers.destroy === 'function'));
+  check('window.__app.markers exposed', await page.evaluate(() => typeof window.__app.markers.setHidden === 'function' && typeof window.__app.markers.destroy === 'function'));
 
   const el = '.crop-marker[data-level=coarse][data-gate=on][data-state=shown]';
   const box = await page.evaluate((el) => {
@@ -126,16 +126,34 @@ const idle = (page) => page.waitForFunction(() => !window.__map.isMoving(), null
   );
   check('no marker left mid-transform (coarse)', stuck2 === 0, `stuck=${stuck2}`);
 
-  // Emphasis.
-  const dim = await page.evaluate(() => {
-    const m = window.__app.markers;
-    m.setEmphasis(new Set([15]));
-    const dimmed = document.querySelectorAll('.crop-marker[data-dim]').length;
-    const lit = [...document.querySelectorAll('.crop-marker:not([data-dim])')].every((e) => e.getAttribute('aria-label').startsWith('Lettuce'));
-    m.setEmphasis(null);
-    return { dimmed, lit, after: document.querySelectorAll('.crop-marker[data-dim]').length };
-  });
-  check('setEmphasis dims non-matching and clears with null', dim.dimmed > 0 && dim.lit && dim.after === 0, JSON.stringify(dim));
+  // Hiding (search / legend selection): every marker fades out and goes inert, then returns on clear.
+  const gateOpacities = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('.crop-marker[data-state=shown][data-gate=on]')].map((e) =>
+        Number(getComputedStyle(e.querySelector('.crop-marker__gate')).opacity),
+      ),
+    );
+  await page.evaluate(() => window.__app.markers.setHidden(true));
+  await page.waitForTimeout(700);
+  const hiddenState = await page.evaluate(() => ({
+    flagged: document.querySelectorAll('.crop-marker[data-suppressed]').length,
+    total: document.querySelectorAll('.crop-marker').length,
+    focusable: [...document.querySelectorAll('.crop-marker')].filter((e) => e.tabIndex === 0).length,
+  }));
+  const hiddenOpacity = await gateOpacities();
+  check(
+    'setHidden(true) fades every marker out and makes it inert',
+    hiddenState.flagged === hiddenState.total && hiddenState.focusable === 0 && hiddenOpacity.length > 0 && hiddenOpacity.every((o) => o < 0.02),
+    JSON.stringify({ ...hiddenState, max: Math.max(...hiddenOpacity) }),
+  );
+  await page.evaluate(() => window.__app.markers.setHidden(false));
+  await page.waitForTimeout(900);
+  const shownOpacity = await gateOpacities();
+  check(
+    'setHidden(false) restores them',
+    (await page.evaluate(() => document.querySelectorAll('.crop-marker[data-suppressed]').length)) === 0 && shownOpacity.length > 0 && shownOpacity.every((o) => o > 0.98),
+    `n=${shownOpacity.length}`,
+  );
 
   await context.close();
 }

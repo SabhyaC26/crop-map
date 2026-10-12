@@ -1,9 +1,10 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { loadCrops, type CropIndex } from './data/crops';
 import { addFieldsLayers, type FieldsLayer } from './layers/fields';
-import { addOverviewLayers } from './layers/overview';
+import { addOverviewLayers, type OverviewLayer } from './layers/overview';
 import { loadIconManifest, registerCropIcons } from './lib/icons';
 import { createRegionMarkers, loadRegions, type RegionMarkers } from './markers';
+import { cropRegionPoints } from './markers/regions';
 import { FIELDS_BEFORE_LAYER_ID } from './style/basemap';
 import { initControls, type Controls } from './ui/controls';
 import { createFieldPopup, type FieldPopup } from './ui/popup';
@@ -12,6 +13,7 @@ export interface CropMapApp {
   map: MapLibreMap;
   crops: CropIndex;
   fields: FieldsLayer;
+  overview: OverviewLayer;
   popup: FieldPopup;
   markers: RegionMarkers;
   controls: Controls;
@@ -48,7 +50,7 @@ export async function initCropMap(map: MapLibreMap, slots: CropMapSlots): Promis
     whenStyleReady(map),
   ]);
   await registerCropIcons(map, crops.list);
-  addOverviewLayers(map, crops);
+  const overview = addOverviewLayers(map, crops);
   const fields = addFieldsLayers(map, crops);
   const popup = createFieldPopup({ map, crops, fields, root: slots.popupRoot, iconManifest });
   const markers = createRegionMarkers(map, regions, crops, iconManifest);
@@ -56,12 +58,14 @@ export async function initCropMap(map: MapLibreMap, slots: CropMapSlots): Promis
     map,
     crops,
     fields,
+    overview,
     regionsSearch: regions.search,
+    cropPoints: (cropId) => cropRegionPoints(regions, cropId),
     manifest: iconManifest,
     markers,
     searchSlot: slots.searchSlot,
     legendSlot: slots.legendSlot,
     popupRoot: slots.popupRoot,
   });
-  return { map, crops, fields, popup, markers, controls };
+  return { map, crops, fields, overview, popup, markers, controls };
 }

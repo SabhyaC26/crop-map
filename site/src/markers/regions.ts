@@ -75,3 +75,8 @@ export async function loadRegions(url: string = REGIONS_URL): Promise<RegionSet>
     search: file.search,
   };
 }
+
+/** Every region marker (coarse and fine) of one crop: a cheap proxy for how far its farms are spread. */
+export function cropRegionPoints(set: RegionSet, cropId: number): [number, number][] {
+  return [...set.coarse, ...set.fine].filter((r) => r.cropId === cropId).map((r) => r.lngLat);
+}

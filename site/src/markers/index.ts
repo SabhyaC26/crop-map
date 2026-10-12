@@ -25,8 +25,8 @@ export { loadRegions } from './regions';
 export type { RegionSet } from './regions';
 
 export interface RegionMarkers {
-  /** Dims every marker whose crop is not in the set (null clears). Used by search and the month slider. */
-  setEmphasis(cropIds: ReadonlySet<number> | null): void;
+  /** Fades every marker out (and back in) while a crop is lit up on the map itself. */
+  setHidden(hidden: boolean): void;
   destroy(): void;
 }
 
@@ -39,7 +39,7 @@ const CA_NORTH_BORDER_LAT = 42;
 const NUDGE_MIN_LAT = 40.5;
 const NUDGE_MARGIN = 4;
 const MAX_NUDGE = 110;
-const UI_OBSTACLE_SELECTOR = '#title-pill, #search-slot > *, #month-slot > *, .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group';
+const UI_OBSTACLE_SELECTOR = '#search-slot > *, .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group';
 
 const levelOf = (zoom: number, current: RegionLevel | null): RegionLevel => {
   if (current === 'fine') return zoom < MERGE_ZOOM ? 'coarse' : 'fine';
@@ -116,7 +116,7 @@ export function createRegionMarkers(
 
   let mode: RegionLevel = levelOf(map.getZoom(), null);
   let revealed = false;
-  let emphasis: ReadonlySet<number> | null = null;
+  let hidden = false;
   let frame = 0;
   let collideTimer: ReturnType<typeof setTimeout> | undefined;
   let lastCollide = 0;
@@ -126,7 +126,7 @@ export function createRegionMarkers(
     const { root } = item.parts;
     root.dataset.gate = item.gateOn ? 'on' : 'off';
     root.dataset.label = item.labelOn ? 'on' : 'off';
-    const live = item.shown && item.gateOn && !item.inert;
+    const live = item.shown && item.gateOn && !item.inert && !hidden;
     root.tabIndex = live ? 0 : -1;
     root.classList.toggle('is-inert', item.inert);
   };
@@ -176,17 +176,11 @@ export function createRegionMarkers(
     }
   };
 
-  const priority = (items: readonly MarkerItem[]): MarkerItem[] => {
-    if (!emphasis) return [...items];
-    const lit = emphasis;
-    return [...items].sort((a, b) => Number(lit.has(b.crop.cropId)) - Number(lit.has(a.crop.cropId)) || a.region.rank - b.region.rank);
-  };
-
   const measureLabels = (): void => {
     for (const item of all) item.labelWidth = item.parts.name.offsetWidth || item.labelWidth;
   };
 
-  /** Floating UI (pills, season panel, zoom buttons) in map-container pixels: markers never sit under it. */
+  /** Floating UI (search pill, places card, zoom buttons) in map-container pixels: markers never sit under it. */
   const uiObstacles = (): Rect[] => {
     const container = map.getContainer();
     const origin = container.getBoundingClientRect();
@@ -203,9 +197,11 @@ export function createRegionMarkers(
 
   const collide = (): void => {
     lastCollide = performance.now();
-    const { changed, placed } = resolveCollisions(map, priority(byLevel[mode]), map.getZoom(), uiObstacles());
+    const obstacles = uiObstacles();
+    const { changed, placed } = resolveCollisions(map, byLevel[mode], map.getZoom(), obstacles);
     for (const item of changed) refreshInteractive(item);
-    geoLabels.update(placed);
+    // Hidden markers must not keep suppressing the place names underneath them.
+    geoLabels.update(hidden ? obstacles : placed);
   };
 
   const scheduleCollide = (): void => {
@@ -338,11 +334,13 @@ export function createRegionMarkers(
   else map.once('idle', reveal);
 
   return {
-    setEmphasis(cropIds) {
-      emphasis = cropIds;
+    setHidden(next) {
+      if (next === hidden) return;
+      hidden = next;
       for (const item of all) {
-        if (cropIds && !cropIds.has(item.crop.cropId)) item.parts.root.dataset.dim = '';
-        else delete item.parts.root.dataset.dim;
+        if (hidden) item.parts.root.dataset.suppressed = '';
+        else delete item.parts.root.dataset.suppressed;
+        refreshInteractive(item);
       }
       collide();
     },

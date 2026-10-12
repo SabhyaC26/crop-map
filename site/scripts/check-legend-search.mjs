@@ -84,6 +84,44 @@ const row = (page, name) => page.locator('.lg-row', { has: page.locator('.lg-nam
   await page.context().close();
 }
 
+// Search lights up the crop's confetti dots, hides the emoji markers (no pins), and restores everything on clear.
+{
+  const page = await open({ width: 1280, height: 800 });
+  await page.waitForFunction(() => document.querySelector('.crop-marker[data-state=shown]'), null, { timeout: 90000 });
+  const hlFilter = () => page.evaluate(() => JSON.stringify(window.__map.getFilter('overview-hl-dots')));
+  const quiltOpacity = () => page.evaluate(() => JSON.stringify(window.__map.getPaintProperty('overview-dots', 'circle-opacity')));
+  const markerGates = () =>
+    page.evaluate(() => ({
+      flagged: document.querySelectorAll('.crop-marker[data-suppressed]').length,
+      total: document.querySelectorAll('.crop-marker').length,
+      visible: [...document.querySelectorAll('.crop-marker[data-state=shown][data-gate=on]')].filter(
+        (e) => Number(getComputedStyle(e.querySelector('.crop-marker__gate')).opacity) > 0.02,
+      ).length,
+    }));
+  const baseQuilt = await quiltOpacity();
+  const noHighlight = await hlFilter();
+  await page.locator('.cs-input').click();
+  await page.keyboard.type('almond');
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(900);
+  check('no numbered place pins', (await page.locator('.dp').count()) === 0);
+  check('where-it-grows card lists places', (await page.locator('.dc-row').count()) >= 2);
+  const lit = await hlFilter();
+  check('highlight layers filter to the searched crop', lit !== noHighlight && lit.includes('"literal"') && lit.includes('[1]'), lit);
+  check('quilt dims behind the highlight', (await quiltOpacity()) !== baseQuilt);
+  const hidden = await markerGates();
+  check('every emoji marker fades out', hidden.flagged === hidden.total && hidden.visible === 0, JSON.stringify(hidden));
+  await settle(page, 1200);
+  await page.locator('.dc-row').first().click();
+  await settle(page, 2200);
+  check('fields emphasise the same crop', (await fillOpacity(page)).includes('"in"'));
+  await page.locator('.cs-chip-clear').click();
+  await page.waitForTimeout(1000);
+  check('clear restores highlight, quilt and markers', (await hlFilter()) === noHighlight && (await quiltOpacity()) === baseQuilt && (await markerGates()).flagged === 0);
+  await page.context().close();
+}
+
 {
   const page = await open({ width: 800, height: 700 });
   await jump(page, [-121.65, 36.68], 12);

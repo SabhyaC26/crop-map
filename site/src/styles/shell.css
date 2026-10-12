@@ -90,12 +90,6 @@
   color: var(--ink-soft);
 }
 
-@media (max-width: 720px) {
-  .maplibregl-ctrl-bottom-right {
-    bottom: calc(var(--safe-bottom) + 72px);
-  }
-}
-
 /* Storybook overview: engraved compass rose on the Pacific (desktop only). */
 .compass-rose {
   position: absolute;

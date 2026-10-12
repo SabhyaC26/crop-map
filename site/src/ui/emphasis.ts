@@ -6,8 +6,14 @@ export type IconManifest = Awaited<ReturnType<typeof loadIconManifest>>;
 
 export type { RegionsSearch, SearchPlace, SearchTarget } from '../markers/regions';
 
-export interface EmphasisSink {
-  setEmphasis(ids: Set<number> | null): void;
+/** Region emoji markers: faded out entirely while a crop is pinned on. */
+export interface MarkerSink {
+  setHidden(hidden: boolean): void;
+}
+
+/** Confetti overview layer: lights up only the given crops. */
+export interface HighlightSink {
+  setHighlight(cropIds: readonly number[] | null): void;
 }
 
 export interface EmphasisState {
@@ -29,14 +35,15 @@ export interface EmphasisController {
   toggle(cropId: number): void;
   clear(): void;
   setPreview(cropId: number | null): void;
-  setMarkers(markers: EmphasisSink | undefined): void;
+  setMarkers(markers: MarkerSink | undefined): void;
   subscribe(listener: (state: EmphasisState) => void): () => void;
 }
 
 interface EmphasisOptions {
   crops: CropIndex;
   fields: FieldsLayer;
-  markers: EmphasisSink | undefined;
+  overview: HighlightSink;
+  markers: MarkerSink | undefined;
 }
 
 const sameSet = (a: ReadonlySet<number> | null, b: ReadonlySet<number> | null): boolean => {
@@ -53,7 +60,7 @@ function derive(search: number | null, selected: ReadonlySet<number>, preview: n
   return { search, selected, preview, active };
 }
 
-export function createEmphasis({ fields, markers: initialMarkers }: EmphasisOptions): EmphasisController {
+export function createEmphasis({ fields, overview, markers: initialMarkers }: EmphasisOptions): EmphasisController {
   let markers = initialMarkers;
   let search: number | null = null;
   let selected: ReadonlySet<number> = new Set();
@@ -61,16 +68,23 @@ export function createEmphasis({ fields, markers: initialMarkers }: EmphasisOpti
   let state = derive(search, selected, preview);
   const listeners = new Set<(s: EmphasisState) => void>();
 
+  /** A hovered legend preview alone leaves the emoji markers be; only a pinned crop clears them. */
+  const hidesMarkers = (): boolean => state.selected.size > 0;
+
   const applyTargets = (): void => {
-    fields.setEmphasis(state.active === null ? null : [...state.active]);
-    markers?.setEmphasis(state.active === null ? null : new Set(state.active));
+    const ids = state.active === null ? null : [...state.active];
+    fields.setEmphasis(ids);
+    overview.setHighlight(ids);
+    markers?.setHidden(hidesMarkers());
   };
 
   const update = (): void => {
     const next = derive(search, selected, preview);
     const targetsChanged = !sameSet(state.active, next.active);
+    const hiddenBefore = hidesMarkers();
     state = next;
     if (targetsChanged) applyTargets();
+    else if (hiddenBefore !== hidesMarkers()) markers?.setHidden(hidesMarkers());
     for (const fn of listeners) fn(state);
   };
 
@@ -102,7 +116,7 @@ export function createEmphasis({ fields, markers: initialMarkers }: EmphasisOpti
     },
     setMarkers(next) {
       markers = next;
-      if (state.active !== null) markers?.setEmphasis(new Set(state.active));
+      markers?.setHidden(hidesMarkers());
     },
     subscribe(fn) {
       listeners.add(fn);

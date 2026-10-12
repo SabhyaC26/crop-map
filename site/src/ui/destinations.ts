@@ -1,10 +1,10 @@
-import type { Map as MapLibreMap, PaddingOptions } from 'maplibre-gl';
+import type { Map as MapLibreMap } from 'maplibre-gl';
 import '../styles/places.css';
 import type { Crop } from '../data/crops';
+import { solveFrame, type FramePadding } from '../lib/frame';
 import { prefersReducedMotion } from '../lib/motion';
 import type { IconManifest, SearchPlace, SearchTarget } from './emphasis';
 import { cropImg, el, formatAcres, svg } from './format';
-import { createPins, type PlacePins } from './pins';
 import { resolveBbox, resolvePlaces } from './places';
 
 export interface Destinations {
@@ -17,6 +17,7 @@ export interface Destinations {
 interface DestinationsOptions {
   map: MapLibreMap;
   manifest: IconManifest;
+  cropPoints(cropId: number): readonly [number, number][];
   slot: HTMLElement;
 }
 
@@ -24,6 +25,8 @@ const MOBILE = window.matchMedia('(max-width: 639px)');
 const LEAVE_MS = 260;
 const SWIPE_PX = 38;
 const FIT_MAX_ZOOM = 10;
+/** Margin around the places' bbox so the lit-up farms nearby stay in frame. */
+const FIT_MARGIN = 0.12;
 const CHEVRON_RIGHT = 'm9 5 7 7-7 7';
 const CHEVRON_LEFT = 'm15 5-7 7 7 7';
 const FIT_ICON = ['M4 9V5h4', 'M20 9V5h-4', 'M4 15v4h4', 'M20 15v4h-4'];
@@ -36,13 +39,12 @@ interface Session {
   places: readonly SearchPlace[];
   card: HTMLElement;
   rows: HTMLButtonElement[];
-  pins: PlacePins;
   active: number | null;
   setActive(index: number | null): void;
   step(dir: 1 | -1): void;
 }
 
-export function createDestinations({ map, manifest, slot }: DestinationsOptions): Destinations {
+export function createDestinations({ map, manifest, cropPoints, slot }: DestinationsOptions): Destinations {
   let session: Session | null = null;
   let leaveTimer: number | undefined;
 
@@ -52,17 +54,29 @@ export function createDestinations({ map, manifest, slot }: DestinationsOptions)
   const topInset = (): number => slot.getBoundingClientRect().bottom;
 
   const fitOverview = (s: Session): void => {
-    const [w, south, e, n] = resolveBbox(s.target);
-    const padding: PaddingOptions = MOBILE.matches
-      ? { top: topInset() + 28, bottom: 88, left: 40, right: 72 }
-      : { top: topInset() + 36, bottom: 70, left: 90, right: 90 };
-    map.fitBounds(
-      [
-        [w, south],
-        [e, n],
-      ],
-      { padding, maxZoom: FIT_MAX_ZOOM, curve: 1.5, speed: 0.85, duration: duration(2200) },
-    );
+    const [bw, bs, be, bn] = resolveBbox(s.target);
+    // The places' bbox plus the crop's other region markers, so every lit-up farm cluster stays in frame.
+    const pts: [number, number][] = [[bw, bs], [be, bn], ...cropPoints(s.crop.cropId)];
+    const lngs = pts.map(([lng]) => lng);
+    const lats = pts.map(([, lat]) => lat);
+    const w = Math.min(...lngs);
+    const e = Math.max(...lngs);
+    const south = Math.min(...lats);
+    const n = Math.max(...lats);
+    // Keep the farms clear of the chip + card above and (on phones) the zoom buttons at the lower right.
+    const padding: FramePadding = MOBILE.matches
+      ? { top: topInset() + 14, bottom: 30, left: 24, right: 66 }
+      : { top: topInset() + 14, bottom: 40, left: 90, right: 90 };
+    const dLng = (e - w) * FIT_MARGIN;
+    const dLat = (n - south) * FIT_MARGIN;
+    const corners: [[number, number], [number, number], [number, number], [number, number]] = [
+      [w - dLng, south - dLat],
+      [e + dLng, south - dLat],
+      [e + dLng, n + dLat],
+      [w - dLng, n + dLat],
+    ];
+    const camera = solveFrame(map, [corners[0], corners[2]], corners, padding, FIT_MAX_ZOOM);
+    map.flyTo({ ...camera, pitch: 0, bearing: 0, curve: 1.5, speed: 0.85, duration: duration(2200) });
   };
 
   const flyToPlace = (place: SearchPlace): void => {
@@ -96,10 +110,8 @@ export function createDestinations({ map, manifest, slot }: DestinationsOptions)
 
   const teardownSession = (): void => {
     if (!session) return;
-    const { card, pins } = session;
+    const { card } = session;
     session = null;
-    document.documentElement.removeAttribute('data-places');
-    pins.destroy();
     card.classList.add('is-leaving');
     window.setTimeout(() => card.remove(), duration(LEAVE_MS));
   };
@@ -159,7 +171,6 @@ export function createDestinations({ map, manifest, slot }: DestinationsOptions)
       places,
       card,
       rows,
-      pins: createPins(map, crop, manifest, places, (i) => select(i)),
       active: null,
       step(dir) {
         const n = places.length;
@@ -168,7 +179,6 @@ export function createDestinations({ map, manifest, slot }: DestinationsOptions)
       },
       setActive(index) {
         s.active = index;
-        s.pins.setActive(index);
         rows.forEach((row, i) => {
           row.setAttribute('aria-pressed', String(i === index));
           row.classList.toggle('is-active', i === index);
@@ -257,7 +267,6 @@ export function createDestinations({ map, manifest, slot }: DestinationsOptions)
       teardownSession();
       const s = build(crop, target);
       session = s;
-      document.documentElement.toggleAttribute('data-places', true);
       s.setActive(null);
       if (s.places.length === 1 && s.places[0]) {
         s.setActive(0);

@@ -67,7 +67,7 @@ if (!only || only === 'search') {
   const page = await open({ width: 1440, height: 900 });
   await searchCrop(page, 'avocado');
   await settle(page, 3200);
-  console.log('places', await page.locator('.dc-row').count(), 'pins', await page.locator('.dp').count());
+  console.log('places', await page.locator('.dc-row').count());
   await shot(page, 'search-places');
   await page.screenshot({ path: '/tmp/places-detail.png', clip: { x: 340, y: 0, width: 760, height: 520 } });
   await page.locator('.dc-row').nth(1).click();
@@ -80,7 +80,7 @@ if (!only || only === 'search') {
   console.log('legend visible', await page.locator('.lg-root').getAttribute('data-visible'), 'pressed', await page.locator('.lg-row[aria-pressed="true"]').allTextContents());
   await page.locator('.cs-chip-clear').click();
   await page.waitForTimeout(600);
-  console.log('after clear: card', await page.locator('.dc').count(), 'pins', await page.locator('.dp').count());
+  console.log('after clear: card', await page.locator('.dc').count());
   await page.context().close();
 }
 

@@ -1,5 +1,6 @@
 import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
+import { frameInstant, type FramePadding } from './lib/frame';
 import { buildBasemapStyle } from './style/basemap';
 import { mountCompassRose } from './ui/compass-rose';
 
@@ -20,46 +21,15 @@ const CA_EXTREMES: readonly [number, number][] = [
   [-120.47, 34.45],
 ];
 
-interface FramePadding {
-  top: number;
-  bottom: number;
-  left: number;
-  right: number;
-}
-
-/** Room reserved for the title/search pills above and the season panel below (and zoom buttons on phones). */
+/** Room reserved for the search pill above (and the zoom buttons on the right). Nothing else floats over the map at state zoom. */
 const framePadding = (width: number): FramePadding =>
   width <= 720
-    ? { top: 122, bottom: 172, left: 42, right: 70 }
-    : { top: 88, bottom: 182, left: 40, right: 56 };
+    ? { top: 96, bottom: 44, left: 18, right: 18 }
+    : { top: 84, bottom: 34, left: 40, right: 64 };
 
-/**
- * Fits California into the free area between the UI. fitBounds assumes a Mercator camera and the globe
- * renders larger, so it is only used for the first guess; the zoom is then refined from projected outline points.
- */
+/** Fits California into the free area between the UI. */
 function frameCalifornia(map: maplibregl.Map, container: HTMLElement): void {
-  const { clientWidth: w, clientHeight: h } = container;
-  const pad = framePadding(w);
-  map.fitBounds(CA_BOUNDS, { padding: pad, duration: 0 });
-  const free = { w: w - pad.left - pad.right, h: h - pad.top - pad.bottom };
-  const extent = (): { minX: number; maxX: number; minY: number; maxY: number } => {
-    const pts = CA_EXTREMES.map(([lng, lat]) => map.project([lng, lat]));
-    return {
-      minX: Math.min(...pts.map((p) => p.x)),
-      maxX: Math.max(...pts.map((p) => p.x)),
-      minY: Math.min(...pts.map((p) => p.y)),
-      maxY: Math.max(...pts.map((p) => p.y)),
-    };
-  };
-  for (let i = 0; i < 3; i++) {
-    const e = extent();
-    const scale = Math.min(free.w / (e.maxX - e.minX), free.h / (e.maxY - e.minY));
-    map.jumpTo({ zoom: map.getZoom() + Math.log2(scale) });
-    const f = extent();
-    const dx = pad.left + free.w / 2 - (f.minX + f.maxX) / 2;
-    const dy = pad.top + free.h / 2 - (f.minY + f.maxY) / 2;
-    map.jumpTo({ center: map.unproject([w / 2 - dx, h / 2 - dy]) });
-  }
+  frameInstant(map, CA_BOUNDS, CA_EXTREMES, framePadding(container.clientWidth));
 }
 
 const protocol = new Protocol();
