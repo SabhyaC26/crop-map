@@ -1,0 +1,48 @@
+:root {
+  --font: 'Nunito Variable', 'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
+
+  --ink: #33365c;
+  --ink-soft: #7a7da6;
+  --ink-faint: #a7a9c8;
+
+  --sky: #7cc8ff;
+  --mint: #8fe3c0;
+  --leaf: #7fd96b;
+  --butter: #ffe08a;
+  --peach: #ffb48a;
+  --pink: #ff93bd;
+  --lavender: #b9a8ff;
+
+  --glass: rgba(255, 255, 255, 0.62);
+  --glass-strong: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-blur: blur(18px) saturate(1.7);
+
+  --r-pill: 999px;
+  --r-lg: 26px;
+  --r-md: 18px;
+  --r-sm: 12px;
+
+  --shadow-sm: 0 1px 2px rgba(70, 76, 130, 0.08), 0 3px 8px rgba(70, 76, 130, 0.08);
+  --shadow-md:
+    0 2px 4px rgba(70, 76, 130, 0.06), 0 8px 18px rgba(70, 76, 130, 0.12),
+    0 18px 40px rgba(70, 76, 130, 0.12);
+  --shadow-lg:
+    0 4px 8px rgba(70, 76, 130, 0.08), 0 16px 32px rgba(70, 76, 130, 0.16),
+    0 32px 64px rgba(70, 76, 130, 0.16);
+  --inner-glow: inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(120, 130, 200, 0.08);
+
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 0.18s;
+  --dur: 0.38s;
+  --dur-slow: 0.7s;
+
+  --space: 16px;
+  --edge: max(16px, env(safe-area-inset-left));
+  --safe-top: max(14px, env(safe-area-inset-top));
+  --safe-bottom: max(16px, env(safe-area-inset-bottom));
+
+  --z-map-ui: 10;
+  --z-popup: 50;
+}
