@@ -1,6 +1,8 @@
 import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
+import { startStorybookMotion } from './layers/storybook-motion';
 import { buildBasemapStyle } from './style/basemap';
+import { mountCompassRose } from './ui/compass-rose';
 
 export const CA_BOUNDS: maplibregl.LngLatBoundsLike = [
   [-124.6, 32.4],
@@ -30,6 +32,8 @@ export function createMap(container: HTMLElement): maplibregl.Map {
   });
 
   map.once('load', () => {
+    startStorybookMotion(map);
+    mountCompassRose(container.parentElement ?? container, map);
     const attrib = container.querySelector('.maplibregl-ctrl-attrib');
     attrib?.classList.remove('maplibregl-compact-show');
     attrib?.removeAttribute('open');
