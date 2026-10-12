@@ -38,6 +38,10 @@ SEARCH_ZOOM_WIDE = 10
 # A crop covering at least this many coarse cells (each >= COARSE.min_acres of it) is "wide".
 WIDE_FOOTPRINT_CELLS = 8
 PLACE_MAX_KM = 35.0
+COARSE_PROMINENT_KM = 45.0
+PROMINENT = 1
+DIVERSITY_MAX_USED = 2  # a coarse top crop may be used by this many higher-ranked regions before we look for an alternative
+DIVERSITY_MIN_SHARE = 0.35  # alternative crop needs this share of the leader's real acres in the region
 VALLEY_KINDS = frozenset({"valley"})
 COORD_DECIMALS = 5
 EARTH_KM = 6371.0088
@@ -57,7 +61,7 @@ class Level:
     snap_km: float  # snap the centroid onto a field if no field of the crop lies this close
 
 
-COARSE = Level("coarse", 4, 8000.0, 4, 45.0, 0.6, 3.0)
+COARSE = Level("coarse", 4, 6000.0, 4, 45.0, 1.0, 3.0)
 FINE = Level("fine", 5, 3000.0, 4, 15.0, 0.85, 1.0)
 
 
@@ -67,6 +71,7 @@ class Place:
     lon: float
     lat: float
     kind: str
+    prominence: int = 2
 
 
 @dataclass
@@ -78,6 +83,7 @@ class Region:
     cells: frozenset[str]
     county: str
     label: str = ""
+    switched_from: int | None = None
     id: str = ""
     parent: str | None = None
     rank: int = 0
@@ -126,9 +132,12 @@ def cell_ids(points: pd.DataFrame, res: int) -> pd.Series:
     )
 
 
-def featured_weights(crops: list[Crop], statewide_acres: dict[int, float] | None = None) -> dict[int, float]:
+def featured_weights(
+    crops: list[Crop], statewide_acres: dict[int, float] | None = None, *, allow_mixed_pasture: bool = True
+) -> dict[int, float]:
     """crop_id -> weight for crops allowed to be a region's top crop."""
-    allowed = [c for c in crops if c.icon not in EXCLUDED_ICONS and c.dwr_code != NATIVE_PASTURE]
+    excluded_codes = {NATIVE_PASTURE} | (set() if allow_mixed_pasture else {MIXED_PASTURE})
+    allowed = [c for c in crops if c.icon not in EXCLUDED_ICONS and c.dwr_code not in excluded_codes]
     totals = {c.crop_id: (statewide_acres or {}).get(c.crop_id, 0.0) for c in allowed}
     biggest = max(totals.values(), default=0.0)
     weights: dict[int, float] = {}
@@ -214,33 +223,75 @@ def region_point(points: pd.DataFrame, cells: frozenset[str], res: int, snap_km:
     return lon, lat
 
 
+def cell_index(points: pd.DataFrame, cell_col: str) -> dict[str, np.ndarray]:
+    """cell -> positional row indices into `points`."""
+    return dict(points.groupby(cell_col).indices)
+
+
+def crop_members(points: pd.DataFrame, index: dict[str, np.ndarray], cells: frozenset[str]) -> pd.DataFrame:
+    return points.iloc[np.concatenate([index[cell] for cell in cells if cell in index])]
+
+
+def make_region(
+    points: pd.DataFrame, index: dict[str, np.ndarray], cells: frozenset[str], crop_id: int, level: Level
+) -> Region:
+    """Marker for `crop_id` over `cells`: acreage-weighted centroid snapped onto farmland."""
+    members = crop_members(points, index, cells)
+    members = members[members["crop_id"] == crop_id]
+    lon, lat = region_point(members, cells, level.res, level.snap_km)
+    counties = members.groupby("county")["acres"].sum()
+    return Region(
+        crop_id=int(crop_id),
+        acres=float(members["acres"].sum()),
+        lon=lon,
+        lat=lat,
+        cells=cells,
+        county=str(counties.idxmax()),
+    )
+
+
 def build_regions(
-    points: pd.DataFrame, top: pd.DataFrame, level: Level, cell_col: str
+    points: pd.DataFrame, top: pd.DataFrame, level: Level, index: dict[str, np.ndarray]
 ) -> list[Region]:
     """Merge adjacent same-crop cells, cap their size, and place a marker per chunk."""
     regions: list[Region] = []
-    by_cell = points.groupby(cell_col)
-    cell_groups = {cell: idx for cell, idx in by_cell.indices.items()}
     for crop_id, group in top.groupby("crop_id"):
         for component in connected_components(set(group["cell"])):
             for chunk in split_cells(component, level.max_cells):
-                cells = frozenset(chunk)
-                rows = np.concatenate([cell_groups[cell] for cell in chunk])
-                members = points.iloc[rows]
-                members = members[members["crop_id"] == crop_id]
-                lon, lat = region_point(members, cells, level.res, level.snap_km)
-                counties = members.groupby("county")["acres"].sum()
-                regions.append(
-                    Region(
-                        crop_id=int(crop_id),
-                        acres=float(members["acres"].sum()),
-                        lon=lon,
-                        lat=lat,
-                        cells=cells,
-                        county=str(counties.idxmax()),
-                    )
-                )
+                regions.append(make_region(points, index, frozenset(chunk), int(crop_id), level))
     return regions
+
+
+def diversify(
+    regions: list[Region],
+    points: pd.DataFrame,
+    index: dict[str, np.ndarray],
+    weights: dict[int, float],
+    level: Level,
+) -> list[Region]:
+    """Rank-ordered pass: a crop already topping DIVERSITY_MAX_USED bigger regions yields to the best
+    alternative featured crop that has >= DIVERSITY_MIN_SHARE of the leader's real acres in the region."""
+    used: Counter[int] = Counter()
+    result: list[Region] = []
+    for region in sorted(regions, key=lambda r: (-r.acres, r.crop_id, r.lon)):
+        if used[region.crop_id] >= DIVERSITY_MAX_USED:
+            members = crop_members(points, index, region.cells)
+            acres = members[members["crop_id"].isin(weights)].groupby("crop_id")["acres"].sum()
+            alternatives = [
+                (crop_id, total)
+                for crop_id, total in acres.items()
+                if crop_id != region.crop_id
+                and total >= DIVERSITY_MIN_SHARE * region.acres
+                and used[crop_id] < DIVERSITY_MAX_USED
+            ]
+            if alternatives:
+                crop_id, _ = max(alternatives, key=lambda item: (item[1] * weights[item[0]], -item[0]))
+                switched = make_region(points, index, region.cells, int(crop_id), level)
+                switched.switched_from = region.crop_id
+                region = switched
+        used[region.crop_id] += 1
+        result.append(region)
+    return result
 
 
 def enforce_spacing(regions: list[Region], min_km: float) -> list[Region]:
@@ -257,7 +308,10 @@ def enforce_spacing(regions: list[Region], min_km: float) -> list[Region]:
 
 def load_places(path: Path = PLACES_CSV) -> list[Place]:
     with path.open(newline="", encoding="utf-8") as handle:
-        return [Place(row["name"], float(row["lon"]), float(row["lat"]), row["kind"]) for row in csv.DictReader(handle)]
+        return [
+            Place(row["name"], float(row["lon"]), float(row["lat"]), row["kind"], int(row["prominence"]))
+            for row in csv.DictReader(handle)
+        ]
 
 
 def place_candidates(lon: float, lat: float, places: list[Place], valley_bias: float) -> list[tuple[Place, float]]:
@@ -297,27 +351,65 @@ def label_regions(
         region.label = label
 
 
-def label_point(
-    lon: float, lat: float, county: str, places: list[Place], valley_bias: float = COARSE.valley_bias
-) -> str:
-    candidates = place_candidates(lon, lat, places, valley_bias)
-    return candidates[0][0].name if candidates else county_label(county)
+def coarse_label_candidates(lon: float, lat: float, county: str, places: list[Place]) -> list[str]:
+    """State-scale names, best first: prominent places within 45 km by distance, else other places within 35 km."""
+    ranked = sorted(
+        (float(haversine_km(lat, lon, place.lat, place.lon)), place) for place in places
+    )
+    prominent = [place.name for km, place in ranked if place.prominence == PROMINENT and km <= COARSE_PROMINENT_KM]
+    if prominent:
+        return prominent
+    others = [place.name for km, place in ranked if place.prominence != PROMINENT and km <= PLACE_MAX_KM]
+    return others or [county_label(county)]
+
+
+def label_point(lon: float, lat: float, county: str, places: list[Place]) -> str:
+    return coarse_label_candidates(lon, lat, county, places)[0]
+
+
+def label_coarse(regions: list[Region], places: list[Place]) -> list[Region]:
+    """Largest first; a taken name moves to the next prominent place, then the county, else the smaller marker drops."""
+    taken: set[str] = set()
+    kept: list[Region] = []
+    for region in sorted(regions, key=lambda r: (-r.acres, r.crop_id, r.lon)):
+        names = coarse_label_candidates(region.lon, region.lat, region.county, places)
+        free = [name for name in names if name not in taken]
+        if not free and county_label(region.county) not in taken:
+            free = [county_label(region.county)]
+        if not free:
+            continue
+        region.label = free[0]
+        taken.add(region.label)
+        kept.append(region)
+    return kept
 
 
 # --- Level assembly -------------------------------------------------------------------
 
 
-def compute_level(
-    points: pd.DataFrame, level: Level, weights: dict[int, float], places: list[Place], counties: dict
-) -> list[Region]:
-    cell_col = f"cell{level.res}"
-    top = top_crop_per_cell(points, cell_col, weights, level.min_acres)
-    regions = enforce_spacing(build_regions(points, top, level, cell_col), level.min_spacing_km)
-    label_regions(regions, places, level.valley_bias, counties)
-    prefix = level.name[0]
-    for rank, region in enumerate(sorted(regions, key=lambda r: (-r.acres, r.crop_id, r.lon)), start=1):
+def rank_regions(regions: list[Region], prefix: str) -> list[Region]:
+    ordered = sorted(regions, key=lambda r: (-r.acres, r.crop_id, r.lon))
+    for rank, region in enumerate(ordered, start=1):
         region.rank, region.id = rank, f"{prefix}{rank}"
-    return sorted(regions, key=lambda r: r.rank)
+    return ordered
+
+
+def compute_fine(points: pd.DataFrame, weights: dict[int, float], places: list[Place], counties: dict) -> list[Region]:
+    cell_col = f"cell{FINE.res}"
+    top = top_crop_per_cell(points, cell_col, weights, FINE.min_acres)
+    index = cell_index(points, cell_col)
+    regions = enforce_spacing(build_regions(points, top, FINE, index), FINE.min_spacing_km)
+    label_regions(regions, places, FINE.valley_bias, counties)
+    return rank_regions(regions, "f")
+
+
+def compute_coarse(points: pd.DataFrame, weights: dict[int, float], places: list[Place]) -> list[Region]:
+    cell_col = f"cell{COARSE.res}"
+    top = top_crop_per_cell(points, cell_col, weights, COARSE.min_acres)
+    index = cell_index(points, cell_col)
+    regions = enforce_spacing(build_regions(points, top, COARSE, index), COARSE.min_spacing_km)
+    regions = enforce_spacing(diversify(regions, points, index, weights, COARSE), COARSE.min_spacing_km)
+    return rank_regions(label_coarse(regions, places), "c")
 
 
 def assign_parents(fine: list[Region], coarse: list[Region]) -> None:
@@ -395,14 +487,16 @@ def regions_document(coarse: list[Region], fine: list[Region], search: dict[str,
 def run(points: pd.DataFrame, crops: list[Crop], places: list[Place]) -> tuple[dict, list[Region], list[Region], dict]:
     for res in (COARSE.res, FINE.res, SEARCH_RES):
         points[f"cell{res}"] = cell_ids(points, res)
-    weights = featured_weights(crops, points.groupby("crop_id")["acres"].sum().to_dict())
+    statewide = points.groupby("crop_id")["acres"].sum().to_dict()
+    weights = featured_weights(crops, statewide)
+    coarse_weights = featured_weights(crops, statewide, allow_mixed_pasture=False)
     counties = {
         county: weighted_point(group) for county, group in points.groupby("county") if county and group["acres"].sum() > 0
     }
-    coarse = compute_level(points, COARSE, weights, places, counties)
-    fine = compute_level(points, FINE, weights, places, counties)
+    coarse = compute_coarse(points, coarse_weights, places)
+    fine = compute_fine(points, weights, places, counties)
     assign_parents(fine, coarse)
-    top_coarse = top_crop_per_cell(points, f"cell{COARSE.res}", weights, COARSE.min_acres)
+    top_coarse = top_crop_per_cell(points, f"cell{COARSE.res}", coarse_weights, COARSE.min_acres)
     search = compute_search(points, [c.crop_id for c in crops], wide_crops(top_coarse), places)
     return regions_document(coarse, fine, search), coarse, fine, search
 
@@ -498,7 +592,7 @@ def write_doc(coarse: list[Region], fine: list[Region], crops: list[Crop], place
         "1. One representative point (inside the polygon) per field, assigned to H3 cells at res 4 (coarse, ~1,770 km2)",
         "   and res 5 (fine, ~250 km2); acres are summed per (cell, crop).",
         "2. Only featured crops can win a cell: icons `seedling`/`herb` and Native pasture (P4) are excluded; Mixed",
-        f"   pasture (P3) competes at x{MIXED_PASTURE_WEIGHT} weight. Every crop also gets a mild specialty boost",
+        f"   pasture (P3) is excluded at coarse level and competes at x{MIXED_PASTURE_WEIGHT} weight at fine level. Every crop also gets a mild specialty boost",
         f"   (largest crop acres / crop acres) ** {SPECIALTY_EXPONENT} so strawberries or dates can win their home cells over",
         "   almonds/corn. A cell is kept only if the winner's real acres reach",
         f"   the threshold (coarse {COARSE.min_acres:,.0f} ac, fine {FINE.min_acres:,.0f} ac).",
@@ -510,11 +604,15 @@ def write_doc(coarse: list[Region], fine: list[Region], crops: list[Crop], place
         "   contributing field point.",
         f"5. Minimum spacing: coarse {COARSE.min_spacing_km:g} km, fine {FINE.min_spacing_km:g} km; the smaller of two too-close",
         "   markers is dropped.",
-        "6. Labels: nearest curated place within 35 km (valley names count at x"
-        f"{COARSE.valley_bias} / x{FINE.valley_bias} distance for coarse / fine), unique per level (next-nearest place, else a compass",
-        "   prefix), else `<County> County`.",
-        "7. `parent` (fine): the nearest coarse marker among those in the fine marker's res-4 neighbourhood, else the nearest overall.",
-        "8. `search`: per crop the densest res-6 cell (~36 km2), centre = acreage-weighted point snapped to a field; zoom 11,",
+        f"6. Coarse diversity (rank order): a crop already topping {DIVERSITY_MAX_USED} bigger coarse regions yields to the best alternative",
+        f"   featured crop (not itself overused) holding >= {DIVERSITY_MIN_SHARE:.0%} of the leader's real acres in that region; the marker is",
+        "   recomputed for the new crop and spacing is re-enforced.",
+        f"7. Coarse labels: nearest prominence-1 place within {COARSE_PROMINENT_KM:g} km, else nearest other place within {PLACE_MAX_KM:g} km, else",
+        "   `<County> County`; a taken name moves to the next prominent place, then the county, else the smaller marker is dropped (no compass words).",
+        f"   Fine labels: nearest place within {PLACE_MAX_KM:g} km (valleys count at x{FINE.valley_bias} distance), unique per level",
+        "   (next-nearest place, else a compass prefix), else `<County> County`.",
+        "8. `parent` (fine): the nearest coarse marker among those in the fine marker's res-4 neighbourhood, else the nearest overall.",
+        "9. `search`: per crop the densest res-6 cell (~36 km2), centre = acreage-weighted point snapped to a field; zoom 11,",
         f"   or 10 for crops that top at least {WIDE_FOOTPRINT_CELLS} coarse cells (huge contiguous footprints).",
         "",
         "## Coarse regions",
@@ -523,6 +621,11 @@ def write_doc(coarse: list[Region], fine: list[Region], crops: list[Crop], place
         "|---|-------|------|------:|",
     ]
     lines += [f"| {r.rank} | {r.label} | {names.get(r.crop_id, r.crop_id)} | {r.acres:,.0f} |" for r in coarse]
+    switched = [r for r in coarse if r.switched_from is not None]
+    lines += ["", f"Distinct coarse crops: **{len({r.crop_id for r in coarse})}**. Diversity switches ({len(switched)}):", ""]
+    lines += [
+        f"- {r.label}: {names.get(r.switched_from, r.switched_from)} -> {names.get(r.crop_id, r.crop_id)}" for r in switched
+    ] or ["- none"]
     lines += ["", "## Counts", "", "| Level | Markers |", "|---|---:|", f"| coarse | {len(coarse)} |", f"| fine | {len(fine)} |"]
     crop_counts = Counter(names.get(r.crop_id, str(r.crop_id)) for r in fine)
     lines += ["", "Fine markers by crop: " + ", ".join(f"{name} {n}" for name, n in crop_counts.most_common()) + "."]

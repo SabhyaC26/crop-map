@@ -40,6 +40,12 @@ def test_featured_weights_exclude_seedling_herb_and_native_pasture():
     assert weights[IDS["D12"]] == 1.0
 
 
+def test_coarse_weights_exclude_mixed_pasture():
+    coarse = regions.featured_weights(LOOKUP, allow_mixed_pasture=False)
+    assert IDS["P3"] not in coarse and IDS["P4"] not in coarse
+    assert IDS["P3"] in regions.featured_weights(LOOKUP)
+
+
 def test_specialty_weight_favours_small_crops():
     weights = regions.featured_weights(LOOKUP, {IDS["D12"]: 1_000_000.0, IDS["T20"]: 10_000.0})
     assert weights[IDS["D12"]] == 1.0
@@ -107,13 +113,45 @@ def test_spacing_drops_the_smaller_close_marker():
     assert [r.acres for r in kept] == [50, 5]
 
 
-def test_label_prefers_valley_then_county_fallback():
+def test_coarse_label_prefers_prominent_then_other_then_county():
     places = [
-        regions.Place("Smalltown", -120.00, 37.00, "town"),
-        regions.Place("Big Valley", -120.05, 37.00, "valley"),
+        regions.Place("Near Hamlet", -120.00, 37.00, "town", 2),
+        regions.Place("Famous City", -120.30, 37.00, "town", 1),  # ~27 km away
+        regions.Place("Far City", -121.00, 37.00, "town", 1),
     ]
-    assert regions.label_point(-120.03, 37.0, "Fresno", places, valley_bias=0.5) == "Big Valley"
+    assert regions.label_point(-120.0, 37.0, "Fresno", places) == "Famous City"
+    assert regions.label_point(-120.2, 37.0, "Fresno", places[:1]) == "Near Hamlet"
     assert regions.label_point(-110.0, 37.0, "Fresno", places) == "Fresno County"
+
+
+def test_label_coarse_dedups_without_compass_words():
+    places = [regions.Place("Only City", -120.0, 37.0, "town", 1)]
+    found = [regions.Region(1, 100 - 10 * i, -120.0 + i * 0.3, 37.0, frozenset(), "Fresno") for i in range(4)]
+    kept = regions.label_coarse(found, places)
+    labels = [r.label for r in kept]
+    assert labels == ["Only City", "Fresno County"]  # third+ duplicates drop
+    assert not any(word in label for label in labels for word in ("North", "South", "East", "West"))
+
+
+def test_diversify_switch_requires_share_threshold():
+    almond, rice = IDS["D12"], IDS["R1"]
+    # One res-4 cell holds both crops; two earlier almond regions already exist elsewhere.
+    base = [(almond, -123.0 + i * 1.5, 37.0, 5000.0) for i in range(2)]
+    for share, expect_switch in ((0.40, True), (0.30, False)):
+        rows = [*base, (almond, -119.0, 37.0, 4000.0), (rice, -119.0, 37.0, 4000.0 * share)]
+        points = _points(rows)
+        index = regions.cell_index(points, "cell4")
+        weights = {almond: 1.0, rice: 1.0}
+        level = regions.COARSE
+        built = [
+            regions.make_region(points, index, frozenset({points["cell4"].iloc[i]}), almond, level) for i in range(3)
+        ]
+        result = regions.diversify(built, points, index, weights, level)
+        if expect_switch:
+            third = next(r for r in result if r.switched_from is not None)
+            assert third.crop_id == rice and third.switched_from == almond and third.acres == 1600.0
+        else:
+            assert all(r.switched_from is None for r in result)
 
 
 def test_label_regions_are_unique():
@@ -126,6 +164,7 @@ def test_label_regions_are_unique():
 
 def test_places_csv_is_wellformed():
     places = regions.load_places()
+    assert {p.prominence for p in places} == {1, 2}
     assert 80 <= len(places) <= 200
     assert len({p.name for p in places}) == len(places)
     assert all(-125 < p.lon < -114 and 32 < p.lat < 42.5 for p in places)
@@ -192,3 +231,18 @@ def test_marker_counts_within_targets():
     document = _load_document()
     assert 20 <= len(document["coarse"]["features"]) <= 35
     assert 70 <= len(document["fine"]["features"]) <= 160
+
+
+@needs_output
+def test_coarse_art_direction():
+    document = _load_document()
+    names = {crop.crop_id: crop.name for crop in LOOKUP}
+    coarse = [f["properties"] for f in document["coarse"]["features"]]
+    assert IDS["P3"] not in {p["crop_id"] for p in coarse}
+    assert len({p["crop_id"] for p in coarse}) >= 10, {names[p["crop_id"]] for p in coarse}
+    assert len({p["label"] for p in coarse}) == len(coarse)
+    assert not any(label.split()[0] in {"North", "South", "East", "West", "North-West", "North-East", "South-West", "South-East"} for label in (p["label"] for p in coarse))
+    counts = {}
+    for p in coarse:
+        counts[p["crop_id"]] = counts.get(p["crop_id"], 0) + 1
+    assert max(counts.values()) <= 4

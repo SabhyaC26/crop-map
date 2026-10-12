@@ -229,61 +229,53 @@
 <circle cx="213.3" cy="284.3" r="7.5" fill="#4fc3d9" stroke="#333" stroke-width="1"/>
 <text x="222.8" y="287.6333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Colusa · 342k</text>
 <circle cx="351.6" cy="543.5" r="7.5" fill="#f7a8c4" stroke="#333" stroke-width="1"/>
-<text x="361.1" y="546.8333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Kerman · 294k</text>
+<text x="361.1" y="546.8333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Madera · 294k</text>
 <circle cx="327.3" cy="479.5" r="7.5" fill="#f7a8c4" stroke="#333" stroke-width="1"/>
 <text x="336.8" y="482.8333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Merced · 272k</text>
 <circle cx="282.4" cy="439.0" r="7.5" fill="#f7a8c4" stroke="#333" stroke-width="1"/>
 <text x="291.9" y="442.3333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Modesto · 190k</text>
 <circle cx="395.2" cy="622.7" r="7.5" fill="#a8d672" stroke="#333" stroke-width="1"/>
-<text x="404.7" y="626.0333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Corcoran · 166k</text>
-<circle cx="426.4" cy="571.6" r="7.5" fill="#ffb347" stroke="#333" stroke-width="1"/>
-<text x="435.9" y="574.9333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Visalia · 162k</text>
+<text x="404.7" y="626.0333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Delano · 166k</text>
 <circle cx="722.7" cy="916.6" r="7.5" fill="#5fd4b6" stroke="#333" stroke-width="1"/>
 <text x="732.2" y="919.9333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Imperial Valley · 151k</text>
-<circle cx="417.8" cy="658.0" r="7.5" fill="#f7a8c4" stroke="#333" stroke-width="1"/>
-<text x="427.3" y="661.3333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Shafter · 116k</text>
 <circle cx="243.3" cy="318.6" r="7.5" fill="#4fc3d9" stroke="#333" stroke-width="1"/>
-<text x="252.8" y="321.93333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Knights Landing · 104k</text>
-<circle cx="198.0" cy="241.1" r="7.5" fill="#f7a8c4" stroke="#333" stroke-width="1"/>
-<text x="207.5" y="244.43333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Orland · 90k</text>
+<text x="252.8" y="321.93333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Yuba City · 104k</text>
+<circle cx="436.5" cy="589.4" r="7.5" fill="#ffb347" stroke="#333" stroke-width="1"/>
+<text x="446.0" y="592.7333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Porterville · 90k</text>
 <circle cx="265.8" cy="389.9" r="7.5" fill="#a98ae6" stroke="#333" stroke-width="1"/>
 <text x="275.3" y="393.2333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Lodi · 89k</text>
+<circle cx="413.2" cy="547.7" r="7.5" fill="#ffb347" stroke="#333" stroke-width="1"/>
+<text x="422.7" y="551.0333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Visalia · 80k</text>
 <circle cx="171.5" cy="369.6" r="7.5" fill="#a98ae6" stroke="#333" stroke-width="1"/>
 <text x="181.0" y="372.93333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Napa Valley · 72k</text>
 <circle cx="298.7" cy="628.1" r="7.5" fill="#a98ae6" stroke="#333" stroke-width="1"/>
 <text x="308.2" y="631.4333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Paso Robles · 72k</text>
+<circle cx="203.4" cy="238.1" r="7.5" fill="#d9a066" stroke="#333" stroke-width="1"/>
+<text x="212.9" y="241.43333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Chico · 71k</text>
 <circle cx="243.1" cy="544.9" r="7.5" fill="#8be05a" stroke="#333" stroke-width="1"/>
 <text x="252.6" y="548.2333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Salinas Valley · 65k</text>
 <circle cx="130.0" cy="334.7" r="7.5" fill="#a98ae6" stroke="#333" stroke-width="1"/>
 <text x="139.5" y="338.0333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Alexander Valley · 48k</text>
 <circle cx="790.9" cy="854.5" r="7.5" fill="#5fd4b6" stroke="#333" stroke-width="1"/>
 <text x="800.4" y="857.8333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Palo Verde Valley · 45k</text>
-<circle cx="241.0" cy="16.8" r="7.5" fill="#5fd4b6" stroke="#333" stroke-width="1"/>
-<text x="250.5" y="20.133333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Tulelake · 36k</text>
-<circle cx="212.3" cy="347.0" r="7.5" fill="#f7a8c4" stroke="#333" stroke-width="1"/>
-<text x="221.8" y="350.3333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Esparto · 33k</text>
-<circle cx="30.7" cy="146.8" r="7.5" fill="#b5cc98" stroke="#333" stroke-width="1"/>
-<text x="40.2" y="150.13333333333335" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Humboldt County · 28k</text>
-<circle cx="318.8" cy="179.4" r="7.5" fill="#b5cc98" stroke="#333" stroke-width="1"/>
-<text x="328.3" y="182.73333333333335" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Honey Lake Valley · 21k</text>
+<circle cx="241.4" cy="18.3" r="7.5" fill="#e6d794" stroke="#333" stroke-width="1"/>
+<text x="250.9" y="21.633333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Tulelake · 22k</text>
+<circle cx="591.5" cy="876.3" r="7.5" fill="#5aa878" stroke="#333" stroke-width="1"/>
+<text x="601.0" y="879.6333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Temecula Valley · 19k</text>
 <circle cx="444.3" cy="776.4" r="7.5" fill="#5aa878" stroke="#333" stroke-width="1"/>
-<text x="453.8" y="779.7333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Santa Paula · 18k</text>
-<circle cx="274.4" cy="86.8" r="7.5" fill="#b5cc98" stroke="#333" stroke-width="1"/>
-<text x="283.9" y="90.13333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Big Valley · 18k</text>
-<circle cx="423.4" cy="387.9" r="7.5" fill="#b5cc98" stroke="#333" stroke-width="1"/>
-<text x="432.9" y="391.2333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Mono County · 14k</text>
-<circle cx="183.9" cy="170.0" r="7.5" fill="#b5cc98" stroke="#333" stroke-width="1"/>
-<text x="193.4" y="173.33333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Redding · 13k</text>
-<circle cx="596.1" cy="883.4" r="7.5" fill="#5aa878" stroke="#333" stroke-width="1"/>
-<text x="605.6" y="886.7333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Valley Center · 12k</text>
-<circle cx="343.0" cy="727.8" r="7.5" fill="#a98ae6" stroke="#333" stroke-width="1"/>
-<text x="352.5" y="731.1333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Santa Maria Valley · 12k</text>
-<circle cx="402.7" cy="345.1" r="7.5" fill="#b5cc98" stroke="#333" stroke-width="1"/>
-<text x="412.2" y="348.43333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">North-West Mono County · 10k</text>
-<circle cx="459.8" cy="682.9" r="7.5" fill="#ffb347" stroke="#333" stroke-width="1"/>
-<text x="469.3" y="686.2333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Arvin · 10k</text>
-<circle cx="330.8" cy="64.3" r="7.5" fill="#5fd4b6" stroke="#333" stroke-width="1"/>
-<text x="340.3" y="67.63333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Surprise Valley · 9,579</text>
+<text x="453.8" y="779.7333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Oxnard Plain · 18k</text>
+<circle cx="215.3" cy="349.7" r="7.5" fill="#f2574a" stroke="#333" stroke-width="1"/>
+<text x="224.8" y="353.0333333333333" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Woodland · 16k</text>
+<circle cx="324.8" cy="87.1" r="7.5" fill="#e6d794" stroke="#333" stroke-width="1"/>
+<text x="334.3" y="90.43333333333332" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Lassen County · 14k</text>
 <circle cx="138.4" cy="51.7" r="7.5" fill="#5fd4b6" stroke="#333" stroke-width="1"/>
 <text x="147.9" y="55.03333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Scott Valley · 8,513</text>
+<circle cx="456.9" cy="687.0" r="7.5" fill="#dcc29a" stroke="#333" stroke-width="1"/>
+<text x="466.4" y="690.3333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Bakersfield · 6,790</text>
+<circle cx="673.2" cy="855.0" r="7.5" fill="#cf8f7a" stroke="#333" stroke-width="1"/>
+<text x="682.7" y="858.3333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Coachella Valley · 6,702</text>
+<circle cx="196.5" cy="22.5" r="7.5" fill="#e6d794" stroke="#333" stroke-width="1"/>
+<text x="206.0" y="25.833333333333332" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Siskiyou County · 6,535</text>
+<circle cx="335.1" cy="719.2" r="7.5" fill="#ff7b8f" stroke="#333" stroke-width="1"/>
+<text x="344.6" y="722.5333333333334" font-size="10" font-weight="bold" fill="#222" stroke="#fff" stroke-width="2.4" paint-order="stroke">Santa Maria Valley · 5,226</text>
 </svg>
