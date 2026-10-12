@@ -25,7 +25,10 @@ process:
 tiles:
 	YEAR=$(YEAR) REGION=$(REGION) pipeline/05_tiles.sh
 
-regions basemap:
+regions:
+	$(UV) run python pipeline/06_regions.py --year $(YEAR) --region $(REGION)
+
+basemap:
 	@echo "$@: not yet"
 
 all: lookup process tiles regions basemap

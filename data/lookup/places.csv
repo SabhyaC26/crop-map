@@ -1,0 +1,136 @@
+name,lon,lat,kind
+Salinas Valley,-121.53,36.56,valley
+Pajaro Valley,-121.76,36.90,valley
+Castroville,-121.7566,36.7653,town
+Carmel Valley,-121.66,36.46,valley
+Hollister,-121.4016,36.8525,town
+Gonzales,-121.4438,36.5060,town
+Soledad,-121.3263,36.4247,town
+Greenfield,-121.2438,36.3208,town
+King City,-121.1260,36.2128,town
+Santa Cruz,-122.0308,36.9741,town
+Napa Valley,-122.39,38.42,valley
+Sonoma Valley,-122.51,38.36,valley
+Russian River Valley,-122.86,38.50,valley
+Alexander Valley,-122.82,38.70,valley
+Anderson Valley,-123.3661,39.0090,valley
+Ukiah,-123.2078,39.1502,town
+Lake County,-122.88,39.00,valley
+Lodi,-121.2724,38.1302,valley
+Galt,-121.2999,38.2546,town
+Sacramento-San Joaquin Delta,-121.58,38.08,valley
+Clarksburg,-121.5253,38.4207,town
+Brentwood,-121.6958,37.9319,town
+Livermore,-121.7680,37.6819,town
+Tracy,-121.4252,37.7397,town
+Stockton,-121.2908,37.9577,town
+Manteca,-121.2161,37.7974,town
+Escalon,-121.0083,37.7971,town
+Oakdale,-120.8469,37.7666,town
+Modesto,-120.9969,37.6391,town
+Turlock,-120.8466,37.4947,town
+Patterson,-121.1297,37.4716,town
+Newman,-121.0208,37.3138,town
+Gustine,-120.9630,37.2577,town
+Los Banos,-120.8499,37.0583,town
+Dos Palos,-120.6252,36.9855,town
+Merced,-120.4830,37.3022,town
+Atwater,-120.6091,37.3477,town
+Chowchilla,-120.2600,37.1230,town
+Madera,-120.0607,36.9613,town
+Firebaugh,-120.4560,36.8589,town
+Mendota,-120.3815,36.7536,town
+Kerman,-120.0599,36.7236,town
+Fresno,-119.7871,36.7378,town
+Clovis,-119.7029,36.8252,town
+Sanger,-119.5560,36.7080,town
+Fowler,-119.6787,36.6305,town
+Selma,-119.6121,36.5708,town
+Kingsburg,-119.5543,36.5138,town
+Parlier,-119.5271,36.6116,town
+Reedley,-119.4504,36.5963,town
+Dinuba,-119.3868,36.5433,town
+Orange Cove,-119.3140,36.6244,town
+Five Points,-120.1118,36.4272,town
+Huron,-120.1029,36.2027,town
+Coalinga,-120.3604,36.1397,town
+Avenal,-120.1293,36.0044,town
+Kettleman City,-119.9618,35.9930,town
+Lemoore,-119.7829,36.3010,town
+Hanford,-119.6457,36.3274,town
+Corcoran,-119.5604,36.0980,town
+Visalia,-119.2921,36.3302,town
+Tulare,-119.3473,36.2077,town
+Exeter,-119.1418,36.2961,town
+Lindsay,-119.0882,36.2030,town
+Porterville,-119.0168,36.0652,town
+Earlimart,-119.2707,35.8830,town
+Delano,-119.2471,35.7688,town
+McFarland,-119.2293,35.6780,town
+Wasco,-119.3409,35.5941,town
+Lost Hills,-119.6910,35.6130,town
+Shafter,-119.2718,35.5005,town
+Buttonwillow,-119.4690,35.4000,town
+Bakersfield,-119.0187,35.3733,town
+Arvin,-118.8284,35.2091,town
+Lamont,-118.9115,35.2563,town
+Maricopa,-119.4001,35.0588,town
+Taft,-119.4565,35.1425,town
+Tehachapi,-118.4482,35.1322,town
+Antelope Valley,-118.30,34.75,valley
+Cuyama Valley,-119.6889,34.9511,valley
+Santa Maria Valley,-120.45,34.93,valley
+Arroyo Grande,-120.5907,35.1186,town
+Edna Valley,-120.62,35.19,valley
+Paso Robles,-120.6910,35.6266,town
+Santa Ynez Valley,-120.10,34.61,valley
+Lompoc,-120.4579,34.6391,town
+Oxnard Plain,-119.12,34.22,valley
+Santa Paula,-119.0593,34.3542,town
+Fillmore,-118.9182,34.3992,town
+Ojai,-119.2429,34.4480,town
+Temecula Valley,-117.1484,33.4936,valley
+Fallbrook,-117.2511,33.3764,town
+Valley Center,-117.0342,33.2184,town
+Escondido,-117.0864,33.1192,town
+Coachella Valley,-116.15,33.62,valley
+Indio,-116.2156,33.7206,town
+Thermal,-116.1397,33.6403,town
+Imperial Valley,-115.55,32.88,valley
+El Centro,-115.5631,32.7920,town
+Brawley,-115.5303,32.9787,town
+Calexico,-115.4989,32.6789,town
+Palo Verde Valley,-114.68,33.58,valley
+Blythe,-114.5964,33.6103,town
+Sacramento,-121.4944,38.5816,town
+Davis,-121.7405,38.5449,town
+Woodland,-121.7733,38.6785,town
+Winters,-121.9708,38.5249,town
+Dixon,-121.8233,38.4455,town
+Esparto,-122.0105,38.6766,town
+Knights Landing,-121.7181,38.7943,town
+Arbuckle,-122.0575,39.0190,town
+Williams,-122.1494,39.1546,town
+Colusa,-122.0094,39.2144,town
+Willows,-122.1936,39.5243,town
+Yuba City,-121.6169,39.1404,town
+Marysville,-121.5911,39.1457,town
+Live Oak,-121.6572,39.2768,town
+Gridley,-121.6936,39.3638,town
+Biggs,-121.7120,39.4129,town
+Oroville,-121.5564,39.5138,town
+Chico,-121.8375,39.7285,town
+Orland,-122.1964,39.7474,town
+Corning,-122.1792,39.9271,town
+Red Bluff,-122.2358,40.1785,town
+Redding,-122.3917,40.5865,town
+Placerville,-120.7985,38.7296,town
+Shenandoah Valley,-120.8460,38.4813,valley
+Tulelake,-121.4777,41.9546,town
+Scott Valley,-122.8947,41.4568,valley
+Shasta Valley,-122.6345,41.7355,valley
+Fall River Valley,-121.4505,40.9979,valley
+Big Valley,-121.1394,41.1163,valley
+Surprise Valley,-120.0800,41.5000,valley
+Honey Lake Valley,-120.3000,40.2500,valley
+Sierra Valley,-120.2410,39.6769,valley
