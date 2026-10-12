@@ -18,7 +18,6 @@ export const BASEMAP_SOURCE = 'basemap';
 export const TERRAIN_SOURCE = 'terrain';
 export const OCEAN_SOURCE = 'ocean-mask';
 export const OUTSIDE_SOURCE = 'outside-ca';
-export const STICKER_SOURCE = 'ca-sticker';
 export const SHADOW_SOURCE = 'ca-shadow';
 export const GRADIENT_SOURCE = 'ocean-gradient';
 /** Confetti is inserted below this layer: the gradient is transparent over land but covers glow that spills offshore. */
@@ -362,7 +361,7 @@ const buildOceanGradient = (): LayerSpecification[] => [
   },
 ];
 
-// Soft raised shadow (baked gaussian raster with CA cut out) + glossy white die-cut edge.
+// Soft raised shadow (baked gaussian raster with CA cut out).
 const buildStickerLayers = (): LayerSpecification[] => [
   {
     id: 'ca_sticker_shadow',
@@ -372,32 +371,6 @@ const buildStickerLayers = (): LayerSpecification[] => [
       'raster-opacity': STICKER_FADE,
       'raster-resampling': 'linear',
       'raster-fade-duration': 0,
-    },
-  },
-  {
-    id: 'ca_sticker_edge_soft',
-    type: 'line',
-    source: STICKER_SOURCE,
-    layout: { 'line-join': 'round' },
-    paint: {
-      'line-color': '#ffffff',
-      'line-opacity': zoomStops([6.5, 0.55], [9, 0]),
-      'line-width': zoomStops([3, 9], [6, 13]),
-      'line-offset': zoomStops([3, 4.5], [6, 6.5]),
-      'line-blur': 5,
-    },
-  },
-  {
-    id: 'ca_sticker_edge',
-    type: 'line',
-    source: STICKER_SOURCE,
-    layout: { 'line-join': 'round' },
-    paint: {
-      'line-color': '#ffffff',
-      'line-opacity': zoomStops([6.5, 1], [9, 0]),
-      'line-width': zoomStops([3, 4], [6, 6.5]),
-      'line-offset': zoomStops([3, 2], [6, 3.25]),
-      'line-blur': 0.5,
     },
   },
 ];
@@ -465,7 +438,6 @@ export const buildBasemapStyle = (origin: string, baseUrl: string): StyleSpecifi
       data: `${origin}${baseUrl}data/outside-ca.geojson`,
       tolerance: 0.5,
     },
-    [STICKER_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/ca-sticker.geojson`, tolerance: 0.1 },
     [SHADOW_SOURCE]: {
       type: 'image',
       url: `${origin}${baseUrl}data/ca-shadow.png`,
