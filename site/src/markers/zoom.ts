@@ -8,8 +8,8 @@ export const MERGE_ZOOM = 7.34;
 const COARSE_DIM_START = 7.2;
 const FINE_FADE: readonly [number, number] = [9.8, 10.4];
 
-export const COARSE_SIZE: readonly [number, number] = [64, 112];
-export const FINE_SIZE: readonly [number, number] = [40, 68];
+export const COARSE_SIZE: readonly [number, number] = [44, 76];
+export const FINE_SIZE: readonly [number, number] = [32, 52];
 
 export const LABEL_HEIGHT = 26;
 /** Space between the label's bottom edge and the ground point where the shadow sits. */

@@ -19,7 +19,6 @@ const requireElement = (id: string): HTMLElement => {
 const slots = {
   popupRoot: requireElement('popup-root'),
   searchSlot: requireElement('search-slot'),
-  monthSlot: requireElement('month-slot'),
 };
 
 const map = createMap(container);

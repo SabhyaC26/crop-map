@@ -40,15 +40,13 @@
   animation: sprout 3.2s var(--ease-out) 1s infinite;
 }
 
-#search-slot,
-#month-slot {
+#search-slot {
   position: absolute;
   z-index: var(--z-map-ui);
   pointer-events: none;
 }
 
 #search-slot > *,
-#month-slot > *,
 #popup-root > * {
   pointer-events: auto;
 }
@@ -57,13 +55,6 @@
   top: var(--safe-top);
   left: 50%;
   width: min(420px, calc(100vw - 2 * var(--edge)));
-  transform: translateX(-50%);
-}
-
-#month-slot {
-  left: 50%;
-  bottom: var(--safe-bottom);
-  width: min(640px, calc(100vw - 2 * var(--edge)));
   transform: translateX(-50%);
 }
 

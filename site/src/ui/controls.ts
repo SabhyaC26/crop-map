@@ -2,7 +2,6 @@ import type { Map as MapLibreMap } from 'maplibre-gl';
 import type { CropIndex } from '../data/crops';
 import type { FieldsLayer } from '../layers/fields';
 import { createEmphasis, type EmphasisSink, type IconManifest, type RegionsSearch } from './emphasis';
-import { createMonth } from './month';
 import { createSearch } from './search';
 
 export interface ControlsOptions {
@@ -13,7 +12,6 @@ export interface ControlsOptions {
   manifest: IconManifest;
   markers?: EmphasisSink;
   searchSlot: HTMLElement;
-  monthSlot: HTMLElement;
 }
 
 export interface Controls {
@@ -21,29 +19,18 @@ export interface Controls {
   destroy(): void;
 }
 
-/** Crop search + harvest-month slider, sharing one emphasis state that drives fields and markers. */
+/** Crop search, driving the shared emphasis state for fields and markers. */
 export function initControls(opts: ControlsOptions): Controls {
-  const { map, crops, fields, regionsSearch, manifest, searchSlot, monthSlot } = opts;
+  const { map, crops, fields, regionsSearch, manifest, searchSlot } = opts;
   const emphasis = createEmphasis({ crops, fields, markers: opts.markers });
   const search = createSearch({ map, crops, regionsSearch, manifest, emphasis, slot: searchSlot });
-  const month = createMonth({
-    map,
-    crops,
-    regionsSearch,
-    manifest,
-    emphasis,
-    slot: monthSlot,
-    popupRoot: document.getElementById('popup-root'),
-  });
 
   return {
     setMarkers: (markers) => emphasis.setMarkers(markers),
     destroy() {
       search.destroy();
-      month.destroy();
       emphasis.setMarkers(undefined);
       emphasis.setSearch(null);
-      emphasis.setMonth(null);
     },
   };
 }
