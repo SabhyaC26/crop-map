@@ -13,7 +13,9 @@ export const OCEAN_SOURCE = 'ocean-mask';
 export const OUTSIDE_SOURCE = 'outside-ca';
 
 /** Later layers (fields) are inserted below this id so roads and labels stay on top. */
-export const FIELDS_BEFORE_LAYER_ID = 'roads_minor_service_casing';
+export const FIELDS_BEFORE_LAYER_ID = 'roads_tunnels_other_casing';
+
+const OUTSIDE_VEIL_OPACITY = 0.9;
 
 export const PALETTE = {
   cream: '#f7f3e1',
@@ -139,6 +141,7 @@ const DROPPED_LAYERS = new Set([
   'roads_shields',
   'places_subplace',
   'places_country',
+  'places_region',
   'pois',
   'buildings',
 ]);
@@ -231,16 +234,6 @@ const PATCHES: Record<string, LayerPatch> = {
     paint(l, { 'text-halo-width': 2, 'text-color': PALETTE.lavender });
   },
 
-  places_region: (l) => {
-    l.maxzoom = 8;
-    layout(l, {
-      'text-letter-spacing': 0.28,
-      'text-size': zoomStops([3, 11], [7, 17]),
-      'text-font': [FONT_BOLD],
-    });
-    paint(l, { 'text-color': '#c1bbe0', 'text-halo-width': 2, 'text-halo-blur': 1 });
-  },
-
   places_locality: (l) => {
     const layoutProps = l.layout as Record<string, unknown>;
     delete layoutProps['icon-image'];
@@ -318,7 +311,7 @@ const buildOutsideVeil = (): LayerSpecification => ({
   paint: {
     'fill-color': PALETTE.cream,
     'fill-antialias': false,
-    'fill-opacity': 0.72,
+    'fill-opacity': OUTSIDE_VEIL_OPACITY,
   },
 });
 
