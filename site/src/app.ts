@@ -19,6 +19,7 @@ export interface CropMapApp {
 export interface CropMapSlots {
   popupRoot: HTMLElement;
   searchSlot: HTMLElement;
+  legendSlot: HTMLElement;
 }
 
 // isStyleLoaded() also reports false while tiles load, so probe for a known basemap layer instead.
@@ -57,6 +58,8 @@ export async function initCropMap(map: MapLibreMap, slots: CropMapSlots): Promis
     manifest: iconManifest,
     markers,
     searchSlot: slots.searchSlot,
+    legendSlot: slots.legendSlot,
+    popupRoot: slots.popupRoot,
   });
   return { map, crops, fields, popup, markers, controls };
 }

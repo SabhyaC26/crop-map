@@ -1,8 +1,9 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import '../styles/search.css';
 import type { Crop, CropIndex } from '../data/crops';
-import { iconUrl } from '../lib/icons';
 import type { EmphasisController, IconManifest, RegionsSearch, SearchTarget } from './emphasis';
+import { createDestinations } from './destinations';
+import { cropImg, el, formatAcres, svg } from './format';
 
 interface SearchOptions {
   map: MapLibreMap;
@@ -125,15 +126,6 @@ function editDistanceAtMostOne(a: string, b: string): boolean {
   return edits + (a.length - i) + (b.length - j) <= 1;
 }
 
-export function formatAcres(acres: number): string {
-  if (acres >= 1e6) return `${trim(acres / 1e6)}M`;
-  if (acres >= 1e4) return `${Math.round(acres / 1e3)}k`;
-  if (acres >= 1e3) return `${trim(acres / 1e3)}k`;
-  return String(Math.round(acres));
-}
-
-const trim = (n: number): string => n.toFixed(1).replace(/\.0$/, '');
-
 function buildEntries(crops: CropIndex, regionsSearch: RegionsSearch): Entry[] {
   const out: Entry[] = [];
   for (const crop of crops.list) {
@@ -194,46 +186,6 @@ function search(entries: readonly Entry[], raw: string): Match[] {
   return matches.sort((a, b) => b.score - a.score).slice(0, MAX_RESULTS);
 }
 
-function el<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  className?: string,
-  text?: string,
-): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
-
-const SVG_NS = 'http://www.w3.org/2000/svg';
-
-function svg(className: string, paths: readonly string[], strokeWidth = 2.4): SVGSVGElement {
-  const node = document.createElementNS(SVG_NS, 'svg');
-  node.setAttribute('viewBox', '0 0 24 24');
-  node.setAttribute('class', className);
-  node.setAttribute('aria-hidden', 'true');
-  node.setAttribute('fill', 'none');
-  node.setAttribute('stroke', 'currentColor');
-  node.setAttribute('stroke-width', String(strokeWidth));
-  node.setAttribute('stroke-linecap', 'round');
-  node.setAttribute('stroke-linejoin', 'round');
-  for (const d of paths) {
-    const p = document.createElementNS(SVG_NS, 'path');
-    p.setAttribute('d', d);
-    node.append(p);
-  }
-  return node;
-}
-
-function cropImg(manifest: IconManifest, crop: Crop, className: string): HTMLImageElement {
-  const img = el('img', className);
-  img.src = iconUrl(manifest, crop.icon);
-  img.alt = '';
-  img.decoding = 'async';
-  img.draggable = false;
-  return img;
-}
-
 function highlight(node: HTMLElement, text: string, q: string): void {
   node.textContent = '';
   const needle = singular(norm(q).trim());
@@ -257,6 +209,8 @@ export function createSearch({ map, crops, regionsSearch, manifest, emphasis, sl
   const entries = buildEntries(crops, regionsSearch);
   const uid = `cs-${Math.random().toString(36).slice(2, 7)}`;
   const listId = `${uid}-list`;
+
+  const destinations = createDestinations({ map, manifest, slot });
 
   const root = el('div', 'cs-root');
   const box = el('div', 'cs-search glass');
@@ -305,7 +259,7 @@ export function createSearch({ map, crops, regionsSearch, manifest, emphasis, sl
 
   box.append(bar, chip);
   root.append(box, list, status);
-  slot.append(root);
+  slot.prepend(root);
 
   let mode: Mode = 'idle';
   let selected: Entry | null = null;
@@ -408,19 +362,26 @@ export function createSearch({ map, crops, regionsSearch, manifest, emphasis, sl
     selected = entry;
     renderChip();
     emphasis.setSearch(entry.crop.cropId);
-    map.flyTo({ center: entry.target.center, zoom: entry.target.zoom, curve: 1.6, speed: 1.1 });
     input.blur();
     closeSearch();
+    destinations.show(entry.crop, entry.target);
     chipMain.focus({ preventScroll: true });
     status.textContent = `Showing ${entry.crop.name}`;
   };
 
-  const clear = (): void => {
+  const reset = (): void => {
     selected = null;
-    emphasis.setSearch(null);
+    destinations.hide();
     closeSearch();
     status.textContent = 'Crop filter cleared';
   };
+
+  const clear = (): void => emphasis.clear();
+
+  // The legend can unselect the searched crop; the chip and destinations follow.
+  const unsubscribe = emphasis.subscribe((state) => {
+    if (selected && state.search === null) reset();
+  });
 
   const onFocus = (): void => openSearch();
   const onBlur = (): void => {
@@ -520,6 +481,8 @@ export function createSearch({ map, crops, regionsSearch, manifest, emphasis, sl
   return {
     destroy() {
       document.removeEventListener('keydown', onDocKey);
+      unsubscribe();
+      destinations.destroy();
       root.remove();
     },
   };

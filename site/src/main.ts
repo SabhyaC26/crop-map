@@ -19,6 +19,7 @@ const requireElement = (id: string): HTMLElement => {
 const slots = {
   popupRoot: requireElement('popup-root'),
   searchSlot: requireElement('search-slot'),
+  legendSlot: requireElement('legend-slot'),
 };
 
 const map = createMap(container);

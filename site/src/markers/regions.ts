@@ -14,11 +14,22 @@ export interface Region {
   lngLat: [number, number];
 }
 
+export interface SearchPlace {
+  center: [number, number];
+  zoom: number;
+  label: string;
+  acres: number;
+}
+
 export interface SearchTarget {
   center: [number, number];
   zoom: number;
   label: string;
   acres_total: number;
+  /** 1-5 hotspots, acres desc; absent in older regions.json builds. */
+  places?: SearchPlace[];
+  /** [w, s, e, n] around all places; absent in older regions.json builds. */
+  bbox?: [number, number, number, number];
 }
 
 export type RegionsSearch = Record<string, SearchTarget>;

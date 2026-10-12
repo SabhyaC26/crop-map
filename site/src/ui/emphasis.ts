@@ -4,44 +4,31 @@ import type { loadIconManifest } from '../lib/icons';
 
 export type IconManifest = Awaited<ReturnType<typeof loadIconManifest>>;
 
-export type { RegionsSearch, SearchTarget } from '../markers/regions';
+export type { RegionsSearch, SearchPlace, SearchTarget } from '../markers/regions';
 
 export interface EmphasisSink {
   setEmphasis(ids: Set<number> | null): void;
 }
 
-export const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const;
-
 export interface EmphasisState {
-  /** Crop picked in search, if any. */
+  /** Crop picked in search, if any. Always a member of `selected` while set. */
   readonly search: number | null;
-  /** 0-based month, or null for "All year". */
-  readonly month: number | null;
+  /** Crops pinned on by search or the legend. */
+  readonly selected: ReadonlySet<number>;
+  /** Crop being hovered in the legend: shown in addition to `selected`, without committing. */
+  readonly preview: number | null;
   /** Crops shown at full strength; null means nothing is dimmed. */
   readonly active: ReadonlySet<number> | null;
-  /** Crops that should "bloom": harvesting in the selected month. Empty when no month is active. */
-  readonly bloom: readonly number[];
-  /** Gentle note for the month pill when search and month disagree. */
-  readonly hint: string | null;
 }
 
 export interface EmphasisController {
   readonly state: EmphasisState;
+  /** Search selects exactly one crop (or clears everything with null). */
   setSearch(cropId: number | null): void;
-  setMonth(month: number | null): void;
+  /** Legend toggle: adds or removes one crop from the selection. */
+  toggle(cropId: number): void;
+  clear(): void;
+  setPreview(cropId: number | null): void;
   setMarkers(markers: EmphasisSink | undefined): void;
   subscribe(listener: (state: EmphasisState) => void): () => void;
 }
@@ -59,34 +46,19 @@ const sameSet = (a: ReadonlySet<number> | null, b: ReadonlySet<number> | null): 
   return true;
 };
 
-function derive(crops: CropIndex, search: number | null, month: number | null): EmphasisState {
-  const harvesting = month === null ? null : crops.harvestingIn(month);
-  if (search === null) {
-    return {
-      search,
-      month,
-      active: harvesting === null ? null : new Set(harvesting),
-      bloom: harvesting ?? [],
-      hint: null,
-    };
-  }
-  const crop = crops.get(search);
-  const inSeason = harvesting?.includes(search) ?? false;
-  let hint: string | null = null;
-  if (month !== null && !inSeason) {
-    hint =
-      crop?.harvest === null
-        ? `No harvest calendar for ${crop.name}`
-        : `Not in harvest in ${MONTH_NAMES[month]}`;
-  }
-  return { search, month, active: new Set([search]), bloom: inSeason ? [search] : [], hint };
+function derive(search: number | null, selected: ReadonlySet<number>, preview: number | null): EmphasisState {
+  if (selected.size === 0 && preview === null) return { search, selected, preview, active: null };
+  const active = new Set(selected);
+  if (preview !== null) active.add(preview);
+  return { search, selected, preview, active };
 }
 
-export function createEmphasis({ crops, fields, markers: initialMarkers }: EmphasisOptions): EmphasisController {
+export function createEmphasis({ fields, markers: initialMarkers }: EmphasisOptions): EmphasisController {
   let markers = initialMarkers;
   let search: number | null = null;
-  let month: number | null = null;
-  let state = derive(crops, search, month);
+  let selected: ReadonlySet<number> = new Set();
+  let preview: number | null = null;
+  let state = derive(search, selected, preview);
   const listeners = new Set<(s: EmphasisState) => void>();
 
   const applyTargets = (): void => {
@@ -95,7 +67,7 @@ export function createEmphasis({ crops, fields, markers: initialMarkers }: Empha
   };
 
   const update = (): void => {
-    const next = derive(crops, search, month);
+    const next = derive(search, selected, preview);
     const targetsChanged = !sameSet(state.active, next.active);
     state = next;
     if (targetsChanged) applyTargets();
@@ -107,13 +79,25 @@ export function createEmphasis({ crops, fields, markers: initialMarkers }: Empha
       return state;
     },
     setSearch(cropId) {
-      if (cropId === search) return;
       search = cropId;
+      selected = cropId === null ? new Set() : new Set([cropId]);
       update();
     },
-    setMonth(m) {
-      if (m === month) return;
-      month = m;
+    toggle(cropId) {
+      const next = new Set(selected);
+      if (!next.delete(cropId)) next.add(cropId);
+      selected = next;
+      if (search !== null && !next.has(search)) search = null;
+      update();
+    },
+    clear() {
+      search = null;
+      selected = new Set();
+      update();
+    },
+    setPreview(cropId) {
+      if (cropId === preview) return;
+      preview = cropId;
       update();
     },
     setMarkers(next) {
