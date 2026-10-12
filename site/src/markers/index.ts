@@ -1,0 +1,320 @@
+import { Marker, type Map as MapLibreMap } from 'maplibre-gl';
+import type { CropIndex } from '../data/crops';
+import { iconUrl } from '../lib/icons';
+import {
+  cancelAll,
+  drop,
+  hideStatic,
+  mergeOut,
+  popIn,
+  popOut,
+  showStatic,
+  splitIn,
+  STAGGER_MERGE_MS,
+  STAGGER_SPLIT_MS,
+  type MarkerItem,
+  type Offset,
+} from './choreography';
+import { resolveCollisions } from './collision';
+import { buildMarkerElement, estimateLabelWidth } from './element';
+import type { Region, RegionLevel, RegionSet } from './regions';
+import { bandOpacity, bandScale, inBand, MERGE_ZOOM, sizeScale, SPLIT_ZOOM } from './zoom';
+
+export { loadRegions } from './regions';
+export type { RegionSet } from './regions';
+
+export interface RegionMarkers {
+  /** Dims every marker whose crop is not in the set (null clears). Used by search and the month slider. */
+  setEmphasis(cropIds: ReadonlySet<number> | null): void;
+  destroy(): void;
+}
+
+const CLICK_ZOOM: Record<RegionLevel, number> = { coarse: 8.6, fine: 11 };
+const MAX_PARENT_OFFSET = 720;
+const COLLISION_THROTTLE_MS = 140;
+const MOBILE_SIZE_FACTOR = 0.82;
+const REVEAL_STAGGER_MS = 40;
+
+const levelOf = (zoom: number, current: RegionLevel | null): RegionLevel => {
+  if (current === 'fine') return zoom < MERGE_ZOOM ? 'coarse' : 'fine';
+  return zoom >= SPLIT_ZOOM ? 'fine' : 'coarse';
+};
+
+export function createRegionMarkers(
+  map: MapLibreMap,
+  regions: RegionSet,
+  crops: CropIndex,
+  manifest: Record<string, string>,
+): RegionMarkers {
+  const sizeFactor = window.innerWidth < 640 ? MOBILE_SIZE_FACTOR : 1;
+  const byLevel: Record<RegionLevel, MarkerItem[]> = { coarse: [], fine: [] };
+  const byId = new Map<string, MarkerItem>();
+  const children = new Map<string, MarkerItem[]>();
+  const build = (level: RegionLevel, list: readonly Region[]): void => {
+    const sizeOf = sizeScale(list, level);
+    for (const region of list) {
+      const crop = crops.get(region.cropId);
+      if (!crop) continue;
+      const size = Math.round(sizeOf(region) * sizeFactor);
+      const parts = buildMarkerElement(region, crop, iconUrl(manifest, crop.icon), size);
+      parts.root.style.zIndex = String(500 - Math.min(region.rank, 499));
+      const marker = new Marker({
+        element: parts.root,
+        anchor: 'bottom',
+        opacityWhenCovered: '0',
+        subpixelPositioning: true,
+      }).setLngLat(region.lngLat);
+      const item: MarkerItem = {
+        region,
+        crop,
+        marker,
+        parts,
+        size,
+        labelWidth: estimateLabelWidth(region.label, level),
+        parent: null,
+        sibling: 0,
+        siblingCount: 1,
+        anims: [],
+        attached: false,
+        shown: false,
+        gateOn: true,
+        labelOn: true,
+        inert: false,
+        bandOpacity: -1,
+        bandScale: -1,
+      };
+      byLevel[level].push(item);
+      byId.set(region.id, item);
+    }
+  };
+  build('coarse', regions.coarse);
+  build('fine', regions.fine);
+
+  for (const item of byLevel.fine) {
+    const parent = item.region.parent ? (byId.get(item.region.parent) ?? null) : null;
+    item.parent = parent;
+    if (!parent) continue;
+    const siblings = children.get(parent.region.id) ?? [];
+    siblings.push(item);
+    children.set(parent.region.id, siblings);
+  }
+  for (const siblings of children.values()) {
+    siblings.forEach((s, i) => {
+      s.sibling = i;
+      s.siblingCount = siblings.length;
+    });
+  }
+  const all = [...byLevel.coarse, ...byLevel.fine];
+
+  let mode: RegionLevel = levelOf(map.getZoom(), null);
+  let revealed = false;
+  let emphasis: ReadonlySet<number> | null = null;
+  let frame = 0;
+  let collideTimer: ReturnType<typeof setTimeout> | undefined;
+  let lastCollide = 0;
+  let destroyed = false;
+
+  const refreshInteractive = (item: MarkerItem): void => {
+    const { root } = item.parts;
+    root.dataset.gate = item.gateOn ? 'on' : 'off';
+    root.dataset.label = item.labelOn ? 'on' : 'off';
+    const live = item.shown && item.gateOn && !item.inert;
+    root.tabIndex = live ? 0 : -1;
+    root.classList.toggle('is-inert', item.inert);
+  };
+
+  const applyZoom = (force: boolean): void => {
+    const zoom = map.getZoom();
+    for (const item of all) {
+      const { level } = item.region;
+      const wanted = item.shown || inBand(level, zoom);
+      if (wanted !== item.attached) {
+        item.attached = wanted;
+        if (wanted) item.marker.addTo(map);
+        else item.marker.remove();
+      }
+      if (!item.attached || (!item.shown && !force)) continue;
+      const opacity = bandOpacity(level, zoom);
+      const scale = bandScale(level, zoom, opacity);
+      const { style } = item.parts.band;
+      if (Math.abs(opacity - item.bandOpacity) > 0.004) {
+        item.bandOpacity = opacity;
+        style.opacity = opacity.toFixed(3);
+        const inert = opacity < 0.35;
+        if (inert !== item.inert) {
+          item.inert = inert;
+          refreshInteractive(item);
+        }
+      }
+      if (Math.abs(scale - item.bandScale) > 0.002) {
+        item.bandScale = scale;
+        const t = scale.toFixed(3);
+        style.transform = `scale(${t})`;
+        item.parts.label.style.transform = `scale(${(1 / scale).toFixed(3)})`;
+      }
+    }
+  };
+
+  const priority = (items: readonly MarkerItem[]): MarkerItem[] => {
+    if (!emphasis) return [...items];
+    const lit = emphasis;
+    return [...items].sort((a, b) => Number(lit.has(b.crop.cropId)) - Number(lit.has(a.crop.cropId)) || a.region.rank - b.region.rank);
+  };
+
+  const measureLabels = (): void => {
+    for (const item of all) item.labelWidth = item.parts.name.offsetWidth || item.labelWidth;
+  };
+
+  const collide = (): void => {
+    lastCollide = performance.now();
+    for (const item of resolveCollisions(map, priority(byLevel[mode]), map.getZoom())) refreshInteractive(item);
+  };
+
+  const scheduleCollide = (): void => {
+    if (collideTimer !== undefined) return;
+    const wait = Math.max(0, COLLISION_THROTTLE_MS - (performance.now() - lastCollide));
+    collideTimer = setTimeout(() => {
+      collideTimer = undefined;
+      if (!destroyed) collide();
+    }, wait);
+  };
+
+  const parentOffset = (child: MarkerItem): Offset | null => {
+    if (!child.parent) return null;
+    const from = map.project(child.parent.region.lngLat);
+    const to = map.project(child.region.lngLat);
+    const offset = { x: from.x - to.x, y: from.y - to.y };
+    return Math.hypot(offset.x, offset.y) > MAX_PARENT_OFFSET ? null : offset;
+  };
+
+  const staged = (item: MarkerItem): boolean => {
+    if (!item.gateOn || item.parts.root.classList.contains('maplibregl-marker-covered')) return false;
+    const p = map.project(item.region.lngLat);
+    const { clientWidth: w, clientHeight: h } = map.getContainer();
+    return p.x > -160 && p.x < w + 160 && p.y > -40 && p.y < h + 280;
+  };
+
+  const split = (): void => {
+    for (const parent of byLevel.coarse) {
+      if (parent.shown) {
+        if (staged(parent)) popOut(parent, 0);
+        else hideStatic(parent);
+      }
+    }
+    for (const child of byLevel.fine) {
+      if (staged(child)) splitIn(child, parentOffset(child), child.sibling * STAGGER_SPLIT_MS);
+      else showStatic(child);
+    }
+  };
+
+  const merge = (): void => {
+    for (const child of byLevel.fine) {
+      if (!child.shown) continue;
+      if (staged(child)) mergeOut(child, parentOffset(child), (child.siblingCount - 1 - child.sibling) * STAGGER_MERGE_MS);
+      else hideStatic(child);
+    }
+    byLevel.coarse.forEach((parent, i) => {
+      if (staged(parent)) popIn(parent, 160 + Math.min(i, 8) * 20);
+      else showStatic(parent);
+    });
+  };
+
+  const reveal = (): void => {
+    if (revealed || destroyed) return;
+    revealed = true;
+    applyZoom(true);
+    collide();
+    let n = 0;
+    for (const item of byLevel[mode]) {
+      if (!staged(item)) showStatic(item);
+      else if (mode === 'coarse') drop(item, n++ * REVEAL_STAGGER_MS);
+      else popIn(item, n++ * STAGGER_SPLIT_MS);
+      refreshInteractive(item);
+    }
+    applyZoom(false);
+  };
+
+  const onFrame = (): void => {
+    frame = 0;
+    if (destroyed) return;
+    const next = levelOf(map.getZoom(), mode);
+    if (next !== mode) {
+      mode = next;
+      revealed = true;
+      applyZoom(true);
+      collide();
+      if (mode === 'fine') split();
+      else merge();
+      for (const item of all) refreshInteractive(item);
+    }
+    applyZoom(false);
+  };
+
+  const schedule = (): void => {
+    if (frame === 0) frame = requestAnimationFrame(onFrame);
+  };
+
+  const onMove = (): void => {
+    schedule();
+    scheduleCollide();
+  };
+  const onMoveEnd = (): void => {
+    schedule();
+    if (collideTimer !== undefined) {
+      clearTimeout(collideTimer);
+      collideTimer = undefined;
+    }
+    collide();
+  };
+
+  map.on('zoom', schedule);
+  map.on('move', onMove);
+  map.on('moveend', onMoveEnd);
+
+  for (const item of all) {
+    item.parts.root.addEventListener('click', (e) => {
+      e.stopPropagation();
+      map.flyTo({
+        center: item.region.lngLat,
+        zoom: CLICK_ZOOM[item.region.level],
+        speed: 0.85,
+        curve: 1.55,
+        essential: false,
+      });
+    });
+  }
+
+  measureLabels();
+  void document.fonts.ready.then(() => {
+    if (destroyed) return;
+    measureLabels();
+    collide();
+  });
+  applyZoom(true);
+  if (map.loaded() && !map.isMoving()) requestAnimationFrame(reveal);
+  else map.once('idle', reveal);
+
+  return {
+    setEmphasis(cropIds) {
+      emphasis = cropIds;
+      for (const item of all) {
+        if (cropIds && !cropIds.has(item.crop.cropId)) item.parts.root.dataset.dim = '';
+        else delete item.parts.root.dataset.dim;
+      }
+      collide();
+    },
+    destroy() {
+      destroyed = true;
+      map.off('zoom', schedule);
+      map.off('move', onMove);
+      map.off('moveend', onMoveEnd);
+      map.off('idle', reveal);
+      if (frame !== 0) cancelAnimationFrame(frame);
+      if (collideTimer !== undefined) clearTimeout(collideTimer);
+      for (const item of all) {
+        cancelAll(item);
+        item.marker.remove();
+      }
+    },
+  };
+}

@@ -1,0 +1,275 @@
+/* Keeps marker z-indexes inside the map so they never climb over the UI chrome. */
+.maplibregl-canvas-container {
+  isolation: isolate;
+}
+
+.crop-marker {
+  --bob-lift: 7px;
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  transition: opacity 0.3s ease;
+}
+
+.crop-marker[data-state='hidden'] {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.crop-marker.is-inert,
+.crop-marker[data-gate='off'] {
+  pointer-events: none;
+}
+
+.crop-marker:hover,
+.crop-marker:focus-visible {
+  z-index: 1000 !important;
+}
+
+.crop-marker__fx,
+.crop-marker__band,
+.crop-marker__gate {
+  position: absolute;
+  inset: 0;
+  display: block;
+  transform-origin: 50% 100%;
+}
+
+.crop-marker__gate {
+  transition:
+    opacity 0.38s var(--ease-out),
+    scale 0.55s var(--spring),
+    filter 0.4s ease;
+}
+
+.crop-marker[data-dim] .crop-marker__gate {
+  opacity: 0.25;
+  filter: saturate(0.35);
+}
+
+.crop-marker[data-gate='off'] .crop-marker__gate {
+  opacity: 0;
+  scale: 0.82;
+}
+
+.crop-marker__float {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: 50% 100%;
+  animation: crop-bob var(--bob-dur) ease-in-out var(--bob-delay) infinite;
+}
+
+.crop-marker__icon {
+  position: relative;
+  display: block;
+  width: var(--size);
+  height: var(--size);
+  transform-origin: 50% 100%;
+  animation: crop-squash var(--bob-dur) ease-in-out var(--bob-delay) infinite;
+}
+
+.crop-marker__halo {
+  position: absolute;
+  inset: -14%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--crop-color) 38%, white) 0%,
+    color-mix(in srgb, var(--crop-color) 18%, white) 48%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.crop-marker__img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 4px rgba(58, 52, 110, 0.3));
+}
+
+.crop-marker__label {
+  position: relative;
+  display: block;
+  height: 26px;
+  margin-top: 0;
+  /* JS counter-scales this against the band scale so labels stay the same size at every zoom. */
+  transform-origin: 50% 0;
+}
+
+.crop-marker__name,
+.crop-marker__sub {
+  display: block;
+  white-space: nowrap;
+  border-radius: var(--r-pill);
+}
+
+.crop-marker__name {
+  height: 26px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 26px;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.9) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 2px 5px rgba(70, 76, 130, 0.16),
+    0 6px 14px rgba(70, 76, 130, 0.14),
+    inset 0 -2.5px 0 color-mix(in srgb, var(--crop-color) 60%, transparent);
+  transition:
+    opacity 0.3s ease,
+    translate 0.45s var(--spring);
+}
+
+/* Crowded: keep the icon, tuck the label away until hover / focus. */
+.crop-marker[data-label='off'] .crop-marker__name {
+  opacity: 0;
+  translate: 0 -5px;
+}
+
+.crop-marker[data-label='off']:hover .crop-marker__name,
+.crop-marker[data-label='off']:focus-visible .crop-marker__name {
+  opacity: 1;
+  translate: 0 0;
+}
+
+.crop-marker[data-level='fine'] .crop-marker__name {
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.crop-marker__sub {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  padding: 4px 11px 5px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #fff;
+  background: rgba(51, 54, 92, 0.9);
+  box-shadow: 0 4px 12px rgba(51, 54, 92, 0.28);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -6px) scale(0.88);
+  transform-origin: 50% 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.45s var(--spring);
+}
+
+.crop-marker__shadow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--size) * -0.07);
+  width: calc(var(--size) * 0.62);
+  height: calc(var(--size) * 0.14);
+  margin: 0 auto;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(52, 48, 110, 0.36), rgba(52, 48, 110, 0));
+  animation: crop-shadow var(--bob-dur) ease-in-out var(--bob-delay) infinite;
+}
+
+@media (hover: hover) {
+  .crop-marker:hover .crop-marker__gate {
+    scale: 1.12;
+    opacity: 1;
+    filter: none;
+  }
+
+  .crop-marker:hover .crop-marker__sub {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+
+  .crop-marker:hover .crop-marker__halo {
+    opacity: 1;
+  }
+}
+
+.crop-marker:focus-visible .crop-marker__gate {
+  scale: 1.12;
+  opacity: 1;
+  filter: none;
+}
+
+.crop-marker:focus-visible .crop-marker__sub {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+.crop-marker:focus-visible .crop-marker__icon::after {
+  content: '';
+  position: absolute;
+  inset: -8%;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 6px var(--lavender);
+}
+
+@keyframes crop-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(calc(var(--bob-tilt) * -1));
+  }
+  50% {
+    transform: translateY(calc(var(--bob-lift) * -1)) rotate(var(--bob-tilt));
+  }
+}
+
+@keyframes crop-squash {
+  0%,
+  100% {
+    transform: scale(1.04, 0.96);
+  }
+  22%,
+  78% {
+    transform: scale(0.985, 1.025);
+  }
+  50% {
+    transform: scale(1, 1);
+  }
+}
+
+@keyframes crop-shadow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crop-marker__float,
+  .crop-marker__icon,
+  .crop-marker__shadow {
+    animation: none;
+  }
+}

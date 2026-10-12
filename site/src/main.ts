@@ -3,6 +3,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/shell.css';
 import './styles/popup.css';
+import './styles/markers.css';
 import { initCropMap, type CropMapApp } from './app';
 import { createMap } from './map';
 
