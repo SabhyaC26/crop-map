@@ -14,13 +14,6 @@ export const GEO_LABELS_SOURCE = 'geo-labels';
 export const GEO_SNOW_SOURCE = 'geo-snow';
 export const STORY_OCEAN_SOURCE = 'story-ocean';
 
-export const SPARKLE_LAYER_IDS = ['story_sparkle_0', 'story_sparkle_1', 'story_sparkle_2'] as const;
-export const CLOUD_LAYER_IDS = ['story_cloud_0', 'story_cloud_1', 'story_cloud_2'] as const;
-
-/** Basemap layer after which the ocean decoration is inserted (just above water + shore). */
-export const OCEAN_DECOR_AFTER_LAYER_ID = 'water_shore_line';
-export const SNOW_AFTER_LAYER_ID = 'hillshade';
-
 const FONT_EXTRA_BOLD = ['Figtree ExtraBold'];
 const FONT_SEMI_BOLD = ['Figtree SemiBold'];
 const FONT_MEDIUM = ['Figtree Medium'];
@@ -38,10 +31,14 @@ export const OVERVIEW_CITIES = [
 ] as const;
 const CITY_DOT_GAP_EM = 0.8;
 const CITY_HALF_ADVANCE_EM = 0.33;
+
 /** Phones sit below this zoom; line labels get a compact variant because anchors are sized by the largest size stop. */
 const COMPACT_MAX_ZOOM = 4.6;
 /** The overview city labels hand over to the stock locality layer here. */
 export const OVERVIEW_CITY_MAX_ZOOM = 7;
+
+/** Larger than any on-screen length of the short desert/range lines, so each name appears once. */
+const LONG_SPACING = 1500;
 
 const COLORS = {
   oceanText: '#f4faff',
@@ -50,8 +47,6 @@ const COLORS = {
   mountainHalo: '#eef8e2',
   desertText: '#b07d3c',
   desertHalo: '#fff6dc',
-  valleyText: '#58a35a',
-  valleyHalo: '#f3fce4',
   forestText: '#4e9a52',
   forestHalo: '#e9f8dc',
   stateText: '#d3cdea',
@@ -62,7 +57,7 @@ const COLORS = {
 } as const;
 
 export const storySources = (origin: string, baseUrl: string): Record<string, SourceSpecification> => ({
-  [GEO_LABELS_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/geo-labels.geojson` },
+  [GEO_LABELS_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/geo-labels.geojson`, promoteId: 'name' },
   [GEO_SNOW_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/geo-snow.geojson` },
   [STORY_OCEAN_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/storybook-ocean.geojson` },
 });
@@ -78,8 +73,12 @@ const scaled = (prop: string, ...stops: [number, number][]): ExpressionSpecifica
 const fadeOut = (peak: number, holdUntil: number, end: number): ExpressionSpecification =>
   zoomStops([STORY_MIN_ZOOM, peak], [holdUntil, peak], [end, 0]);
 
-const labelOpacity = (peak: number): ExpressionSpecification =>
-  zoomStops([STORY_MIN_ZOOM, 0], [3.8, peak], [7.3, peak], [8.4, 0]);
+/** Labels carry a `hidden` feature-state so markers can take over a spot without a style reload. */
+const labelOpacity = (peak: number): ExpressionSpecification => {
+  const shown = (v: number): ExpressionSpecification =>
+    ['case', ['boolean', ['feature-state', 'hidden'], false], 0, v] as ExpressionSpecification;
+  return zoomStops([STORY_MIN_ZOOM, 0], [3.8, shown(peak)], [7.3, shown(peak)], [8.4, 0]);
+};
 
 const byKind = (...kinds: string[]): FilterSpecification => ['in', ['get', 'kind'], ['literal', kinds]];
 const isLine: FilterSpecification = ['==', ['geometry-type'], 'LineString'];
@@ -106,6 +105,8 @@ interface LabelStyle {
   maxZoom?: number;
   /** Static `text-anchor` (data-driven anchors blow up collision boxes). */
   anchor?: 'left' | 'right';
+  /** Line labels: pixels between repeats. Short hand-placed lines would otherwise repeat their name when zoomed in. */
+  symbolSpacing?: number;
   /** Point labels wrap at this many ems. */
   maxWidth?: number;
 }
@@ -123,6 +124,7 @@ const labelLayer = (
   source: GEO_LABELS_SOURCE,
   layout: {
     'symbol-placement': s.placement,
+    ...(s.symbolSpacing ? { 'symbol-spacing': s.symbolSpacing } : {}),
     'symbol-sort-key': ['get', 'rank'],
     'text-field': ['get', 'name'],
     'text-font': s.font,
@@ -201,25 +203,12 @@ const LABEL_STYLES: LabelStyle[] = [
     opacity: 0.8,
   },
   {
-    id: 'story_label_valley',
-    kinds: ['valley'],
-    placement: 'point',
-    font: FONT_SEMI_BOLD,
-    size: zoomStops([3.4, 6], [5.4, 10], [7, 17]),
-    spacing: 0.34,
-    maxWidth: 4.5,
-    color: COLORS.valleyText,
-    halo: COLORS.valleyHalo,
-    haloWidth: 1.6,
-    opacity: 0.62,
-  },
-  {
     id: 'story_label_ocean',
     kinds: ['ocean'],
     placement: 'line',
     font: FONT_SEMI_BOLD,
-    size: [14.5, 31],
-    spacing: [0.42, 0.6],
+    size: [12.5, 31],
+    spacing: [0.3, 0.6],
     color: COLORS.oceanText,
     halo: COLORS.oceanHalo,
     haloWidth: 1.6,
@@ -229,6 +218,7 @@ const LABEL_STYLES: LabelStyle[] = [
     id: 'story_label_desert_small',
     kinds: ['desert_small'],
     placement: 'line',
+    symbolSpacing: LONG_SPACING,
     font: FONT_SEMI_BOLD,
     size: [6.5, 10.5],
     spacing: 0.3,
@@ -253,6 +243,7 @@ const LABEL_STYLES: LabelStyle[] = [
     id: 'story_label_desert',
     kinds: ['desert'],
     placement: 'line',
+    symbolSpacing: LONG_SPACING,
     font: FONT_EXTRA_BOLD,
     size: [8.5, 14.5],
     spacing: 0.3,
@@ -315,6 +306,7 @@ const LABEL_STYLES: LabelStyle[] = [
     id: 'story_label_range',
     kinds: ['range'],
     placement: 'line',
+    symbolSpacing: LONG_SPACING,
     font: FONT_EXTRA_BOLD,
     size: [8, 12.5],
     spacing: 0.3,
@@ -384,6 +376,9 @@ const buildCityDots = (): LayerSpecification => ({
   },
 });
 
+/** Point labels (names that sit at one spot) can be hidden under a marker; the long curved line labels are placed by hand instead. */
+export const GEO_POINT_LABEL_LAYER_IDS: readonly string[] = LABEL_STYLES.filter((s) => s.placement === 'point').map((s) => s.id);
+
 export const buildGeoLabelLayers = (): LayerSpecification[] => [
   ...LABEL_STYLES.flatMap(buildLabel),
   buildCityDots(),
@@ -445,25 +440,9 @@ export const buildSnowLayers = (terrainSource: string): LayerSpecification[] => 
   ];
 };
 
-/** Wave marks, twinkling sparkles and slow cloud shadows over the open Pacific. */
-export const buildOceanDecorLayers = (): LayerSpecification[] => {
-  const layers: LayerSpecification[] = CLOUD_LAYER_IDS.map((id, k) => ({
-    id,
-    type: 'circle',
-    source: STORY_OCEAN_SOURCE,
-    filter: ['all', byKind('cloud'), ['==', ['get', 'k'], k]] as FilterSpecification,
-    paint: {
-      'circle-color': '#1f6fc4',
-      'circle-radius': scaled('r', [4, 55], [6, 190], [8, 700]),
-      'circle-blur': 1,
-      'circle-opacity': fadeOut(0.1, 7, 8.4),
-      'circle-translate': [0, 0],
-      'circle-pitch-alignment': 'map',
-      'circle-pitch-scale': 'map',
-    },
-  }));
-
-  layers.push({
+/** Quiet wave marks and a few sparkles on the open Pacific (static: animated paint props keep the map from ever going idle). */
+export const buildOceanDecorLayers = (): LayerSpecification[] => [
+  {
     id: 'story_wave',
     type: 'line',
     source: STORY_OCEAN_SOURCE,
@@ -471,26 +450,22 @@ export const buildOceanDecorLayers = (): LayerSpecification[] => {
     layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: {
       'line-color': '#ffffff',
-      'line-width': zoomStops([4, 1.1], [6, 1.8], [8, 2.6]),
-      'line-opacity': fadeOut(0.4, 7, 8.4),
+      'line-width': zoomStops([4, 1], [6, 1.5], [8, 2.2]),
+      'line-opacity': fadeOut(0.3, 7, 8.4),
     },
-  });
-
-  for (const [k, id] of SPARKLE_LAYER_IDS.entries()) {
-    layers.push({
-      id,
-      type: 'circle',
-      source: STORY_OCEAN_SOURCE,
-      filter: ['all', byKind('sparkle'), ['==', ['get', 'k'], k]] as FilterSpecification,
-      paint: {
-        'circle-color': '#ffffff',
-        'circle-radius': scaled('r', [4, 1.3], [6, 2.2], [8, 3.4]),
-        'circle-blur': 0.35,
-        'circle-opacity': 0.55,
-        'circle-pitch-alignment': 'map',
-        'circle-pitch-scale': 'map',
-      },
-    });
-  }
-  return layers;
-};
+  },
+  {
+    id: 'story_sparkle',
+    type: 'circle',
+    source: STORY_OCEAN_SOURCE,
+    filter: byKind('sparkle'),
+    paint: {
+      'circle-color': '#ffffff',
+      'circle-radius': scaled('r', [4, 1.2], [6, 2], [8, 3]),
+      'circle-blur': 0.35,
+      'circle-opacity': fadeOut(0.5, 7, 8.4),
+      'circle-pitch-alignment': 'map',
+      'circle-pitch-scale': 'map',
+    },
+  },
+];

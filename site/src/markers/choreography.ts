@@ -26,6 +26,8 @@ export interface MarkerItem {
   inert: boolean;
   bandOpacity: number;
   bandScale: number;
+  /** Pixels the marker is pushed down so its icon stays under the state's northern border. */
+  nudgeY: number;
 }
 
 export interface Offset {

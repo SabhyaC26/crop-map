@@ -20,8 +20,9 @@ export const OCEAN_SOURCE = 'ocean-mask';
 export const OUTSIDE_SOURCE = 'outside-ca';
 export const STICKER_SOURCE = 'ca-sticker';
 export const SHADOW_SOURCE = 'ca-shadow';
-export const BANDS_SOURCE = 'ocean-bands';
-export const WATERLINES_SOURCE = 'ocean-lines';
+export const GRADIENT_SOURCE = 'ocean-gradient';
+/** Confetti is inserted below this layer: the gradient is transparent over land but covers glow that spills offshore. */
+export const OCEAN_GRADIENT_LAYER_ID = 'ocean_gradient';
 
 /** Later layers (fields) are inserted below this id so roads and labels stay on top. */
 export const FIELDS_BEFORE_LAYER_ID = 'roads_tunnels_other_casing';
@@ -333,67 +334,44 @@ const buildOutsideVeil = (): LayerSpecification => ({
 });
 
 
-// Ocean depth bands (coast distance in degrees, from make-sticker-masks.py), widest/deepest first.
-const BAND_DISTANCES = [5.0, 3.4, 2.3, 1.55, 1.1, 0.8, 0.58, 0.42, 0.3, 0.2, 0.12, 0.06] as const;
-const BAND_GRADIENT = ['#3282e4', '#4ea6f3', '#7cd5f2', '#c9f7ee'] as const;
+// Smooth shore-to-deep ocean gradient and soft drop shadow, rendered once by scripts/make-sticker-rasters.py (keep bounds in sync).
+const OCEAN_GRADIENT_BOUNDS = { west: -148, east: -112, south: 24, north: 51 } as const;
+const SHADOW_BOUNDS = { west: -127, east: -112, south: 31, north: 43.5 } as const;
 
-const hexToRgb = (hex: string): [number, number, number] => {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-};
+type ImageCorners = [[number, number], [number, number], [number, number], [number, number]];
 
-const gradientAt = (stops: readonly string[], t: number): string => {
-  const x = Math.min(Math.max(t, 0), 1) * (stops.length - 1);
-  const i = Math.min(Math.floor(x), stops.length - 2);
-  const [r1, g1, b1] = hexToRgb(stops[i]!);
-  const [r2, g2, b2] = hexToRgb(stops[i + 1]!);
-  const f = x - i;
-  const ch = (u: number, v: number): string => Math.round(u + (v - u) * f).toString(16).padStart(2, '0');
-  return `#${ch(r1, r2)}${ch(g1, g2)}${ch(b1, b2)}`;
-};
-
-const OCEAN_BANDS: readonly [number, string][] = BAND_DISTANCES.map((d, i) => [
-  d,
-  gradientAt(BAND_GRADIENT, (i / (BAND_DISTANCES.length - 1)) ** 0.9),
-]);
+const imageCorners = (b: { west: number; east: number; south: number; north: number }): ImageCorners => [
+  [b.west, b.north],
+  [b.east, b.north],
+  [b.east, b.south],
+  [b.west, b.south],
+];
 
 const STICKER_FADE = zoomStops([6.5, 1], [9, 0]);
 
-const buildOceanBands = (): LayerSpecification[] => [
-  ...OCEAN_BANDS.map(
-    ([d, color]): LayerSpecification => ({
-      id: `ocean_band_${d}`,
-      type: 'fill',
-      source: BANDS_SOURCE,
-      filter: ['==', ['get', 'd'], d],
-      paint: { 'fill-color': color, 'fill-antialias': false, 'fill-opacity': STICKER_FADE },
-    }),
-  ),
+const buildOceanGradient = (): LayerSpecification[] => [
   {
-    id: 'ocean_waterlines',
-    type: 'line',
-    source: WATERLINES_SOURCE,
-    layout: { 'line-join': 'round', 'line-cap': 'round' },
+    id: OCEAN_GRADIENT_LAYER_ID,
+    type: 'raster',
+    source: GRADIENT_SOURCE,
     paint: {
-      'line-color': '#ffffff',
-      'line-opacity': zoomStops([6.5, 0.42], [9, 0]),
-      'line-width': zoomStops([4, 0.8], [7, 1.4]),
-      'line-blur': 0.4,
-      'line-dasharray': [0.1, 2.2],
+      'raster-opacity': STICKER_FADE,
+      'raster-resampling': 'linear',
+      'raster-fade-duration': 0,
     },
   },
 ];
 
-// Soft raised shadow (stacked offset rings with CA cut out) + glossy white die-cut edge.
+// Soft raised shadow (baked gaussian raster with CA cut out) + glossy white die-cut edge.
 const buildStickerLayers = (): LayerSpecification[] => [
   {
     id: 'ca_sticker_shadow',
-    type: 'fill',
+    type: 'raster',
     source: SHADOW_SOURCE,
     paint: {
-      'fill-color': '#2d3a8c',
-      'fill-antialias': true,
-      'fill-opacity': zoomStops([6.5, 0.062], [9, 0]),
+      'raster-opacity': STICKER_FADE,
+      'raster-resampling': 'linear',
+      'raster-fade-duration': 0,
     },
   },
   {
@@ -445,7 +423,7 @@ export const SKY: SkySpecification = {
   'sky-horizon-blend': 0.6,
   'horizon-fog-blend': 0.7,
   'fog-ground-blend': 0.2,
-  'atmosphere-blend': zoomStops([0, 1], [5, 1], [7, 0]) as never,
+  'atmosphere-blend': zoomStops([0, 1], [3.5, 0.6], [4.4, 0]) as never,
 };
 
 export const buildBasemapLayers = (): LayerSpecification[] => {
@@ -457,7 +435,7 @@ export const buildBasemapLayers = (): LayerSpecification[] => {
     if (layer.id === 'water_label_ocean') out.push(buildOutsideVeil(), ...buildStickerLayers());
     if (layer.id === 'roads_runway') out.push(buildHillshade(), buildOceanMask(), ...buildSnowLayers(TERRAIN_SOURCE));
     out.push(layer);
-    if (layer.id === 'water_river') out.push(...buildShoreLayers(), ...buildOceanBands(), ...buildOceanDecorLayers());
+    if (layer.id === 'water_river') out.push(...buildShoreLayers(), ...buildOceanGradient(), ...buildOceanDecorLayers());
   }
   out.push(...buildGeoLabelLayers());
   return out;
@@ -488,9 +466,16 @@ export const buildBasemapStyle = (origin: string, baseUrl: string): StyleSpecifi
       tolerance: 0.5,
     },
     [STICKER_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/ca-sticker.geojson`, tolerance: 0.1 },
-    [SHADOW_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/ca-shadow.geojson`, tolerance: 0.2 },
-    [BANDS_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/ocean-bands.geojson`, tolerance: 0.3 },
-    [WATERLINES_SOURCE]: { type: 'geojson', data: `${origin}${baseUrl}data/ocean-lines.geojson`, tolerance: 0.3 },
+    [SHADOW_SOURCE]: {
+      type: 'image',
+      url: `${origin}${baseUrl}data/ca-shadow.png`,
+      coordinates: imageCorners(SHADOW_BOUNDS),
+    },
+    [GRADIENT_SOURCE]: {
+      type: 'image',
+      url: `${origin}${baseUrl}data/ocean-gradient.png`,
+      coordinates: imageCorners(OCEAN_GRADIENT_BOUNDS),
+    },
     [TERRAIN_SOURCE]: {
       type: 'raster-dem',
       tiles: [TERRAIN_TILES_URL],

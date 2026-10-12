@@ -1,5 +1,5 @@
 // Generates site/public/data/storybook-ocean.geojson: little wave marks (LineStrings),
-// sparkle points and cloud-shadow centres scattered over open Pacific water.
+// and sparkle points scattered over open Pacific water.
 // Usage: node scripts/make-storybook-ocean.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -60,10 +60,10 @@ const waveLine = ([cx, cy], len, amp) => {
 
 const features = [];
 const centres = [];
-while (centres.length < 46) {
+while (centres.length < 30) {
   const p = sample(0.55);
   if (!p) break;
-  if (!farEnough(centres, p, 1.15)) continue;
+  if (!farEnough(centres, p, 1.45)) continue;
   centres.push(p);
   const len = 0.38 + rand() * 0.3;
   features.push({
@@ -74,10 +74,10 @@ while (centres.length < 46) {
 }
 
 const sparkles = [];
-while (sparkles.length < 90) {
+while (sparkles.length < 55) {
   const p = sample(0.3);
   if (!p) break;
-  if (!farEnough(sparkles, p, 0.5)) continue;
+  if (!farEnough(sparkles, p, 0.7)) continue;
   sparkles.push(p);
   features.push({
     type: 'Feature',
@@ -86,26 +86,8 @@ while (sparkles.length < 90) {
   });
 }
 
-const clouds = [];
-const cloudSpots = [
-  [-128.6, 41.0],
-  [-127.4, 37.6],
-  [-129.6, 34.2],
-  [-126.8, 33.2],
-  [-130.6, 38.8],
-];
-for (const [i, p] of cloudSpots.entries()) {
-  if (!inOcean(p[0], p[1])) continue;
-  clouds.push(p);
-  features.push({
-    type: 'Feature',
-    properties: { kind: 'cloud', k: i % 3, r: 1 + (i % 2) * 0.35 },
-    geometry: { type: 'Point', coordinates: p },
-  });
-}
-
 writeFileSync(
   join(dataDir, 'storybook-ocean.geojson'),
   JSON.stringify({ type: 'FeatureCollection', features }),
 );
-console.log({ waves: centres.length, sparkles: sparkles.length, clouds: clouds.length });
+console.log({ waves: centres.length, sparkles: sparkles.length });

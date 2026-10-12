@@ -2,7 +2,7 @@ import type { ExpressionSpecification, LayerSpecification, Map as MapLibreMap } 
 import { OVERVIEW_URL } from '../config';
 import type { CropIndex } from '../data/crops';
 import { saturate } from '../lib/color';
-import { FIELDS_BEFORE_LAYER_ID } from '../style/basemap';
+import { OCEAN_GRADIENT_LAYER_ID } from '../style/basemap';
 
 export const OVERVIEW_SOURCE = 'overview';
 export const OVERVIEW_LAYER = 'overview';
@@ -36,12 +36,12 @@ function buildLayers(crops: CropIndex): LayerSpecification[] {
       source: OVERVIEW_SOURCE,
       'source-layer': OVERVIEW_LAYER,
       maxzoom: 11,
-      filter: FARMLAND_ONLY,
+      filter: ['all', FARMLAND_ONLY, ['==', ['get', 'g'], 1]],
       paint: {
         'circle-color': color,
-        'circle-radius': zoomCurve([4, 7], [5, 9.5], [6, 12], [8, 19], [10, 26]),
+        'circle-radius': zoomCurve([4, 13], [5, 17], [6, 19], [8, 26], [10, 34]),
         'circle-blur': 1,
-        'circle-opacity': zoomCurve([4, 0.45], [7, 0.34], [9.5, 0.22], [10.8, 0]),
+        'circle-opacity': zoomCurve([4, 0.3], [7, 0.3], [9.5, 0.24], [10.8, 0]),
         'circle-pitch-alignment': 'map',
       },
     },
@@ -66,5 +66,5 @@ function buildLayers(crops: CropIndex): LayerSpecification[] {
 export function addOverviewLayers(map: MapLibreMap, crops: CropIndex): void {
   const url = `pmtiles://${new URL(OVERVIEW_URL, `${window.location.origin}/`).href}`;
   map.addSource(OVERVIEW_SOURCE, { type: 'vector', url });
-  for (const spec of buildLayers(crops)) map.addLayer(spec, FIELDS_BEFORE_LAYER_ID);
+  for (const spec of buildLayers(crops)) map.addLayer(spec, OCEAN_GRADIENT_LAYER_ID);
 }

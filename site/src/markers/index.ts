@@ -15,10 +15,11 @@ import {
   type MarkerItem,
   type Offset,
 } from './choreography';
-import { resolveCollisions } from './collision';
+import { GLYPH_INSET, resolveCollisions, type Rect } from './collision';
+import { createGeoLabelGuard } from './geo-labels';
 import { buildMarkerElement, estimateLabelWidth } from './element';
 import type { Region, RegionLevel, RegionSet } from './regions';
-import { bandOpacity, bandScale, inBand, MERGE_ZOOM, sizeScale, SPLIT_ZOOM } from './zoom';
+import { bandOpacity, bandScale, GROUND_GAP, inBand, LABEL_HEIGHT, MERGE_ZOOM, sizeScale, SPLIT_ZOOM } from './zoom';
 
 export { loadRegions } from './regions';
 export type { RegionSet } from './regions';
@@ -34,6 +35,11 @@ const MAX_PARENT_OFFSET = 720;
 const COLLISION_THROTTLE_MS = 140;
 const MOBILE_SIZE_FACTOR = 0.82;
 const REVEAL_STAGGER_MS = 40;
+const CA_NORTH_BORDER_LAT = 42;
+const NUDGE_MIN_LAT = 40.5;
+const NUDGE_MARGIN = 4;
+const MAX_NUDGE = 110;
+const UI_OBSTACLE_SELECTOR = '#title-pill, #search-slot > *, #month-slot > *, .maplibregl-ctrl-bottom-right .maplibregl-ctrl-group';
 
 const levelOf = (zoom: number, current: RegionLevel | null): RegionLevel => {
   if (current === 'fine') return zoom < MERGE_ZOOM ? 'coarse' : 'fine';
@@ -82,6 +88,7 @@ export function createRegionMarkers(
         inert: false,
         bandOpacity: -1,
         bandScale: -1,
+        nudgeY: 0,
       };
       byLevel[level].push(item);
       byId.set(region.id, item);
@@ -105,6 +112,7 @@ export function createRegionMarkers(
     });
   }
   const all = [...byLevel.coarse, ...byLevel.fine];
+  const geoLabels = createGeoLabelGuard(map);
 
   let mode: RegionLevel = levelOf(map.getZoom(), null);
   let revealed = false;
@@ -121,6 +129,18 @@ export function createRegionMarkers(
     const live = item.shown && item.gateOn && !item.inert;
     root.tabIndex = live ? 0 : -1;
     root.classList.toggle('is-inert', item.inert);
+  };
+
+  /** Coarse icons float above their anchor; near the Oregon line that would push them outside California, so slide them down just enough. */
+  const applyBorderNudge = (item: MarkerItem, scale: number): void => {
+    const [lng, lat] = item.region.lngLat;
+    if (lat < NUDGE_MIN_LAT) return;
+    const border = map.project([lng, CA_NORTH_BORDER_LAT]).y;
+    const iconTop = map.project(item.region.lngLat).y - (GROUND_GAP + LABEL_HEIGHT + item.size * (1 - GLYPH_INSET)) * scale;
+    const nudge = Math.min(MAX_NUDGE, Math.max(0, border + NUDGE_MARGIN - iconTop));
+    if (Math.abs(nudge - item.nudgeY) < 0.75) return;
+    item.nudgeY = nudge;
+    item.marker.setOffset([0, nudge]);
   };
 
   const applyZoom = (force: boolean): void => {
@@ -152,6 +172,7 @@ export function createRegionMarkers(
         style.transform = `scale(${t})`;
         item.parts.label.style.transform = `scale(${(1 / scale).toFixed(3)})`;
       }
+      if (level === 'coarse') applyBorderNudge(item, scale);
     }
   };
 
@@ -165,9 +186,26 @@ export function createRegionMarkers(
     for (const item of all) item.labelWidth = item.parts.name.offsetWidth || item.labelWidth;
   };
 
+  /** Floating UI (pills, season panel, zoom buttons) in map-container pixels: markers never sit under it. */
+  const uiObstacles = (): Rect[] => {
+    const container = map.getContainer();
+    const origin = container.getBoundingClientRect();
+    const targets = container.parentElement?.querySelectorAll(UI_OBSTACLE_SELECTOR) ?? [];
+    const rects: Rect[] = [];
+    for (const el of targets) {
+      const r = el.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) {
+        rects.push({ x0: r.left - origin.left, x1: r.right - origin.left, y0: r.top - origin.top, y1: r.bottom - origin.top });
+      }
+    }
+    return rects;
+  };
+
   const collide = (): void => {
     lastCollide = performance.now();
-    for (const item of resolveCollisions(map, priority(byLevel[mode]), map.getZoom())) refreshInteractive(item);
+    const { changed, placed } = resolveCollisions(map, priority(byLevel[mode]), map.getZoom(), uiObstacles());
+    for (const item of changed) refreshInteractive(item);
+    geoLabels.update(placed);
   };
 
   const scheduleCollide = (): void => {
@@ -270,6 +308,11 @@ export function createRegionMarkers(
   map.on('zoom', schedule);
   map.on('move', onMove);
   map.on('moveend', onMoveEnd);
+  // Labels are placed after the first frames, so re-check them once the map settles.
+  const onIdle = (): void => {
+    if (!destroyed && revealed) collide();
+  };
+  map.on('idle', onIdle);
 
   for (const item of all) {
     item.parts.root.addEventListener('click', (e) => {
@@ -305,9 +348,11 @@ export function createRegionMarkers(
     },
     destroy() {
       destroyed = true;
+      geoLabels.destroy();
       map.off('zoom', schedule);
       map.off('move', onMove);
       map.off('moveend', onMoveEnd);
+      map.off('idle', onIdle);
       map.off('idle', reveal);
       if (frame !== 0) cancelAnimationFrame(frame);
       if (collideTimer !== undefined) clearTimeout(collideTimer);

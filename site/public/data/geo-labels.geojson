@@ -36,7 +36,8 @@
    "properties": {
     "name": "SIERRA NEVADA",
     "kind": "mountain",
-    "rank": 2
+    "rank": 2,
+    "view": "full"
    },
    "geometry": {
     "type": "LineString",
@@ -67,6 +68,32 @@
   {
    "type": "Feature",
    "properties": {
+    "name": "SIERRA NEVADA",
+    "kind": "mountain",
+    "rank": 2,
+    "view": "compact"
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      -121.0,
+      40.2
+     ],
+     [
+      -119.9,
+      38.6
+     ],
+     [
+      -118.9,
+      37.0
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "properties": {
     "name": "COAST RANGES",
     "kind": "range_note",
     "rank": 4
@@ -76,21 +103,6 @@
     "coordinates": [
      -123.2,
      40.1
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
-    "name": "CENTRAL VALLEY",
-    "kind": "valley",
-    "rank": 5
-   },
-   "geometry": {
-    "type": "Point",
-    "coordinates": [
-     -120.95,
-     37.6
     ]
    }
   },
@@ -139,27 +151,6 @@
   {
    "type": "Feature",
    "properties": {
-    "name": "CASCADE RANGE",
-    "kind": "range",
-    "rank": 7
-   },
-   "geometry": {
-    "type": "LineString",
-    "coordinates": [
-     [
-      -125.035,
-      42.263
-     ],
-     [
-      -118.765,
-      42.437
-     ]
-    ]
-   }
-  },
-  {
-   "type": "Feature",
-   "properties": {
     "name": "Lake Tahoe",
     "kind": "lake",
     "rank": 8
@@ -197,8 +188,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     -122.19,
-     41.41
+     -122.25,
+     40.85
     ]
    }
   },
@@ -212,8 +203,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     -124.15,
-     41.6
+     -123.75,
+     40.85
     ]
    }
   },
@@ -227,8 +218,8 @@
    "geometry": {
     "type": "Point",
     "coordinates": [
-     -115.9,
-     34.1
+     -115.7,
+     34.55
     ]
    }
   },
@@ -304,20 +295,20 @@
     "type": "LineString",
     "coordinates": [
      [
-      -127.6,
-      31.9
+      -124.6,
+      31.5
      ],
      [
-      -124.0,
-      31.4
+      -122.4,
+      31.3
      ],
      [
       -120.4,
       31.2
      ],
      [
-      -118.0,
-      31.3
+      -118.4,
+      31.1
      ]
     ]
    }

@@ -8,6 +8,9 @@ export const MERGE_ZOOM = 7.34;
 const COARSE_DIM_START = 7.2;
 const FINE_FADE: readonly [number, number] = [9.8, 10.4];
 
+/** Coarse icons start small at whole-California zoom so far more of them fit without overlapping. */
+const COARSE_MIN_SCALE = 0.44;
+
 export const COARSE_SIZE: readonly [number, number] = [64, 112];
 export const FINE_SIZE: readonly [number, number] = [40, 68];
 
@@ -43,7 +46,7 @@ export function bandOpacity(level: RegionLevel, zoom: number): number {
 export function bandScale(level: RegionLevel, zoom: number, opacity: number): number {
   switch (level) {
     case 'coarse':
-      return lerp(0.66, 1.1, clamp01((zoom - 4.6) / (SPLIT_ZOOM - 4.6))) * (0.9 + 0.1 * opacity);
+      return lerp(COARSE_MIN_SCALE, 1.1, clamp01((zoom - 4.6) / (SPLIT_ZOOM - 4.6)) ** 1.25) * (0.9 + 0.1 * opacity);
     case 'fine':
       return lerp(0.86, 1.2, clamp01((zoom - SPLIT_ZOOM) / (10 - SPLIT_ZOOM))) * (0.88 + 0.12 * opacity);
     default: {
