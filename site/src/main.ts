@@ -10,8 +10,17 @@ import { createMap } from './map';
 const container = document.getElementById('map');
 if (!container) throw new Error('#map container missing');
 
-const popupRoot = document.getElementById('popup-root');
-if (!popupRoot) throw new Error('#popup-root missing');
+const requireElement = (id: string): HTMLElement => {
+  const el = document.getElementById(id);
+  if (!el) throw new Error(`#${id} missing`);
+  return el;
+};
+
+const slots = {
+  popupRoot: requireElement('popup-root'),
+  searchSlot: requireElement('search-slot'),
+  monthSlot: requireElement('month-slot'),
+};
 
 const map = createMap(container);
 map.once('idle', () => document.documentElement.classList.add('map-ready'));
@@ -24,7 +33,7 @@ declare global {
 }
 window.__map = map;
 
-initCropMap(map, popupRoot)
+initCropMap(map, slots)
   .then((app) => {
     window.__app = app;
   })

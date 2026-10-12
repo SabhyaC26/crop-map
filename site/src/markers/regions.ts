@@ -14,9 +14,19 @@ export interface Region {
   lngLat: [number, number];
 }
 
+export interface SearchTarget {
+  center: [number, number];
+  zoom: number;
+  label: string;
+  acres_total: number;
+}
+
+export type RegionsSearch = Record<string, SearchTarget>;
+
 export interface RegionSet {
   coarse: readonly Region[];
   fine: readonly Region[];
+  search: RegionsSearch;
 }
 
 interface RegionFeature {
@@ -27,6 +37,7 @@ interface RegionFeature {
 interface RegionsFile {
   coarse: { features: RegionFeature[] };
   fine: { features: RegionFeature[] };
+  search: RegionsSearch;
 }
 
 const toRegions = (features: readonly RegionFeature[], level: RegionLevel): Region[] =>
@@ -47,5 +58,9 @@ export async function loadRegions(url: string = REGIONS_URL): Promise<RegionSet>
   const res = await fetch(url);
   if (!res.ok) throw new Error(`regions.json: HTTP ${res.status}`);
   const file = (await res.json()) as RegionsFile;
-  return { coarse: toRegions(file.coarse.features, 'coarse'), fine: toRegions(file.fine.features, 'fine') };
+  return {
+    coarse: toRegions(file.coarse.features, 'coarse'),
+    fine: toRegions(file.fine.features, 'fine'),
+    search: file.search,
+  };
 }

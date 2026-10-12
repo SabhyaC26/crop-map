@@ -4,14 +4,7 @@ import type { loadIconManifest } from '../lib/icons';
 
 export type IconManifest = Awaited<ReturnType<typeof loadIconManifest>>;
 
-export interface SearchTarget {
-  center: [number, number];
-  zoom: number;
-  label: string;
-  acres_total: number;
-}
-
-export type RegionsSearch = Record<string, SearchTarget>;
+export type { RegionsSearch, SearchTarget } from '../markers/regions';
 
 export interface EmphasisSink {
   setEmphasis(ids: Set<number> | null): void;
