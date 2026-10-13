@@ -1,9 +1,12 @@
+import type { Map as MapLibreMap } from 'maplibre-gl';
 import { prefersReducedMotion } from './motion';
 
 /** Must match the `#map` / `#boot` fade in boot.css. */
 export const MAP_FADE_MS = 400;
-/** Safety net: never leave the skeleton up if the map cannot report idle. */
+/** Safety net: never leave the skeleton up if the sources never report loaded. */
 const GIVE_UP_MS = 12000;
+/** Once everything else is in, wait at most this long for the slow sources (terrain shading comes from AWS). */
+const SLOW_SOURCE_GRACE_MS = 500;
 
 let announce: () => void = () => undefined;
 
@@ -22,11 +25,24 @@ export function showMap(): void {
   window.setTimeout(announce, prefersReducedMotion() ? 0 : MAP_FADE_MS);
 }
 
-/** Calls `showMap` after `ready` settles and the map has painted at least once more, or after a timeout. */
-export function showMapWhenIdle(map: { once(type: 'idle', fn: () => void): unknown }, ready: Promise<unknown>): void {
+/**
+ * Calls `showMap` after `ready` settles and every source except `slowSources` has its tiles, giving the slow ones a
+ * short grace period. Waiting for full `idle` instead would hold the whole map back on the slowest terrain tile.
+ */
+export function showMapWhenReady(map: MapLibreMap, ready: Promise<unknown>, slowSources: readonly string[]): void {
   window.setTimeout(showMap, GIVE_UP_MS);
-  const settle = (): void => {
-    map.once('idle', showMap);
+  let graceTimer: number | undefined;
+  const loaded = (ids: string[]): boolean => ids.every((id) => map.isSourceLoaded(id));
+  const check = (): void => {
+    const ids = Object.keys(map.getStyle().sources);
+    if (!loaded(ids.filter((id) => !slowSources.includes(id)))) return;
+    graceTimer ??= window.setTimeout(showMap, SLOW_SOURCE_GRACE_MS);
+    if (loaded(ids)) showMap();
+    if (started) map.off('render', check);
   };
-  ready.then(settle, settle);
+  const watch = (): void => {
+    map.on('render', check);
+    map.triggerRepaint();
+  };
+  ready.then(watch, watch);
 }

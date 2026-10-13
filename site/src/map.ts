@@ -74,7 +74,12 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     touchPitch: false,
     attributionControl: false,
     renderWorldCopies: false,
+    // 3x phones would shade 2.25x the pixels of 2x for detail nobody can see on a map canvas.
+    pixelRatio: Math.min(window.devicePixelRatio, 2),
   });
+
+  map.on('movestart', () => container.classList.add('is-moving'));
+  map.on('moveend', () => container.classList.remove('is-moving'));
 
   map.once('style.load', () => {
     frameCalifornia(map, container);

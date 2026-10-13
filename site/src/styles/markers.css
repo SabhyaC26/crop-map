@@ -170,6 +170,13 @@
     transform 0.45s var(--spring);
 }
 
+/* Panning already re-positions every marker each frame; the bob resumes when the map settles. */
+.is-moving .crop-marker__float,
+.is-moving .crop-marker__icon,
+.is-moving .crop-marker__shadow {
+  animation-play-state: paused;
+}
+
 .crop-marker__shadow {
   position: absolute;
   left: 0;

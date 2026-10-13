@@ -135,6 +135,7 @@ export function createRegionMarkers(
   let frame = 0;
   let collideTimer: ReturnType<typeof setTimeout> | undefined;
   let lastCollide = 0;
+  let labelsClear = false;
   let destroyed = false;
 
   const refreshInteractive = (item: MarkerItem): void => {
@@ -238,6 +239,10 @@ export function createRegionMarkers(
 
   const collide = (): void => {
     lastCollide = performance.now();
+    // Zoomed past every marker band: once the place names are restored there is nothing left to collide.
+    const empty = !hidden && !all.some((item) => item.attached);
+    if (empty && labelsClear) return;
+    labelsClear = empty;
     const obstacles = uiObstacles();
     const coarse = mode === 'coarse';
     const { changed, placed } = resolveCollisions(map, byLevel[mode], map.getZoom(), obstacles, {
@@ -371,8 +376,8 @@ export function createRegionMarkers(
   applyZoom(true);
   // The emoji drop in only after the skeleton has faded and the map is visible.
   void mapShown.then(() => {
-    if (map.loaded() && !map.isMoving()) requestAnimationFrame(reveal);
-    else map.once('idle', reveal);
+    if (!map.isMoving()) requestAnimationFrame(reveal);
+    else map.once('moveend', reveal);
   });
 
   return {
@@ -393,7 +398,7 @@ export function createRegionMarkers(
       map.off('move', onMove);
       map.off('moveend', onMoveEnd);
       map.off('idle', onIdle);
-      map.off('idle', reveal);
+      map.off('moveend', reveal);
       if (frame !== 0) cancelAnimationFrame(frame);
       if (collideTimer !== undefined) clearTimeout(collideTimer);
       for (const item of all) {

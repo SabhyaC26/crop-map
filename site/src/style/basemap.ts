@@ -494,14 +494,15 @@ export const buildBasemapStyle = (origin: string, baseUrl: string): StyleSpecifi
     },
     [GRADIENT_SOURCE]: {
       type: 'image',
-      url: `${origin}${baseUrl}data/ocean-gradient.png`,
+      url: `${origin}${baseUrl}data/ocean-gradient.webp`,
       coordinates: imageCorners(OCEAN_GRADIENT_BOUNDS),
     },
     [TERRAIN_SOURCE]: {
       type: 'raster-dem',
       tiles: [TERRAIN_TILES_URL],
       encoding: 'terrarium',
-      tileSize: 256,
+      // The 256px Terrarium tiles stretched over 512px: a quarter of the requests, and the soft shading looks the same.
+      tileSize: 512,
       maxzoom: 13,
       attribution: 'Terrain: Mapzen / AWS',
     },

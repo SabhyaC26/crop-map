@@ -6,8 +6,10 @@ All icons live in `site/public/icons/` and are indexed by `site/public/icons/man
 ## Fluent Emoji (32 emoji-backed slugs)
 
 3D PNGs from [microsoft/fluentui-emoji](https://github.com/microsoft/fluentui-emoji), MIT License,
-Copyright (c) Microsoft Corporation. Files are the unmodified 256x256 `*_3d.png` assets
-(they ship at 256px, so no resize was needed). Source URLs are also in `assets-src/icons/sources.json`.
+Copyright (c) Microsoft Corporation. The unmodified 256x256 `*_3d.png` assets live in
+`assets-src/icons/fluent-256/`; `site/scripts/encode-icons.mjs` ships them as 160px WebP (the largest marker is
+52 css px, so 160px covers 3x screens) and points `manifest.json` at them. Source URLs are also in
+`assets-src/icons/sources.json`.
 
 Mapping notes: `lettuce` = Leafy green, `corn` = Ear of corn, `orange` = Tangerine, `apple` = Red apple,
 `kiwi` = Kiwi fruit, `rice` = Sheaf of rice, `blueberry` = Blueberries, `cow` = Cow (full body).

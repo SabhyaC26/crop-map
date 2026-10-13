@@ -6,8 +6,9 @@ import './styles/popup.css';
 import './styles/markers.css';
 import './styles/boot.css';
 import { initCropMap, type CropMapApp } from './app';
-import { showMapWhenIdle } from './lib/ready';
+import { showMapWhenReady } from './lib/ready';
 import { createMap } from './map';
+import { TERRAIN_SOURCE } from './style/basemap';
 
 const container = document.getElementById('map');
 if (!container) throw new Error('#map container missing');
@@ -40,5 +41,5 @@ const ready = initCropMap(map, slots)
   })
   .catch((err: unknown) => console.error('crop layers failed to initialise', err));
 
-// Skeleton until the crop layers are in and the map has painted once more, then fade the map in.
-showMapWhenIdle(map, ready);
+// Skeleton until the crop layers and their tiles are in, then fade the map in.
+showMapWhenReady(map, ready, [TERRAIN_SOURCE]);
