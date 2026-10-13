@@ -22,7 +22,14 @@ export function showMap(): void {
   if (started) return;
   started = true;
   document.documentElement.classList.add('map-ready');
-  window.setTimeout(announce, prefersReducedMotion() ? 0 : MAP_FADE_MS);
+  window.setTimeout(
+    () => {
+      // A faded-out skeleton would keep its shimmer animations ticking for the life of the page.
+      document.getElementById('boot')?.remove();
+      announce();
+    },
+    prefersReducedMotion() ? 0 : MAP_FADE_MS,
+  );
 }
 
 /**

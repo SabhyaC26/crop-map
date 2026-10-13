@@ -36,6 +36,11 @@ const VARIANTS = {
   noMarkers: css('.maplibregl-marker { display: none !important; }'),
   noSymbols: symbolIds,
   noFieldTexture: hide(['fields-texture']),
+  noHillshade: hide(['hillshade']),
+  noStickerRasters: hide(['ca_sticker_shadow', 'ocean_gradient']),
+  bobConst: css(
+    '@keyframes crop-bob { 0%,100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-3px) rotate(1.5deg); } }',
+  ),
 };
 const names = arg('variants', Object.keys(VARIANTS).join(',')).split(',');
 
@@ -78,12 +83,17 @@ const ALL_SCENARIOS = [
   { name: 'zoom z5->9.5', setup: jump({ center: [-120.5, 37], zoom: 5 }), run: ease({ center: [-121.2, 36.7], zoom: 9.5, duration: 2200 }) },
   { name: 'pan z8', setup: jump({ center: [-121, 36.5], zoom: 8 }), run: ease({ center: [-119.2, 37.4], duration: 2200 }) },
   { name: 'pan z12 Salinas', setup: jump({ center: [-121.65, 36.68], zoom: 12 }), run: ease({ center: [-121.37, 36.8], duration: 2200 }) },
+  { name: 'zoom z9->13 fields', setup: jump({ center: [-121.0, 37.6], zoom: 9 }), run: ease({ center: [-121.03, 37.6], zoom: 13, duration: 2200 }) },
+  { name: 'fly z6->8.6', setup: jump({ center: [-119.6, 37.2], zoom: 6 }), run: `new Promise((res) => { const m = window.__map; m.once('moveend', () => res()); m.flyTo({ center: [-120.6, 37.3], zoom: 8.6, duration: 1600 }); })` },
+  { name: 'hover z12 fields', setup: jump({ center: [-121.62, 36.62], zoom: 12 }), run: `new Promise((res) => { const c = window.__map.getCanvas(); const r = c.getBoundingClientRect(); let i = 0; const step = () => { const x = r.left + 100 + (i % 120) * ((r.width - 200) / 120); const y = r.top + r.height / 2 + 120 * Math.sin(i / 9); c.dispatchEvent(new PointerEvent('pointermove', { clientX: x, clientY: y, bubbles: true })); c.dispatchEvent(new MouseEvent('mousemove', { clientX: x, clientY: y, bubbles: true })); if (++i < 132) requestAnimationFrame(step); else res(); }; requestAnimationFrame(step); })` },
 ];
 
 const wanted = arg('scenarios', ALL_SCENARIOS.map((s) => s.name).join('|')).split('|');
 const SCENARIOS = ALL_SCENARIOS.filter((s) => wanted.includes(s.name));
 
-const browser = await chromium.launch({ args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
+// CHROMIUM_PATH + GL=swiftshader for headless Linux; defaults to the bundled browser on a real GPU (macOS Metal).
+const GL_ARGS = process.env.GL === 'swiftshader' ? ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] : ['--use-angle=metal', '--enable-gpu'];
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH, args: [...GL_ARGS, '--ignore-gpu-blocklist'] });
 const results = [];
 async function runVariant(variant) {
   const ctx = await browser.newContext({ viewport: { width: VW, height: VH }, deviceScaleFactor: DPR });

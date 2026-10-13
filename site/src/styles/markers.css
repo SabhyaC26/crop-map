@@ -170,10 +170,11 @@
     transform 0.45s var(--spring);
 }
 
-/* Panning already re-positions every marker each frame; the bob resumes when the map settles. */
-.is-moving .crop-marker__float,
-.is-moving .crop-marker__icon,
-.is-moving .crop-marker__shadow {
+/* Panning already re-positions every marker each frame; the bob resumes when the map settles.
+   Markers nobody can see (hidden, collided, faded out, stepped aside for search, off-screen) hold their pose too. */
+.is-moving .crop-marker :is(.crop-marker__float, .crop-marker__icon, .crop-marker__shadow),
+.crop-marker:is([data-state='hidden'], [data-gate='off'], [data-suppressed], [data-offscreen], .is-inert)
+  :is(.crop-marker__float, .crop-marker__icon, .crop-marker__shadow) {
   animation-play-state: paused;
 }
 

@@ -67,11 +67,16 @@ export function mountCompassRose(host: HTMLElement, map: MapLibreMap): void {
   root.appendChild(dial);
   host.appendChild(root);
 
+  let opacity = '';
+  let transform = '';
+  // Zoom fires every frame; only touch the DOM when the value actually changes.
   const sync = (): void => {
     const z = map.getZoom();
     const t = Math.min(1, Math.max(0, (z - FADE_START_ZOOM) / (FADE_END_ZOOM - FADE_START_ZOOM)));
-    root.style.opacity = String(1 - t);
-    dial.style.transform = `rotate(${-map.getBearing()}deg)`;
+    const nextOpacity = (1 - t).toFixed(3);
+    const nextTransform = `rotate(${(-map.getBearing()).toFixed(2)}deg)`;
+    if (nextOpacity !== opacity) root.style.opacity = opacity = nextOpacity;
+    if (nextTransform !== transform) dial.style.transform = transform = nextTransform;
   };
   map.on('zoom', sync);
   map.on('rotate', sync);

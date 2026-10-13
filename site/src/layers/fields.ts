@@ -256,7 +256,17 @@ export function addFieldsLayers(map: MapLibreMap, crops: CropIndex): FieldsLayer
     canvas.style.cursor = id === null ? '' : 'pointer';
   };
 
-  map.on('mousemove', (e) => setHover(queryAt(e.point)?.id ?? null));
+  // Mice report faster than frames, and hover is meaningless mid-drag: hit-test at most once per frame, at rest.
+  let hoverPoint: PointLike | null = null;
+  let hoverFrame = 0;
+  map.on('mousemove', (e) => {
+    hoverPoint = e.point;
+    hoverFrame ||= requestAnimationFrame(() => {
+      hoverFrame = 0;
+      if (hoverPoint && !map.isMoving()) setHover(queryAt(hoverPoint)?.id ?? null);
+      hoverPoint = null;
+    });
+  });
   canvas.addEventListener('mouseleave', () => setHover(null));
   map.on('zoomstart', () => {
     if (!interactive()) setHover(null);

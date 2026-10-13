@@ -50,6 +50,8 @@ const MAX_PARENT_OFFSET = 720;
 const COLLISION_THROTTLE_MS = 140;
 const MOBILE_SIZE_FACTOR = 0.82;
 const REVEAL_STAGGER_MS = 40;
+/** Pixels beyond the viewport edge before a marker counts as off-screen. */
+const OFFSCREEN_MARGIN = 120;
 const CA_NORTH_BORDER_LAT = 42;
 const NUDGE_MIN_LAT = 40.5;
 const NUDGE_MARGIN = 4;
@@ -163,7 +165,8 @@ export function createRegionMarkers(
     const zoom = map.getZoom();
     for (const item of all) {
       const { level } = item.region;
-      const wanted = item.shown || inBand(level, zoom);
+      // Out of band a marker is fully faded: off the map it costs nothing per frame. Running split/merge keeps it on.
+      const wanted = inBand(level, zoom) || item.anims.length > 0;
       if (wanted !== item.attached) {
         item.attached = wanted;
         if (wanted) item.marker.addTo(map);
@@ -196,8 +199,16 @@ export function createRegionMarkers(
     for (const item of all) item.labelWidth = item.parts.name.offsetWidth || item.labelWidth;
   };
 
+  let obstacleCache: Rect[] | null = null;
   /** Floating UI (search pill, places card, zoom buttons) in map-container pixels: markers never sit under it. */
   const uiObstacles = (): Rect[] => {
+    // The UI does not move with the map, so mid-gesture reuse skips a forced layout on every collision pass.
+    if (map.isMoving() && obstacleCache) return obstacleCache;
+    obstacleCache = measureObstacles();
+    return obstacleCache;
+  };
+
+  const measureObstacles = (): Rect[] => {
     const container = map.getContainer();
     const origin = container.getBoundingClientRect();
     const targets = container.parentElement?.querySelectorAll(UI_OBSTACLE_SELECTOR) ?? [];
@@ -237,6 +248,20 @@ export function createRegionMarkers(
     return out;
   };
 
+  /** Flags markers well outside the viewport so their bob pauses (styles/markers.css); they stay attached so nothing pops in at the edge. */
+  const markOffscreen = (): void => {
+    const { clientWidth: w, clientHeight: h } = map.getContainer();
+    for (const item of all) {
+      if (!item.attached) continue;
+      const p = map.project(item.region.lngLat);
+      const off = p.x < -OFFSCREEN_MARGIN || p.x > w + OFFSCREEN_MARGIN || p.y < -OFFSCREEN_MARGIN || p.y > h + OFFSCREEN_MARGIN;
+      if (off !== 'offscreen' in item.parts.root.dataset) {
+        if (off) item.parts.root.dataset.offscreen = '';
+        else delete item.parts.root.dataset.offscreen;
+      }
+    }
+  };
+
   const collide = (): void => {
     lastCollide = performance.now();
     // Zoomed past every marker band: once the place names are restored there is nothing left to collide.
@@ -250,6 +275,7 @@ export function createRegionMarkers(
       hideLabels: coarse,
     });
     for (const item of changed) refreshInteractive(item);
+    markOffscreen();
     // Hidden markers must not keep suppressing the place names underneath them.
     geoLabels.update(hidden ? obstacles : placed);
   };
