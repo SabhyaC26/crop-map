@@ -144,9 +144,7 @@ export const pastelFlavor: Flavor = {
 
 const DROPPED_LAYERS = new Set([
   'address_label',
-  'water_waterway_label',
   'roads_oneway',
-  'roads_labels_minor',
   'earth_label_islands',
   'roads_shields',
   'places_subplace',
@@ -239,10 +237,23 @@ const PATCHES: Record<string, LayerPatch> = {
   },
 
   roads_labels_major: (l) => {
-    l.minzoom = 10;
-    Object.assign(l, { filter: ['==', ['get', 'kind'], 'highway'] });
+    l.minzoom = 11;
     layout(l, { 'text-size': 11, 'text-letter-spacing': LABEL_TRACKING });
     paint(l, { 'text-halo-width': LABEL_HALO, 'text-halo-blur': 0.5, 'text-color': PALETTE.lavender });
+  },
+
+  roads_labels_minor: (l) => {
+    l.minzoom = 13;
+    Object.assign(l, { filter: ['==', ['get', 'kind'], 'minor_road'] });
+    layout(l, { 'text-size': 10, 'text-letter-spacing': LABEL_TRACKING });
+    paint(l, { 'text-halo-width': LABEL_HALO, 'text-halo-blur': 0.5, 'text-color': PALETTE.inkSoft });
+  },
+
+  water_waterway_label: (l) => {
+    l.minzoom = 10;
+    Object.assign(l, { filter: ['in', ['get', 'kind'], ['literal', ['river', 'canal']]] });
+    layout(l, { 'text-size': 11, 'text-letter-spacing': 0.06, 'symbol-spacing': 500 });
+    paint(l, { 'text-color': '#3a8fd8', 'text-halo-color': '#ffffff', 'text-halo-width': LABEL_HALO });
   },
 
   places_locality: (l) => {
@@ -383,6 +394,44 @@ const buildStickerLayers = (): LayerSpecification[] => [
   },
 ];
 
+// Valley highways often carry only a route number, so "CA 99" is what orients you between fields.
+const buildRouteLabels = (): LayerSpecification => ({
+  id: 'roads_route_labels',
+  type: 'symbol',
+  source: BASEMAP_SOURCE,
+  'source-layer': 'roads',
+  minzoom: 8,
+  filter: [
+    'all',
+    ['in', ['get', 'kind'], ['literal', ['highway', 'major_road']]],
+    ['in', ['get', 'network'], ['literal', ['US:I', 'US:US', 'US:CA']]],
+    ['has', 'shield_text'],
+  ],
+  layout: {
+    'symbol-placement': 'line',
+    'symbol-spacing': 350,
+    'text-rotation-alignment': 'viewport',
+    'text-field': [
+      'match',
+      ['get', 'network'],
+      'US:I',
+      ['concat', 'I-', ['get', 'shield_text']],
+      'US:US',
+      ['concat', 'US ', ['get', 'shield_text']],
+      ['concat', 'CA ', ['get', 'shield_text']],
+    ],
+    'text-font': [FONT_BOLD],
+    'text-size': zoomStops([8, 11.5], [13, 13]),
+    'text-letter-spacing': LABEL_TRACKING,
+    'text-padding': 8,
+  },
+  paint: {
+    'text-color': PALETTE.ink,
+    'text-halo-color': '#ffffff',
+    'text-halo-width': 2.2,
+  },
+});
+
 const buildHillshade = (): LayerSpecification => ({
   id: 'hillshade',
   type: 'hillshade',
@@ -407,6 +456,7 @@ export const buildBasemapLayers = (): LayerSpecification[] => {
     if (layer.id === 'water_label_ocean') out.push(buildOutsideVeil(), ...buildStickerLayers());
     if (layer.id === 'roads_runway') out.push(buildHillshade(), buildOceanMask(), ...buildSnowLayers(TERRAIN_SOURCE));
     out.push(layer);
+    if (layer.id === 'roads_labels_major') out.push(buildRouteLabels());
     if (layer.id === 'water_river') out.push(...buildShoreLayers(), ...buildOceanGradient(), ...buildOceanDecorLayers());
   }
   out.push(...buildGeoLabelLayers());
