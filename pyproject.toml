@@ -6,6 +6,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "geopandas>=1.2.0",
     "h3>=4",
+    "openpyxl>=3.1.5",
     "pyogrio>=0.13.0",
     "pypdf>=6.19.0",
     "pyproj>=3.8.0",

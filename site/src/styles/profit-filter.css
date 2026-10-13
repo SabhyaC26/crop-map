@@ -1,0 +1,85 @@
+.pf-root {
+  --pf-on: #6c5ce7;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-family: var(--font);
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.pf-root[data-mode='profit'] {
+  --pf-on: #2f8a5b;
+}
+
+.pf-root[data-mode='loss'] {
+  --pf-on: #c2484f;
+}
+
+/* Out of the way while the search dropdown is open. */
+.cs-root[data-mode='open'] ~ .pf-root {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pf-seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(250, 247, 255, 0.7));
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-sm), var(--inner-glow);
+}
+
+.pf-seg[hidden] {
+  display: none;
+}
+
+.pf-btn {
+  padding: 5px 12px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.pf-btn:hover {
+  color: var(--ink);
+}
+
+.pf-btn[aria-pressed='true'] {
+  background: var(--pf-on);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(70, 76, 130, 0.18);
+}
+
+.pf-bases .pf-btn[aria-pressed='true'] {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--pf-on);
+  box-shadow:
+    0 1px 3px rgba(70, 76, 130, 0.14),
+    inset 0 0 0 1px rgba(120, 130, 200, 0.18);
+}
+
+.pf-btn:focus-visible {
+  outline: 2px solid var(--pf-on);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-root,
+  .pf-btn {
+    transition: none;
+  }
+}

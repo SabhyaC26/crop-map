@@ -50,8 +50,11 @@ export interface FieldHit {
 
 export interface FieldsLayer {
   readonly layerIds: readonly string[];
-  /** Brightens fields of the given crops; every other field fades to `dimOpacity` x. `null` clears. */
-  setEmphasis(cropIds: readonly number[] | null, dimOpacity?: number): void;
+  /**
+   * Brightens fields of the given crops that also pass `condition` (e.g. a profit filter); every
+   * other field fades to `dimOpacity` x. `null` for both clears.
+   */
+  setEmphasis(cropIds: readonly number[] | null, condition?: ExpressionSpecification | null, dimOpacity?: number): void;
   setSelected(id: number | null): void;
   queryAt(point: PointLike): FieldHit | null;
   isInteractive(): boolean;
@@ -74,29 +77,40 @@ function cropMatch(crops: CropIndex, value: (hex: string, icon: string) => strin
   return ['match', ['get', 'crop_id'], ...pairs, fallback] as unknown as ExpressionSpecification;
 }
 
-/** Opacity for `base`, brightened when lit and dimmed when its crop is outside the emphasis set. */
-function emphasisOpacity(base: number, ids: readonly number[] | null, dim: number): ExpressionSpecification | number {
-  if (ids === null) return base;
-  const inSet: ExpressionSpecification = ['in', ['get', 'crop_id'], ['literal', [...ids]]];
-  return ['case', inSet, base, base * dim] as ExpressionSpecification;
+type Emphasis = ExpressionSpecification | null;
+
+/** Fields shown at full strength: in the crop set (if any) and passing the extra condition (if any). */
+function emphasisCondition(ids: readonly number[] | null, condition: Emphasis): Emphasis {
+  const parts: ExpressionSpecification[] = [];
+  if (ids !== null) parts.push(['in', ['get', 'crop_id'], ['literal', [...ids]]]);
+  if (condition) parts.push(condition);
+  const [first] = parts;
+  if (!first) return null;
+  return parts.length === 1 ? first : (['all', ...parts] as ExpressionSpecification);
 }
 
-function fillOpacity(ids: readonly number[] | null, dim: number): ExpressionSpecification {
+/** Opacity for `base`, dimmed for fields outside the emphasis condition. */
+function emphasisOpacity(base: number, ids: Emphasis, dim: number): ExpressionSpecification | number {
+  if (ids === null) return base;
+  return ['case', ids, base, base * dim] as ExpressionSpecification;
+}
+
+function fillOpacity(ids: Emphasis, dim: number): ExpressionSpecification {
   const lit = Math.min(0.96, FILL_OPACITY + HOVER_EXTRA_OPACITY);
   const at = (base: number): ExpressionSpecification =>
     ['case', LIT, lit, emphasisOpacity(base, ids, dim)] as ExpressionSpecification;
   return zoomCurve([9, 0], [10.5, at(0.78)], [12, at(FILL_OPACITY)], [14, at(FILL_OPACITY)], [16, at(0.75)]);
 }
 
-function outlineOpacity(ids: readonly number[] | null, dim: number): ExpressionSpecification {
+function outlineOpacity(ids: Emphasis, dim: number): ExpressionSpecification {
   return zoomCurve([9.6, 0], [10.6, emphasisOpacity(0.5, ids, dim)], [12.5, emphasisOpacity(0.7, ids, dim)]);
 }
 
-function iconOpacity(ids: readonly number[] | null, dim: number): ExpressionSpecification {
+function iconOpacity(ids: Emphasis, dim: number): ExpressionSpecification {
   return zoomCurve([12.4, 0], [13, emphasisOpacity(1, ids, dim)]);
 }
 
-function textureOpacity(ids: readonly number[] | null, dim: number): ExpressionSpecification {
+function textureOpacity(ids: Emphasis, dim: number): ExpressionSpecification {
   const at: ExpressionSpecification = ['case', LIT, TEXTURE_LIT_OPACITY, emphasisOpacity(TEXTURE_OPACITY, ids, dim)] as ExpressionSpecification;
   const [from, to] = TEXTURE_FADE_IN;
   return zoomCurve([from, 0], [to, at]);
@@ -282,11 +296,12 @@ export function addFieldsLayers(map: MapLibreMap, crops: CropIndex): FieldsLayer
       selected = id;
       if (id !== null) map.setFeatureState(stateTarget(id), { selected: true });
     },
-    setEmphasis(cropIds, dimOpacity = DEFAULT_DIM) {
-      map.setPaintProperty(FIELD_FILL_LAYER_ID, 'fill-opacity', fillOpacity(cropIds, dimOpacity));
-      map.setPaintProperty(FIELD_TEXTURE_LAYER_ID, 'fill-opacity', textureOpacity(cropIds, dimOpacity));
-      map.setPaintProperty(FIELD_OUTLINE_LAYER_ID, 'line-opacity', outlineOpacity(cropIds, dimOpacity));
-      map.setPaintProperty(FIELD_ICONS_LAYER_ID, 'icon-opacity', iconOpacity(cropIds, dimOpacity));
+    setEmphasis(cropIds, condition = null, dimOpacity = DEFAULT_DIM) {
+      const shown = emphasisCondition(cropIds, condition);
+      map.setPaintProperty(FIELD_FILL_LAYER_ID, 'fill-opacity', fillOpacity(shown, dimOpacity));
+      map.setPaintProperty(FIELD_TEXTURE_LAYER_ID, 'fill-opacity', textureOpacity(shown, dimOpacity));
+      map.setPaintProperty(FIELD_OUTLINE_LAYER_ID, 'line-opacity', outlineOpacity(shown, dimOpacity));
+      map.setPaintProperty(FIELD_ICONS_LAYER_ID, 'icon-opacity', iconOpacity(shown, dimOpacity));
     },
   };
 }

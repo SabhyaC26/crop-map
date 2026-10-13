@@ -1,5 +1,6 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { loadCrops, type CropIndex } from './data/crops';
+import { loadEconomics } from './data/economics';
 import { addFieldsLayers, type FieldsLayer } from './layers/fields';
 import { addOverviewLayers, type OverviewLayer } from './layers/overview';
 import { loadIconManifest, registerCropIcons } from './lib/icons';
@@ -43,20 +44,22 @@ const whenStyleReady = (map: MapLibreMap): Promise<void> =>
 
 /** Loads crops, icons and regions, then adds fields, popup, region markers and controls to the basemap. */
 export async function initCropMap(map: MapLibreMap, slots: CropMapSlots): Promise<CropMapApp> {
-  const [crops, iconManifest, regions] = await Promise.all([
+  const [crops, iconManifest, regions, economics] = await Promise.all([
     loadCrops(),
     loadIconManifest(),
     loadRegions(),
+    loadEconomics(),
     whenStyleReady(map),
   ]);
   await registerCropIcons(map, crops.list);
   const overview = addOverviewLayers(map, crops);
   const fields = addFieldsLayers(map, crops);
-  const popup = createFieldPopup({ map, crops, fields, root: slots.popupRoot, iconManifest });
+  const popup = createFieldPopup({ map, crops, fields, root: slots.popupRoot, iconManifest, economics });
   const markers = createRegionMarkers(map, regions, crops, iconManifest);
   const controls = initControls({
     map,
     crops,
+    economics,
     fields,
     overview,
     regionsSearch: regions.search,

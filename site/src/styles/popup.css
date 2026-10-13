@@ -31,6 +31,9 @@
   transition: transform 0.45s var(--spring);
   user-select: none;
   -webkit-user-select: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
 }
 
 .fp-tail {
@@ -239,6 +242,230 @@
   background: linear-gradient(160deg, var(--ga), var(--gb));
 }
 
+.fp-econ {
+  --econ: #2f8a5b;
+  --econ-soft: rgba(47, 138, 91, 0.1);
+  margin-top: 14px;
+  border-radius: var(--r-md);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 1px 2px rgba(70, 76, 130, 0.08),
+    inset 0 0 0 1px rgba(120, 130, 200, 0.14);
+  animation: fp-chip-in 0.45s var(--spring) 0.42s both;
+}
+
+.fp-econ.is-loss {
+  --econ: #c2484f;
+  --econ-soft: rgba(194, 72, 79, 0.1);
+}
+
+.fp-econ-summary {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto;
+  align-items: baseline;
+  gap: 2px 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  list-style: none;
+  border-radius: inherit;
+}
+
+.fp-econ-basis {
+  grid-column: 1 / -1;
+  margin-top: -2px;
+  color: var(--ink-faint);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.fp-econ-summary::-webkit-details-marker {
+  display: none;
+}
+
+.fp-econ-summary:focus-visible {
+  outline: 2px solid var(--crop-deep);
+  outline-offset: 2px;
+}
+
+.fp-econ-label {
+  white-space: nowrap;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.fp-econ-value {
+  white-space: nowrap;
+  color: var(--econ);
+  font-size: 17px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.fp-econ-field {
+  justify-self: end;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  background: var(--econ-soft);
+  color: var(--econ);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fp-econ-chevron {
+  align-self: center;
+  width: 7px;
+  height: 7px;
+  margin: 0 2px 3px 2px;
+  border-right: 2px solid var(--ink-faint);
+  border-bottom: 2px solid var(--ink-faint);
+  transform: rotate(45deg);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.fp-econ[open] .fp-econ-chevron {
+  margin-bottom: -2px;
+  transform: rotate(-135deg);
+}
+
+.fp-econ-body {
+  padding: 0 12px 12px;
+  animation: fp-econ-open 0.28s var(--ease-out) both;
+}
+
+@keyframes fp-econ-open {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.fp-econ-table {
+  display: grid;
+  border-top: 1px solid rgba(120, 130, 200, 0.14);
+}
+
+.fp-econ-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 6px 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fp-econ-row.is-head {
+  padding-bottom: 0;
+  color: var(--ink-faint);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.fp-econ-row.is-total {
+  margin-top: 2px;
+  border-top: 1px solid rgba(120, 130, 200, 0.14);
+  font-weight: 800;
+}
+
+.fp-econ-row.is-total .fp-econ-num {
+  color: var(--econ);
+}
+
+.fp-econ-row.is-subtotal {
+  border-top: 1px solid rgba(120, 130, 200, 0.14);
+}
+
+.fp-econ-row.is-subtotal.is-gain .fp-econ-num {
+  color: #2f8a5b;
+}
+
+.fp-econ-row.is-subtotal.is-loss .fp-econ-num {
+  color: #c2484f;
+}
+
+.fp-econ-row.is-total.is-gain .fp-econ-num {
+  color: #2f8a5b;
+}
+
+.fp-econ-row.is-total.is-loss .fp-econ-num {
+  color: #c2484f;
+}
+
+.fp-econ-num {
+  min-width: 64px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fp-econ-name {
+  min-width: 0;
+}
+
+.fp-econ-note {
+  display: block;
+  margin-top: 1px;
+  color: var(--ink-faint);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.fp-econ-breakeven {
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  border-radius: var(--r-sm);
+  background: var(--crop-tint);
+  color: var(--crop-ink);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.fp-econ-sources {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(120, 130, 200, 0.14);
+  font-size: 11px;
+  line-height: 1.35;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.fp-econ-dt {
+  color: var(--ink-soft);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.fp-econ-dd {
+  margin: 0;
+  color: var(--ink-faint);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.fp-econ-line + .fp-econ-line {
+  margin-top: 1px;
+}
+
+.fp-econ-link {
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-decoration-color: rgba(120, 130, 200, 0.4);
+  text-underline-offset: 2px;
+}
+
 .fp-also {
   margin-top: 14px;
 }
@@ -306,12 +533,17 @@
     margin: 0 8px max(8px, env(safe-area-inset-bottom));
     padding: 8px 18px 20px;
     border-radius: 30px;
-    touch-action: none;
+    max-height: calc(100dvh - 120px);
+    touch-action: pan-y;
     animation: fp-sheet-in 0.55s var(--spring) both;
   }
 
   .field-popup[data-placement='sheet'].is-closing .fp-card {
     animation: fp-sheet-out 0.22s var(--ease-out) both;
+  }
+
+  .field-popup[data-placement='sheet'] :is(.fp-handle, .fp-head) {
+    touch-action: none;
   }
 
   .fp-handle {
