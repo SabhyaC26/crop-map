@@ -1,0 +1,13 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": ["https://crops.sabhyachhabria.com", "http://localhost:5173"],
+        "methods": ["GET", "HEAD"],
+        "headers": ["Range"]
+      },
+      "exposeHeaders": ["Content-Length", "Content-Range", "ETag", "Accept-Ranges"],
+      "maxAgeSeconds": 86400
+    }
+  ]
+}
