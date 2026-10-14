@@ -22,7 +22,7 @@ const hash01 = (s: string): number => {
 
 export function formatAcres(acres: number): string {
   if (acres >= 10000) return `${Math.round(acres / 1000)}k acres`;
-  if (acres >= 1000) return `${(acres / 1000).toFixed(1).replace(/\.0$/, '')}k acres`;
+  if (acres >= 999.5) return `${(acres / 1000).toFixed(1).replace(/\.0$/, '')}k acres`;
   return `${Math.round(acres)} acres`;
 }
 

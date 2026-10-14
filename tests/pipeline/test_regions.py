@@ -1,11 +1,14 @@
 import importlib.util
 import json
 import sys
+import xml.etree.ElementTree as ET
 
+import geopandas as gpd
 import h3
 import numpy as np
 import pandas as pd
 import pytest
+from shapely.geometry import box
 
 import common
 import crops
@@ -122,6 +125,12 @@ def test_coarse_label_prefers_prominent_then_other_then_county():
     assert regions.label_point(-120.0, 37.0, "Fresno", places) == "Famous City"
     assert regions.label_point(-120.2, 37.0, "Fresno", places[:1]) == "Near Hamlet"
     assert regions.label_point(-110.0, 37.0, "Fresno", places) == "Fresno County"
+
+
+def test_place_labels_tolerate_equal_distances():
+    twins = [regions.Place("Twin A", -120.0, 37.0, "town", 1), regions.Place("Twin B", -120.0, 37.0, "town", 1)]
+    assert regions.coarse_label_candidates(-120.0, 37.1, "Fresno", twins) == ["Twin A", "Twin B"]
+    assert regions.hotspot_label_candidates(regions.Hotspot(-120.0, 37.1, 1.0, "Fresno"), twins)[:2] == ["Twin A", "Twin B"]
 
 
 def test_label_coarse_dedups_without_compass_words():
@@ -333,3 +342,269 @@ def test_coarse_art_direction():
     for p in coarse:
         counts[p["crop_id"]] = counts.get(p["crop_id"], 0) + 1
     assert max(counts.values()) <= 4
+
+
+# --- Pure helpers (no regions.json needed) ------------------------------------------
+
+
+def _county_points(rows: list[tuple[int, float, float, float, str]]) -> pd.DataFrame:
+    """rows: (crop_id, lon, lat, acres, county)."""
+    frame = pd.DataFrame(rows, columns=["crop_id", "lon", "lat", "acres", "county"])
+    for res in (4, 5, 6):
+        frame[f"cell{res}"] = regions.cell_ids(frame, res)
+    return frame
+
+
+def test_haversine_known_distances():
+    one_degree = float(regions.haversine_km(0.0, 0.0, 1.0, 0.0))
+    assert one_degree == pytest.approx(111.195, abs=0.01)
+    assert float(regions.haversine_km(37.0, -120.0, 37.0, -120.0)) == 0.0
+    distances = regions.haversine_km(0.0, 0.0, np.array([0.0, 1.0]), np.array([0.0, 0.0]))
+    assert distances.tolist() == pytest.approx([0.0, one_degree])
+
+
+@pytest.mark.parametrize(
+    ("dlat", "dlon", "expected"),
+    [
+        (0, 1, "East"),
+        (1, 1, "North-East"),
+        (1, 0, "North"),
+        (1, -1, "North-West"),
+        (0, -1, "West"),
+        (-1, -1, "South-West"),
+        (-1, 0, "South"),
+        (-1, 1, "South-East"),
+    ],
+)
+def test_bearing_name_covers_eight_sectors(dlat, dlon, expected):
+    assert regions.bearing_name(0.0, 0.0, dlat, dlon) == expected
+
+
+def test_bearing_name_scales_longitude_by_latitude():
+    # 1 degree of longitude at 60N is ~0.5 of a degree of latitude in distance, so this is north-east, not east.
+    assert regions.bearing_name(60.0, 0.0, 60.3, 1.0) == "North-East"
+
+
+def test_county_label_falls_back_to_california():
+    assert regions.county_label("") == "California"
+    assert regions.county_label("Fresno") == "Fresno County"
+
+
+def test_weighted_point_uses_acreage_weights():
+    points = _county_points([(1, -120.0, 37.0, 1.0, "A"), (1, -119.0, 38.0, 3.0, "A")])
+    lon, lat = regions.weighted_point(points)
+    assert (lon, lat) == pytest.approx((-119.25, 37.75))
+
+
+def test_snap_to_field_returns_nearest_field_and_distance():
+    points = _county_points([(1, -120.0, 37.0, 1.0, "A"), (1, -119.0, 38.0, 1.0, "A"), (1, -118.0, 39.0, 1.0, "A")])
+    lon, lat, km = regions.snap_to_field(-119.1, 38.1, points)
+    assert (lon, lat) == (-119.0, 38.0)
+    assert km == pytest.approx(float(regions.haversine_km(38.1, -119.1, 38.0, -119.0)))
+
+
+def test_make_region_counts_only_its_crop_and_cells():
+    almond, rice = IDS["D12"], IDS["R1"]
+    points = _county_points(
+        [
+            (almond, -120.0, 37.0, 1000.0, "Kern"),
+            (rice, -120.0, 37.0, 500.0, "Kern"),
+            (almond, -120.0, 37.0, 2000.0, "Fresno"),
+            (almond, -118.0, 35.0, 9000.0, "Kern"),  # same crop, different cell
+        ]
+    )
+    cell = points["cell4"].iloc[0]
+    assert points["cell4"].iloc[3] != cell
+    region = regions.make_region(points, regions.cell_index(points, "cell4"), frozenset({cell}), almond, regions.COARSE)
+    assert region.crop_id == almond
+    assert region.acres == 3000.0
+    assert region.county == "Fresno"  # the county holding the most of this crop's acres
+    assert (region.lon, region.lat) == pytest.approx((-120.0, 37.0))
+
+
+def test_build_regions_merges_adjacent_same_crop_cells():
+    almond, rice = IDS["D12"], IDS["R1"]
+    origin = h3.latlng_to_cell(37.0, -120.0, 4)
+    neighbour = next(c for c in h3.grid_disk(origin, 1) if c != origin)
+    far = h3.latlng_to_cell(40.0, -122.0, 4)
+    rows = []
+    for cell, crop, acres in ((origin, almond, 5000.0), (neighbour, almond, 5000.0), (far, rice, 7000.0)):
+        lat, lon = h3.cell_to_latlng(cell)
+        rows.append((crop, lon, lat, acres, "Kern"))
+    points = _county_points(rows)
+    top = pd.DataFrame({"cell": [origin, neighbour, far], "crop_id": [almond, almond, rice], "acres": [5000.0, 5000.0, 7000.0]})
+
+    built = regions.build_regions(points, top, regions.COARSE, regions.cell_index(points, "cell4"))
+
+    by_crop = {r.crop_id: r for r in built}
+    assert len(built) == 2
+    assert by_crop[almond].cells == frozenset({origin, neighbour})
+    assert by_crop[almond].acres == 10000.0
+    assert by_crop[rice].cells == frozenset({far})
+
+
+def _region(acres: float, **kwargs) -> regions.Region:
+    return regions.Region(crop_id=kwargs.pop("crop_id", 1), acres=acres, lon=-120.0, lat=37.0, cells=frozenset(), county="Kern", **kwargs)
+
+
+def test_rank_regions_orders_by_acres_and_assigns_ids():
+    ranked = regions.rank_regions([_region(10.0), _region(30.0), _region(20.0)], "c")
+    assert [r.acres for r in ranked] == [30.0, 20.0, 10.0]
+    assert [r.id for r in ranked] == ["c1", "c2", "c3"]
+    assert [r.rank for r in ranked] == [1, 2, 3]
+
+
+def test_assign_parents_prefers_neighbourhood_then_nearest_overall():
+    near_parent = _region(1.0, id="c1")
+    near_parent.lon, near_parent.lat = -120.0, 37.0
+    far_parent = _region(1.0, id="c2")
+    far_parent.lon, far_parent.lat = -122.0, 40.0
+    child = _region(1.0)
+    child.lon, child.lat = -120.05, 37.02  # shares the coarse cell with near_parent
+    stranded = _region(1.0)
+    stranded.lon, stranded.lat = -116.0, 37.0  # no coarse marker within one res-4 ring
+
+    fine = [child, stranded]
+    regions.assign_parents(fine, [near_parent, far_parent])
+
+    assert [r.parent for r in fine] == ["c1", "c1"]
+
+
+def test_compute_search_without_points_falls_back_to_california():
+    almond = IDS["D12"]
+    points = _county_points([(almond, -120.0, 37.0, 1000.0, "Kern")])
+    search = regions.compute_search(points, [almond, IDS["R1"]], places=[])
+
+    fallback = search[str(IDS["R1"])]
+    assert fallback["acres_total"] == 0.0
+    assert fallback["center"] == [regions.FALLBACK_CENTER[0], regions.FALLBACK_CENTER[1]]
+    assert fallback["zoom"] == regions.SEARCH_ZOOM_WIDE
+    assert fallback["label"] == "California"
+    assert fallback["bbox"] == regions.search_bbox([fallback["center"]])
+
+
+def test_compute_search_primary_entry_mirrors_first_place():
+    almond = IDS["D12"]
+    points = _county_points([(almond, -120.0, 37.0, 4000.0, "Kern"), (almond, -120.0, 37.0, 500.0, "Kern")])
+    entry = regions.compute_search(points, [almond], places=[])[str(almond)]
+    first = entry["places"][0]
+    assert entry["acres_total"] == 4500.0
+    assert (entry["center"], entry["zoom"], entry["label"]) == (first["center"], first["zoom"], first["label"])
+    assert entry["label"] == "Kern County"
+
+
+def test_search_bbox_pads_every_side():
+    bbox = regions.search_bbox([[-120.0, 37.0], [-119.0, 38.0]])
+    assert bbox == pytest.approx([-120.15, 36.85, -118.85, 38.15])
+
+
+def test_feature_rounds_coordinates_and_adds_parent_only_when_asked():
+    region = _region(1234.56, id="f3", label="Almond Town", rank=3, parent="c1")
+    region.lon = -120.123456789
+    plain = regions.feature(region, with_parent=False)
+    assert "parent" not in plain["properties"]
+    assert plain["properties"] == {"id": "f3", "crop_id": 1, "acres": 1234.6, "label": "Almond Town", "rank": 3}
+    assert plain["geometry"]["coordinates"] == [-120.12346, 37.0]
+    assert regions.feature(region, with_parent=True)["properties"]["parent"] == "c1"
+
+
+@pytest.mark.parametrize(
+    ("acres", "text"),
+    [(0, "0"), (9_999.4, "9,999"), (10_000, "10k"), (1_234_567, "1,235k")],
+)
+def test_format_acres_switches_to_thousands_at_ten_thousand(acres, text):
+    assert regions.format_acres(acres) == text
+
+
+def test_place_candidates_applies_valley_bias_and_radius():
+    places = [
+        regions.Place("Town", -120.06, 37.0, "town"),  # ~5.3 km
+        regions.Place("Valley Name", -119.9, 37.0, "valley"),  # ~8.9 km, halved by the bias
+        regions.Place("Too Far", -118.0, 37.0, "town"),  # beyond PLACE_MAX_KM
+    ]
+    biased = [p.name for p, _ in regions.place_candidates(-120.0, 37.0, places, valley_bias=0.5)]
+    assert biased == ["Valley Name", "Town"]
+    unbiased = [p.name for p, _ in regions.place_candidates(-120.0, 37.0, places, valley_bias=1.0)]
+    assert unbiased == ["Town", "Valley Name"]
+
+
+def test_hotspot_labels_prefer_prominent_then_nearest_other_then_county():
+    hotspot = regions.Hotspot(-120.0, 37.0, 5000.0, "Fresno")
+    places = [
+        regions.Place("Far Prominent", -120.0, 37.36, "town", 1),  # ~40 km, beyond 30 km
+        regions.Place("Mid Other", -120.0, 37.18, "town", 2),  # ~20 km, inside 25 km
+        regions.Place("Near Prominent", -120.0, 37.09, "town", 1),  # ~10 km
+        regions.Place("Near Other", -120.0, 37.018, "town", 2),  # ~2 km
+    ]
+    assert regions.hotspot_label_candidates(hotspot, places) == [
+        "Near Prominent",
+        "Near Other",
+        "Mid Other",
+        "Fresno County",
+    ]
+
+
+def test_label_regions_stay_unique_when_compass_names_repeat():
+    places = [regions.Place("Only Place", -120.0, 37.0, "town", 1)]
+    found = [regions.Region(1, 100 - i, -120.0 + i * 0.01, 37.0, frozenset(), "Fresno") for i in range(5)]
+    regions.label_regions(found, places, 1.0, {})
+    assert len({r.label for r in found}) == len(found)
+
+
+def test_read_points_one_row_per_field(tmp_path, monkeypatch):
+    monkeypatch.setattr(regions, "WORK_DIR", tmp_path)
+    work = tmp_path / "2023" / "statewide"
+    work.mkdir(parents=True)
+    gpd.GeoDataFrame(
+        {"crop_id": [12, 14], "acres": [100.0, 50.0], "county": ["Fresno", None]},
+        geometry=[box(-120.0, 37.0, -119.9, 37.1), box(-121.0, 36.0, -120.9, 36.1)],
+        crs="EPSG:4326",
+    ).to_file(work / "fields.fgb", driver="FlatGeobuf")
+
+    points = regions.read_points(2023, "statewide")
+
+    assert list(points["county"]) == ["Fresno", ""]
+    assert points["crop_id"].tolist() == [12, 14]
+    assert points["acres"].tolist() == [100.0, 50.0]
+    assert -120.0 < points["lon"].iloc[0] < -119.9 and 37.0 < points["lat"].iloc[0] < 37.1
+
+
+def test_write_preview_emits_well_formed_svg_with_escaped_labels(tmp_path):
+    points = pd.DataFrame({"lon": [-120.0, -119.0], "lat": [37.0, 38.0]})
+    coarse = [_region(9000.0, crop_id=12, id="c1", label="Salinas & Co")]
+    coarse[0].lon, coarse[0].lat = -120.0, 37.0
+    fine = [_region(50.0, crop_id=14, id="f1", label="Ontario")]
+    fine[0].lon, fine[0].lat = -119.0, 38.0
+    path = tmp_path / "preview.svg"
+
+    regions.write_preview(points, coarse, fine, {12: "#ff0000"}, path)
+
+    root = ET.fromstring(path.read_text(encoding="utf-8"))
+    assert root.tag.endswith("svg")
+    texts = [el.text for el in root.iter() if el.tag.endswith("text")]
+    assert "Salinas & Co · 9,000" in texts
+    assert "Ontario" in texts
+    assert any(el.get("fill") == "#ff0000" for el in root.iter() if el.tag.endswith("circle"))
+
+
+def test_run_assembles_consistent_document_from_synthetic_fields():
+    almond, strawberry = IDS["D12"], IDS["T20"]
+    sites = [(-120.0, 37.0, almond), (-118.5, 36.0, almond), (-121.5, 39.0, strawberry)]
+    rows = [(crop, lon, lat, 2000.0, "Kern") for lon, lat, crop in sites for _ in range(4)]
+    points = _county_points(rows)
+    places = [
+        regions.Place("Alpha", -120.0, 37.0, "town", 1),
+        regions.Place("Beta", -118.5, 36.0, "town", 1),
+        regions.Place("Gamma", -121.5, 39.0, "town", 1),
+    ]
+
+    document, coarse, fine, search = regions.run(points, LOOKUP, places)
+
+    assert set(document) == {"coarse", "fine", "search"}
+    assert len(coarse) == 3 and len(fine) == 3
+    assert {r.label for r in coarse} == {"Alpha", "Beta", "Gamma"}
+    coarse_ids = {f["properties"]["id"] for f in document["coarse"]["features"]}
+    assert all(f["properties"]["parent"] in coarse_ids for f in document["fine"]["features"])
+    assert set(search) == {str(crop.crop_id) for crop in LOOKUP}
+    assert search[str(almond)]["acres_total"] == 16000.0
+    assert len(search[str(almond)]["places"]) == 2

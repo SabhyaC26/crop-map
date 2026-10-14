@@ -350,11 +350,19 @@ def label_regions(
         elif county not in taken:
             label = county
         else:
-            anchor_lon, anchor_lat = (candidates[0][0].lon, candidates[0][0].lat) if candidates else county_centers.get(
-                region.county, (region.lon, region.lat)
-            )
-            anchor_name = candidates[0][0].name if candidates else county
-            label = f"{bearing_name(anchor_lat, anchor_lon, region.lat, region.lon)} {anchor_name}"
+            anchors = [(place.name, place.lon, place.lat) for place, _ in candidates] or [
+                (county, *county_centers.get(region.county, (region.lon, region.lat)))
+            ]
+            compass = [
+                f"{bearing_name(anchor_lat, anchor_lon, region.lat, region.lon)} {anchor_name}"
+                for anchor_name, anchor_lon, anchor_lat in anchors
+            ]
+            label = next((name for name in compass if name not in taken), None)
+            if label is None:
+                suffix = 2
+                while f"{compass[0]} {suffix}" in taken:
+                    suffix += 1
+                label = f"{compass[0]} {suffix}"
         taken.add(label)
         region.label = label
 
@@ -362,7 +370,8 @@ def label_regions(
 def coarse_label_candidates(lon: float, lat: float, county: str, places: list[Place]) -> list[str]:
     """State-scale names, best first: prominent places within 45 km by distance, else other places within 35 km."""
     ranked = sorted(
-        (float(haversine_km(lat, lon, place.lat, place.lon)), place) for place in places
+        ((float(haversine_km(lat, lon, place.lat, place.lon)), place) for place in places),
+        key=lambda item: item[0],
     )
     prominent = [place.name for km, place in ranked if place.prominence == PROMINENT and km <= COARSE_PROMINENT_KM]
     if prominent:
@@ -466,7 +475,10 @@ def find_hotspots(crop_points: pd.DataFrame) -> list[Hotspot]:
 
 def hotspot_label_candidates(hotspot: Hotspot, places: list[Place]) -> list[str]:
     """Prominence-1 places within SEARCH_PROMINENT_KM, then prominence-2 within SEARCH_OTHER_KM, nearest first."""
-    ranked = sorted((float(haversine_km(hotspot.lat, hotspot.lon, p.lat, p.lon)), p) for p in places)
+    ranked = sorted(
+        ((float(haversine_km(hotspot.lat, hotspot.lon, p.lat, p.lon)), p) for p in places),
+        key=lambda item: item[0],
+    )
     first = [p.name for km, p in ranked if p.prominence == PROMINENT and km <= SEARCH_PROMINENT_KM]
     second = [p.name for km, p in ranked if p.prominence != PROMINENT and km <= SEARCH_OTHER_KM]
     return [*first, *second, county_label(hotspot.county)]

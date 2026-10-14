@@ -92,7 +92,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     window.clearTimeout(resizeTimer);
     resizeTimer = window.setTimeout(() => {
       const size = `${container.clientWidth}x${container.clientHeight}`;
-      if (size === lastSize || !map.isStyleLoaded()) return;
+      if (size === lastSize) return;
       lastSize = size;
       applyViewLimits(map, container);
     }, 250);

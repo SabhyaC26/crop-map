@@ -19,6 +19,7 @@ const toLinear = (fn: (t: number) => number, samples = SAMPLES): string => {
 export function springEasing(damping: number, fallback = 'cubic-bezier(0.34, 1.56, 0.64, 1)'): string {
   if (!supportsLinear) return fallback;
   const omega = 4.6 / (damping * 0.9);
+  if (damping >= 1) return toLinear((t) => 1 - Math.exp(-omega * t) * (1 + omega * t));
   const wd = omega * Math.sqrt(1 - damping * damping);
   const k = (damping * omega) / wd;
   return toLinear((t) => 1 - Math.exp(-damping * omega * t) * (Math.cos(wd * t) + k * Math.sin(wd * t)));

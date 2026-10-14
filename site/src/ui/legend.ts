@@ -247,13 +247,16 @@ export function createLegend({ map, crops, manifest, emphasis, slot, popupRoot }
       if (!Number.isFinite(cropId) || !Number.isFinite(size)) continue;
       acres.set(cropId, (acres.get(cropId) ?? 0) + size);
     }
-    let total = 0;
-    for (const v of acres.values()) total += v;
     const out: Entry[] = [];
+    let total = 0;
     for (const [cropId, a] of acres) {
       const crop = crops.get(cropId);
-      if (crop && total > 0) out.push({ crop, acres: a, share: a / total });
+      if (!crop) continue;
+      total += a;
+      out.push({ crop, acres: a, share: 0 });
     }
+    if (total <= 0) return [];
+    for (const entry of out) entry.share = entry.acres / total;
     return out.sort((a, b) => b.acres - a.acres);
   };
 
