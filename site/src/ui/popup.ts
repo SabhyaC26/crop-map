@@ -1,6 +1,5 @@
-import { LngLat, type LngLatLike, type Map as MapLibreMap } from 'maplibre-gl';
+import type { LngLatLike, Map as MapLibreMap } from 'maplibre-gl';
 import type { Crop, CropIndex } from '../data/crops';
-import { loadWater, waterAt, type WaterInfo } from '../data/water';
 import type { FieldHit, FieldsLayer } from '../layers/fields';
 import { darken, mix, withAlpha } from '../lib/color';
 import { iconUrl } from '../lib/icons';
@@ -52,11 +51,6 @@ const ACRES_ICON =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 17.5 9 6l4 7 3-4 5 8.5z" fill="currentColor" opacity=".9"/></svg>';
 const PIN_ICON =
   '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2.5a6.5 6.5 0 0 0-6.5 6.5c0 4.6 6.5 12.5 6.5 12.5S18.5 13.6 18.5 9A6.5 6.5 0 0 0 12 2.5Zm0 8.8a2.3 2.3 0 1 1 0-4.6 2.3 2.3 0 0 1 0 4.6Z" fill="currentColor"/></svg>';
-
-const DROP_ICON =
-  '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 2.8S5.5 10.2 5.5 14.6a6.5 6.5 0 0 0 13 0C18.5 10.2 12 2.8 12 2.8Z" fill="currentColor"/></svg>';
-const AQUIFER_ICON =
-  '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M3 7.5c3 0 3-2 6-2s3 2 6 2 3-2 6-2M3 12.5c3 0 3-2 6-2s3 2 6 2 3-2 6-2M3 17.5c3 0 3-2 6-2s3 2 6 2 3-2 6-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
 function el<K extends keyof HTMLElementTagNameMap>(
   tag: K,
@@ -134,41 +128,6 @@ function buildAlso(others: readonly Crop[], manifest: Record<string, string>): H
   const extra = others.length - MAX_ALSO_CHIPS;
   if (extra > 0) chips.append(el('span', 'fp-chip fp-chip-more', `+${extra}`));
   wrap.append(chips);
-  return wrap;
-}
-
-function waterRow(icon: string, main: string, sub: string | null, tags: readonly [string, string][]): HTMLElement {
-  const row = el('div', 'fp-water-row');
-  row.insertAdjacentHTML('afterbegin', icon);
-  const text = el('div', 'fp-water-text');
-  text.append(el('span', 'fp-water-main', main));
-  if (sub) text.append(el('span', 'fp-water-sub', sub));
-  if (tags.length > 0) {
-    const chips = el('span', 'fp-water-tags');
-    for (const [label, tone] of tags) chips.append(el('span', `fp-water-tag is-${tone}`, label));
-    text.append(chips);
-  }
-  row.append(text);
-  return row;
-}
-
-/** Where the field's water comes from: the serving agency and the aquifer underneath (DWR boundaries, not field records). */
-function buildWater(info: WaterInfo): HTMLElement {
-  const wrap = el('section', 'fp-water');
-  wrap.append(el('p', 'fp-caption', 'Water'));
-  wrap.append(
-    waterRow(
-      DROP_ICON,
-      info.district ?? 'No public water agency mapped here',
-      info.within ? `within ${info.within}` : info.district ? null : 'likely private wells or water rights',
-      [],
-    ),
-  );
-  const { basin } = info;
-  const tags: [string, string][] = [];
-  if (basin?.priority === 'High' || basin?.priority === 'Medium') tags.push([`${basin.priority} priority`, basin.priority.toLowerCase()]);
-  if (basin?.critical) tags.push(['Critically overdrafted', 'critical']);
-  wrap.append(waterRow(AQUIFER_ICON, basin ? basin.name : 'Not over a mapped groundwater basin', basin ? 'groundwater basin' : null, tags));
   return wrap;
 }
 
@@ -326,9 +285,6 @@ export function createFieldPopup(options: FieldPopupOptions): FieldPopup {
       node.setAttribute('role', 'dialog');
       node.setAttribute('aria-label', crop?.name ?? 'Field details');
       const card = buildCard(hit, crop);
-      const { lng, lat } = LngLat.convert(lngLat);
-      const water = waterAt(lng, lat);
-      if (water) card.append(buildWater(water));
       node.append(card);
       const tail = SHEET_QUERY.matches ? null : el('div', 'fp-tail');
       if (tail) {
@@ -346,17 +302,6 @@ export function createFieldPopup(options: FieldPopupOptions): FieldPopup {
       attachSwipe(card);
       fields.setSelected(hit.id);
       api.isOpen = true;
-      if (!water) {
-        // Normally preloaded in the background; if a click beats it, slot the section in when it lands.
-        void loadWater()
-          .then(() => {
-            const late = waterAt(lng, lat);
-            if (!late || state?.card !== card) return;
-            card.append(buildWater(late));
-            layout(state);
-          })
-          .catch((err: unknown) => console.error('water data failed to load', err));
-      }
     },
 
     openAt(lngLat) {

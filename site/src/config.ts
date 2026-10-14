@@ -7,7 +7,6 @@ export const BASEMAP_URL: string = env.VITE_BASEMAP_URL || '/data/basemap.pmtile
 export const REGIONS_URL: string = env.VITE_REGIONS_URL || '/data/regions.json';
 export const CROPS_URL: string = env.VITE_CROPS_URL || '/data/crops.json';
 export const ICONS_BASE: string = env.VITE_ICONS_BASE || '/icons/';
-export const WATER_URL: string = env.VITE_WATER_URL || '/data/water.json';
 
 export const TERRAIN_TILES_URL =
   env.VITE_TERRAIN_URL || 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png';
