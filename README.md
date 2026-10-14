@@ -62,9 +62,11 @@ VITE_FIELDS_LOW_URL=https://tiles.example.com/fields-low.pmtiles \
 npm run build
 ```
 
-The live site runs on Cloudflare Pages with the tiles on R2: `deploy.sh` builds and deploys
-(`TILES_BASE` and `PAGES_PROJECT` override the defaults), `r2-cors.json` is the bucket's CORS policy, and
-`site/public/_headers` sets the Pages cache headers.
+The live site runs on Cloudflare Pages with the tiles on R2. `.github/workflows/deploy.yml` builds every push:
+`main` deploys to production and other branches to `<branch>.<project>.pages.dev` previews. It reads the repo
+variables `TILES_BASE` and `PAGES_PROJECT` and the secrets `CLOUDFLARE_API_TOKEN` (Cloudflare Pages: Edit) and
+`CLOUDFLARE_ACCOUNT_ID`; forks without them skip the deploy. `deploy.sh` does the same from a terminal,
+`r2-cors.json` is the bucket's CORS policy, and `site/public/_headers` sets the Pages cache headers.
 
 ## Data and credits
 
