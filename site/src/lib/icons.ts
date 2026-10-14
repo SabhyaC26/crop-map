@@ -23,6 +23,9 @@ export function loadIconManifest(): Promise<IconManifest> {
     if (!res.ok) throw new Error(`icons manifest: HTTP ${res.status}`);
     return res.json() as Promise<IconManifest>;
   });
+  manifestPromise.catch(() => {
+    manifestPromise = undefined;
+  });
   return manifestPromise;
 }
 
@@ -74,7 +77,7 @@ function rasterize(img: HTMLImageElement): ImageData {
 export async function registerCropIcons(map: MapLibreMap, crops: readonly Crop[]): Promise<void> {
   const manifest = await loadIconManifest();
   const slugs = [...new Set(crops.map((c) => c.icon))];
-  await Promise.all(
+  await Promise.allSettled(
     slugs.map(async (slug) => {
       const id = iconImageId(slug);
       if (map.hasImage(id)) return;
