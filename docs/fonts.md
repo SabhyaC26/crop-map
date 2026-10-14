@@ -20,7 +20,6 @@ Figtree is licensed under the SIL Open Font License 1.1. The full text is in `si
 
 **Glyph PBFs** (MapLibre SDF glyphs, requested as `{fontstack}/{range}.pbf`):
 
-- `site/public/fonts/Figtree Regular/`
 - `site/public/fonts/Figtree Medium/`
 - `site/public/fonts/Figtree SemiBold/`
 - `site/public/fonts/Figtree Bold/`
@@ -52,7 +51,7 @@ The glyph script is `site/scripts/build-glyphs.mjs`. It takes the fontnik instal
    node scripts/build-glyphs.mjs /tmp/figtree-build/npm/node_modules/fontnik /tmp/figtree-build/ttf public/fonts figtree
    ```
 
-To rebuild Nunito, use the `nunito` family with a TTF folder laid out as `<weight>/Nunito_<weight>.ttf`. The default family is `nunito`. Running the script with `nunito` reproduces the committed Nunito glyph files byte for byte.
+The script also writes `Figtree Regular/`, which no style uses; delete it rather than committing it. The `nunito` family (the script's default) builds the old Nunito glyphs, which are no longer shipped.
 
 To rebuild the web font, run fonttools with brotli from the folder that holds the variable TTF, and write the output into the repo:
 

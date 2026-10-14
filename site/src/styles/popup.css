@@ -21,8 +21,6 @@
   background:
     radial-gradient(120% 70% at 0% 0%, var(--crop-tint) 0%, rgba(255, 255, 255, 0) 70%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.97));
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-lg), var(--inner-glow), 0 0 0 4px rgba(255, 255, 255, 0.28);
   color: var(--ink);

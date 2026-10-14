@@ -188,8 +188,10 @@ const layout = (layer: LayerSpecification, props: Record<string, unknown>): void
 };
 
 const PATCHES: Record<string, LayerPatch> = {
-  landcover: (l) =>
-    paint(l, { 'fill-opacity': zoomStops([4, 1], [6.5, 1], [8.5, 0]) }),
+  landcover: (l) => {
+    l.maxzoom = 8.5;
+    paint(l, { 'fill-opacity': zoomStops([4, 1], [6.5, 1], [8.5, 0]) });
+  },
 
   landuse_park: (l) => paint(l, { 'fill-opacity': zoomStops([6, 0], [8.5, 0.9], [11, 1]) }),
 
@@ -321,6 +323,7 @@ const buildOceanMask = (): LayerSpecification => ({
   id: 'ocean_mask',
   type: 'fill',
   source: OCEAN_SOURCE,
+  maxzoom: 8,
   paint: {
     'fill-color': OCEAN_COLOR,
     'fill-antialias': false,
@@ -366,12 +369,14 @@ const imageCorners = (b: { west: number; east: number; south: number; north: num
 ];
 
 const STICKER_FADE = zoomStops([6.5, 1], [9, 0]);
+const STICKER_MAX_ZOOM = 9;
 
 const buildOceanGradient = (): LayerSpecification[] => [
   {
     id: OCEAN_GRADIENT_LAYER_ID,
     type: 'raster',
     source: GRADIENT_SOURCE,
+    maxzoom: STICKER_MAX_ZOOM,
     paint: {
       'raster-opacity': STICKER_FADE,
       'raster-resampling': 'linear',
@@ -386,6 +391,7 @@ const buildStickerLayers = (): LayerSpecification[] => [
     id: 'ca_sticker_shadow',
     type: 'raster',
     source: SHADOW_SOURCE,
+    maxzoom: STICKER_MAX_ZOOM,
     paint: {
       'raster-opacity': STICKER_FADE,
       'raster-resampling': 'linear',

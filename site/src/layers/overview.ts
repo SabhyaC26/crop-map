@@ -75,7 +75,7 @@ function buildQuilt(crops: CropIndex): LayerSpecification {
     type: 'circle',
     source: OVERVIEW_SOURCE,
     'source-layer': OVERVIEW_LAYER,
-    maxzoom: 11,
+    maxzoom: 10.8,
     filter: FARMLAND_ONLY,
     paint: {
       'circle-color': cropColor(crops, (hex) => saturate(hex, SATURATION_BOOST)),
@@ -97,7 +97,7 @@ function buildHighlight(crops: CropIndex): LayerSpecification[] {
       type: 'fill',
       source: FIELDS_LOW_SOURCE,
       'source-layer': FIELDS_LOW_LAYER,
-      maxzoom: 10.5,
+      maxzoom: 10.2,
       filter: noMatch(),
       layout: { visibility: 'none' },
       paint: {
@@ -113,7 +113,7 @@ function buildHighlight(crops: CropIndex): LayerSpecification[] {
       type: 'line',
       source: FIELDS_LOW_SOURCE,
       'source-layer': FIELDS_LOW_LAYER,
-      maxzoom: 10.5,
+      maxzoom: 10.2,
       filter: noMatch(),
       layout: { 'line-join': 'round', visibility: 'none' },
       paint: {

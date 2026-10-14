@@ -68,7 +68,7 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     container,
     style: buildBasemapStyle(window.location.origin, import.meta.env.BASE_URL),
     minZoom: UNLIMITED_ZOOM,
-    maxZoom: 18,
+    maxZoom: 15,
     maxPitch: 0,
     pitchWithRotate: false,
     touchPitch: false,

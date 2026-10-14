@@ -1,5 +1,5 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
-import { GEO_LABELS_SOURCE, GEO_POINT_LABEL_LAYER_IDS } from '../style/storybook';
+import { GEO_LABELS_GONE_ZOOM, GEO_LABELS_SOURCE, GEO_POINT_LABEL_LAYER_IDS } from '../style/storybook';
 import type { Rect } from './collision';
 
 /** Negative: a label only counts as covered when the marker really reaches into its text (label boxes carry their own padding). */
@@ -25,9 +25,11 @@ export function createGeoLabelGuard(map: MapLibreMap): GeoLabelGuard {
     map.setFeatureState({ source: GEO_LABELS_SOURCE, id: name }, { hidden: value });
   };
 
+  /** One rendered-feature query per marker box, so it only runs while the labels can still be seen. */
   const covered = (placed: readonly Rect[]): Set<string> => {
-    const layers = GEO_POINT_LABEL_LAYER_IDS.filter((id) => map.getLayer(id) !== undefined);
     const names = new Set<string>();
+    if (map.getZoom() >= GEO_LABELS_GONE_ZOOM) return names;
+    const layers = GEO_POINT_LABEL_LAYER_IDS.filter((id) => map.getLayer(id) !== undefined);
     if (layers.length === 0) return names;
     for (const r of placed) {
       if (r.x1 - r.x0 <= 2 * QUERY_INSET || r.y1 - r.y0 <= 2 * QUERY_INSET) continue;

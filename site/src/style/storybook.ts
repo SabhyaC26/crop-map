@@ -73,11 +73,14 @@ const scaled = (prop: string, ...stops: [number, number][]): ExpressionSpecifica
 const fadeOut = (peak: number, holdUntil: number, end: number): ExpressionSpecification =>
   zoomStops([STORY_MIN_ZOOM, peak], [holdUntil, peak], [end, 0]);
 
+/** Every storybook label has faded out by this zoom. */
+export const GEO_LABELS_GONE_ZOOM = 8.4;
+
 /** Labels carry a `hidden` feature-state so markers can take over a spot without a style reload. */
 const labelOpacity = (peak: number): ExpressionSpecification => {
   const shown = (v: number): ExpressionSpecification =>
     ['case', ['boolean', ['feature-state', 'hidden'], false], 0, v] as ExpressionSpecification;
-  return zoomStops([STORY_MIN_ZOOM, 0], [3.8, shown(peak)], [7.3, shown(peak)], [8.4, 0]);
+  return zoomStops([STORY_MIN_ZOOM, 0], [3.8, shown(peak)], [7.3, shown(peak)], [GEO_LABELS_GONE_ZOOM, 0]);
 };
 
 const byKind = (...kinds: string[]): FilterSpecification => ['in', ['get', 'kind'], ['literal', kinds]];
@@ -391,6 +394,7 @@ export const buildSnowLayers = (terrainSource: string): LayerSpecification[] => 
       id: 'story_snow_relief',
       type: 'color-relief',
       source: terrainSource,
+      maxzoom: 9.5,
       paint: {
         // Elevation-derived snow line: soft white from ~2.1 km, near-full cap above ~3.3 km.
         'color-relief-color': [
@@ -413,6 +417,7 @@ export const buildSnowLayers = (terrainSource: string): LayerSpecification[] => 
       id: 'story_snow_peak_halo',
       type: 'circle',
       source: GEO_SNOW_SOURCE,
+      maxzoom: 9.5,
       filter: byKind('snowpeak'),
       paint: {
         'circle-color': '#ffffff',
@@ -427,6 +432,7 @@ export const buildSnowLayers = (terrainSource: string): LayerSpecification[] => 
       id: 'story_snow_peak_core',
       type: 'circle',
       source: GEO_SNOW_SOURCE,
+      maxzoom: 9.5,
       filter: byKind('snowpeak'),
       paint: {
         'circle-color': '#ffffff',
@@ -446,6 +452,7 @@ export const buildOceanDecorLayers = (): LayerSpecification[] => [
     id: 'story_wave',
     type: 'line',
     source: STORY_OCEAN_SOURCE,
+    maxzoom: 8.4,
     filter: byKind('wave'),
     layout: { 'line-cap': 'round', 'line-join': 'round' },
     paint: {
@@ -458,6 +465,7 @@ export const buildOceanDecorLayers = (): LayerSpecification[] => [
     id: 'story_sparkle',
     type: 'circle',
     source: STORY_OCEAN_SOURCE,
+    maxzoom: 8.4,
     filter: byKind('sparkle'),
     paint: {
       'circle-color': '#ffffff',

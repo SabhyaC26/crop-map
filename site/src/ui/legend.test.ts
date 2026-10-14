@@ -35,7 +35,9 @@ function makeRecords(n: number) {
 
 const state = {
   zoom: 10,
+  lng: -120,
   features: [] as Feature[],
+  tilesLoaded: false,
 };
 
 const legends: Legend[] = [];
@@ -48,7 +50,9 @@ afterEach(() => {
   for (const l of legends.splice(0)) l.destroy();
   vi.useRealTimers();
   state.zoom = 10;
+  state.lng = -120;
   state.features = [];
+  state.tilesLoaded = false;
   document.body.replaceChildren();
 });
 
@@ -62,6 +66,9 @@ function mount(recordCount = 4) {
   const map = {
     getLayer: vi.fn(() => ({})),
     getZoom: vi.fn(() => state.zoom),
+    getCenter: vi.fn(() => ({ lng: state.lng, lat: 36.8 })),
+    getBearing: vi.fn(() => 0),
+    areTilesLoaded: vi.fn(() => state.tilesLoaded),
     queryRenderedFeatures: vi.fn(() => state.features),
     on: vi.fn((type: string, fn: () => void) => {
       handlers.set(type, fn);
@@ -133,6 +140,41 @@ describe('legend: visibility', () => {
     state.zoom = 9.5;
     handlers.get('zoom')?.();
     expect(root.dataset['visible']).toBe('false');
+  });
+});
+
+describe('legend: when it re-measures', () => {
+  it('does not rescan the fields when the camera has not moved since a complete tally', () => {
+    state.features = FOUR_CROPS;
+    state.tilesLoaded = true;
+    const { handlers, settle, map } = mount();
+    const scans = map.queryRenderedFeatures.mock.calls.length;
+    handlers.get('idle')?.();
+    handlers.get('moveend')?.();
+    settle();
+    expect(map.queryRenderedFeatures.mock.calls.length).toBe(scans);
+  });
+
+  it('rescans on idle when the last tally ran before every tile had loaded', () => {
+    state.features = [feature(1, 1, 10)];
+    const { handlers, settle, rows } = mount();
+    expect(rows()).toHaveLength(1);
+    state.features = FOUR_CROPS;
+    state.tilesLoaded = true;
+    handlers.get('idle')?.();
+    settle();
+    expect(rows()).toHaveLength(4);
+  });
+
+  it('rescans after the camera moves', () => {
+    state.features = [feature(1, 1, 10)];
+    state.tilesLoaded = true;
+    const { handlers, settle, rows } = mount();
+    state.features = FOUR_CROPS;
+    state.lng = -119.5;
+    handlers.get('moveend')?.();
+    settle();
+    expect(rows()).toHaveLength(4);
   });
 });
 

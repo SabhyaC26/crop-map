@@ -53,6 +53,9 @@ const formatShare = (share: number): string => {
 
 const plural = (n: number, word: string): string => `${n} ${word}${n === 1 ? '' : 's'}`;
 
+const sameRanking = (a: readonly Entry[], b: readonly Entry[]): boolean =>
+  a.length === b.length && a.every((e, i) => e.crop.cropId === b[i]?.crop.cropId && e.acres === b[i]?.acres);
+
 export function createLegend({ map, crops, manifest, emphasis, slot, popupRoot }: LegendOptions): Legend {
   const uid = `lg-${Math.random().toString(36).slice(2, 7)}`;
   const cardId = `${uid}-card`;
@@ -260,17 +263,42 @@ export function createLegend({ map, crops, manifest, emphasis, slot, popupRoot }
     return out.sort((a, b) => b.acres - a.acres);
   };
 
+  // The tally scans every rendered field, so it only reruns when the camera moved or the last scan ran before
+  // all tiles had arrived.
+  let measuredAt = '';
+  let measuredComplete = false;
+  const cameraKey = (): string => {
+    const c = map.getCenter();
+    return `${map.getZoom().toFixed(3)}/${c.lng.toFixed(6)}/${c.lat.toFixed(6)}/${map.getBearing().toFixed(1)}`;
+  };
+
   const refresh = (): void => {
     refreshTimer = undefined;
     if (map.getZoom() < HIDE_ZOOM) return;
-    ranked = measure();
-    render();
+    const key = cameraKey();
+    if (key === measuredAt && measuredComplete) return;
+    measuredAt = key;
+    measuredComplete = map.areTilesLoaded();
+    const next = measure();
+    if (!sameRanking(ranked, next)) {
+      ranked = next;
+      render();
+    }
     setVisible(ranked.length > 0 && map.getZoom() >= (visible ? HIDE_ZOOM : SHOW_ZOOM));
   };
 
   const scheduleRefresh = (): void => {
     window.clearTimeout(refreshTimer);
     refreshTimer = window.setTimeout(refresh, REFRESH_DEBOUNCE_MS);
+  };
+
+  const onIdle = (): void => {
+    if (!measuredComplete) scheduleRefresh();
+  };
+
+  const onResize = (): void => {
+    measuredAt = '';
+    scheduleRefresh();
   };
 
   const onZoom = (): void => {
@@ -347,7 +375,8 @@ export function createLegend({ map, crops, manifest, emphasis, slot, popupRoot }
   root.addEventListener('keydown', onKeyDown);
   map.on('zoom', onZoom);
   map.on('moveend', scheduleRefresh);
-  map.on('idle', scheduleRefresh);
+  map.on('idle', onIdle);
+  map.on('resize', onResize);
   map.on('click', onMapClick);
 
   render();
@@ -361,7 +390,8 @@ export function createLegend({ map, crops, manifest, emphasis, slot, popupRoot }
       observer.disconnect();
       map.off('zoom', onZoom);
       map.off('moveend', scheduleRefresh);
-      map.off('idle', scheduleRefresh);
+      map.off('idle', onIdle);
+      map.off('resize', onResize);
       map.off('click', onMapClick);
       root.remove();
     },

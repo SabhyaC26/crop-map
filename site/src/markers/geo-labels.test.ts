@@ -1,6 +1,6 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { describe, expect, it, vi } from 'vitest';
-import { GEO_LABELS_SOURCE, GEO_POINT_LABEL_LAYER_IDS } from '../style/storybook';
+import { GEO_LABELS_GONE_ZOOM, GEO_LABELS_SOURCE, GEO_POINT_LABEL_LAYER_IDS } from '../style/storybook';
 import type { Rect } from './collision';
 import { createGeoLabelGuard } from './geo-labels';
 
@@ -16,8 +16,9 @@ interface FakeMapOptions {
 /** A map whose rendered-label query returns whatever `under` currently holds, regardless of the query box. */
 const createFakeMap = (options: FakeMapOptions = {}) => {
   const { hasSource = true, hasLayers = true } = options;
-  const state: { under: Hit[] } = { under: [] };
+  const state: { under: Hit[]; zoom: number } = { under: [], zoom: 7 };
   const map = {
+    getZoom: vi.fn(() => state.zoom),
     getSource: vi.fn(() => (hasSource ? {} : undefined)),
     getLayer: vi.fn((id: string) => (hasLayers ? { id } : undefined)),
     queryRenderedFeatures: vi.fn((_box: unknown, _opts: unknown) => state.under),
@@ -118,6 +119,20 @@ describe('createGeoLabelGuard', () => {
     guard.update([rect(100, 100, 140, 140)]);
 
     expect(map.queryRenderedFeatures).not.toHaveBeenCalled();
+  });
+
+  it('skips the queries once the labels have faded out, and restores any it had hidden', () => {
+    const { asMap, state, map } = createFakeMap();
+    state.under = [{ properties: { name: 'Fresno' } }];
+    const guard = createGeoLabelGuard(asMap);
+    guard.update([rect(100, 100, 140, 140)]);
+    map.queryRenderedFeatures.mockClear();
+
+    state.zoom = GEO_LABELS_GONE_ZOOM;
+    guard.update([rect(100, 100, 140, 140)]);
+
+    expect(map.queryRenderedFeatures).not.toHaveBeenCalled();
+    expect(map.setFeatureState).toHaveBeenLastCalledWith({ source: GEO_LABELS_SOURCE, id: 'Fresno' }, { hidden: false });
   });
 
   it('destroy restores every label it still has hidden', () => {
