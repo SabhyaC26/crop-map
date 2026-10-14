@@ -1,0 +1,1950 @@
+{
+  "_doc": "Hand-curated inputs for pipeline/09_economics.py. See docs/economics.md for the method.",
+  "targetYear": 2024,
+  "calag": {
+    "file": "calag_county_ag_all_crops.xlsx",
+    "url": "https://ucdavis.app.box.com/index.php?rm=box_download_shared_file&shared_name=y6t2icitof2gib1zwwy7ygu3bjpogh0f&file_id=f_2150245931193",
+    "years": [
+      2024,
+      2023,
+      2022
+    ],
+    "source": "calag"
+  },
+  "inflation": {
+    "_doc": "USDA NASS Prices Paid Index for commodities, services, interest, taxes and wage rates (PPITW), annual average, 2011=100. 2004-2016 from Economic Indicators; 2017+ from NASS allprpd.txt. Studies older than 2004 use the 2004 value. Factors are never below 1 (newer studies are not deflated).",
+    "label": "USDA farm prices-paid index",
+    "values": {
+      "2004": 66,
+      "2005": 70,
+      "2006": 74,
+      "2007": 79.0,
+      "2008": 90.0,
+      "2009": 87.3,
+      "2010": 90.0,
+      "2011": 100.0,
+      "2012": 104.4,
+      "2013": 106.3,
+      "2014": 112.0,
+      "2015": 109.9,
+      "2016": 105.8,
+      "2017": 106.9,
+      "2018": 109.6,
+      "2019": 110.3,
+      "2020": 110.2,
+      "2021": 119.9,
+      "2022": 137.4,
+      "2023": 140.7,
+      "2024": 139.9,
+      "2025": 150.3,
+      "2026": 161.5
+    }
+  },
+  "sources": {
+    "calag": {
+      "label": "UC Davis CalAg, County Ag Commissioner crop reports (compiled)",
+      "short": "UC Davis",
+      "url": "https://calag.ucdavis.edu/data/county-crop-reports.html"
+    },
+    "sjc-2024": {
+      "label": "San Joaquin County 2024 Crop Report",
+      "short": "San Joaquin County",
+      "url": "https://www.sjgov.org/department/agcomm/general-info/crop-reports"
+    }
+  },
+  "studies": {
+    "almond-sjvn-2024": {
+      "label": "Almonds, San Joaquin Valley North",
+      "year": 2024,
+      "cash": 4546,
+      "rent": 0,
+      "tax": 352,
+      "url": "https://www.almonds.org/sites/default/files/2025-05/AlmondsSJVNorth%20Final%20draft4.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 2063,
+        "value": 25000
+      }
+    },
+    "alfalfa-svnsjv-2020": {
+      "label": "Alfalfa hay, Sacramento & North San Joaquin Valley",
+      "year": 2020,
+      "cash": 1491,
+      "rent": 300,
+      "tax": 4,
+      "url": "https://ucanr.edu/sites/nichemarketing/files/337465.pdf",
+      "land": {
+        "basis": "rent",
+        "charge": 300
+      }
+    },
+    "tomato-sv-2023": {
+      "label": "Processing tomatoes, Sacramento Valley & Northern Delta",
+      "year": 2023,
+      "cash": 4925,
+      "rent": 762,
+      "tax": 8,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2023/08/21/amended_82123_2023processtomatosacramentovalleysdifinal.pdf",
+      "caveat": "Cost study is for processing tomatoes; county price mixes in fresh-market.",
+      "land": {
+        "basis": "rent",
+        "charge": 762,
+        "note": "12% share of gross"
+      }
+    },
+    "wheat-sv-2016": {
+      "label": "Wheat, Sacramento Valley irrigated",
+      "year": 2016,
+      "cash": 707,
+      "rent": 60,
+      "tax": 71,
+      "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2020-10/337454.pdf",
+      "caveat": "Straw sales not counted.",
+      "land": {
+        "basis": "rent",
+        "charge": 323,
+        "note": "half rented (share rent $60), half owned ($263 capital charge)"
+      }
+    },
+    "wine-napa-2020": {
+      "label": "Wine grapes (Cabernet Sauvignon), Napa County",
+      "year": 2020,
+      "cash": 11871,
+      "rent": 0,
+      "tax": 2229,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/fe/24/fe24e27a-5c29-4cc3-a83c-63a31cd0c767/2020napawinegrape.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 11000,
+        "value": 200000
+      }
+    },
+    "wine-sonoma-2016": {
+      "label": "Wine grapes, Russian River Valley, Sonoma (Pinot noir & Chardonnay avg.)",
+      "year": 2016,
+      "cash": 8661,
+      "rent": 0,
+      "tax": 757,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/c6/28/c6287d1a-64b9-4ba6-b8ff-d83d6c0d0a64/amendedwinegrapessonomafinaldraft91817.pdf",
+      "caveat": "North Coast study used for coastal and foothill wine regions without their own study.",
+      "land": {
+        "basis": "owned",
+        "charge": 2500
+      }
+    },
+    "wine-lodi-2021": {
+      "label": "Wine grapes (Cabernet), Lodi / North San Joaquin Valley",
+      "year": 2021,
+      "cash": 4469,
+      "rent": 0,
+      "tax": 352,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2022/02/28/2021_grapewinelodi_22522.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 998,
+        "value": 21000
+      }
+    },
+    "wine-ssjv-2019": {
+      "label": "Wine grapes (Cabernet), South San Joaquin Valley",
+      "year": 2019,
+      "cash": 4007,
+      "rent": 0,
+      "tax": 357,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/2d/10/2d10450b-f265-45db-85d6-5b15a0fde6c0/19winegrapessjvsouthcabernet.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 1380,
+        "value": 23000
+      }
+    },
+    "table-grape-ssjv-2018": {
+      "label": "Table grapes (Flame Seedless), San Joaquin Valley South",
+      "year": 2018,
+      "cash": 18836,
+      "rent": 0,
+      "tax": 315,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/03/e8/03e8865f-2b6b-4859-90c6-84414cd9d3f4/2018tablegrapessjvflameseedlessfinaldraft.pdf",
+      "caveat": "Includes harvest and packing.",
+      "land": {
+        "basis": "owned",
+        "charge": 1238,
+        "value": 22500
+      }
+    },
+    "raisin-sjv-2016": {
+      "label": "Raisin grapes (dry-on-vine), San Joaquin Valley",
+      "year": 2016,
+      "cash": 2894,
+      "rent": 0,
+      "tax": 283,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/ec/ba/ecba9b89-f1e9-401c-9044-4afa2c060093/2016dovraisinsohtsjvfinaldraft111716.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 750,
+        "value": 20000
+      }
+    },
+    "pistachio-ssjv-2020": {
+      "label": "Pistachios, San Joaquin Valley South",
+      "year": 2020,
+      "cash": 3788,
+      "rent": 0,
+      "tax": 287,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/e4/bd/e4bd9353-25a1-4258-b5b1-42a203bc09ad/2020pistachiosjvsouth.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 1158,
+        "value": 20000
+      }
+    },
+    "walnut-sv-2022": {
+      "label": "Walnuts, Sacramento Valley",
+      "year": 2022,
+      "cash": 4001,
+      "rent": 0,
+      "tax": 362,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2023/03/17/22walnutssacval-31623.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 1625,
+        "value": 25000
+      }
+    },
+    "walnut-ssjv-2023": {
+      "label": "Walnuts, South San Joaquin Valley",
+      "year": 2023,
+      "cash": 3717,
+      "rent": 0,
+      "tax": 421,
+      "url": "https://coststudyfiles.ucdavis.edu/2024/03/27/23WalnutsSacVal-Final-3.26.24.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 1960,
+        "value": 28000
+      }
+    },
+    "pecan-2005": {
+      "label": "Pecans, San Joaquin & Sacramento Valley",
+      "year": 2005,
+      "cash": 1621,
+      "rent": 0,
+      "tax": 77,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/f6/c7/f6c7d8c2-d02a-4c61-a364-6d3b08a5428b/pecansjv2005.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 249,
+        "value": 4000
+      }
+    },
+    "olive-table-2023": {
+      "label": "Table olives (modern, mechanical harvest), Central Valley",
+      "year": 2023,
+      "cash": 4941,
+      "rent": 0,
+      "tax": 288,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2023/11/30/2023moderntableolivedraft11302023.pdf",
+      "caveat": "Table-olive study; oil olives cost much less to grow.",
+      "land": {
+        "basis": "owned",
+        "charge": 1260,
+        "value": 18000
+      }
+    },
+    "pomegranate-ssjv-2010": {
+      "label": "Pomegranates, San Joaquin Valley South",
+      "year": 2010,
+      "cash": 5067,
+      "rent": 0,
+      "tax": 120,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/d5/bd/d5bdaad2-b874-4b99-a3c2-cc7a89cfc72d/pomegranatevs2010.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 425,
+        "value": 8947
+      }
+    },
+    "date-coachella-2006": {
+      "label": "Dates, Coachella Valley",
+      "year": 2006,
+      "cash": 4668,
+      "rent": 0,
+      "tax": 492,
+      "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2011-06/108139.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 1875,
+        "value": 30000
+      }
+    },
+    "navel-ssjv-2021": {
+      "label": "Navel oranges, San Joaquin Valley South",
+      "year": 2021,
+      "cash": 7345,
+      "rent": 0,
+      "tax": 282,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2021/08/12/2021orangessjvsouth.pdf",
+      "caveat": "Includes picking and packing.",
+      "land": {
+        "basis": "owned",
+        "charge": 950,
+        "value": 20000
+      }
+    },
+    "mandarin-ssjv-2011": {
+      "label": "Mandarins (Tango), San Joaquin Valley South",
+      "year": 2011,
+      "cash": 13088,
+      "rent": 0,
+      "tax": 182,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/05/9f/059f84bb-f096-4089-9053-a4cce02fb915/mandarinsvs2011.pdf",
+      "caveat": "Includes picking and packing.",
+      "land": {
+        "basis": "owned",
+        "charge": 489,
+        "value": 10292
+      }
+    },
+    "lemon-ventura-2020": {
+      "label": "Lemons (Eureka), Ventura County",
+      "year": 2020,
+      "cash": 12089,
+      "rent": 0,
+      "tax": 879,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/38/fa/38fa8f9c-c93b-4c62-9740-a850bbc40df9/2020lemonsventuracounty.pdf",
+      "caveat": "Includes picking and packing.",
+      "land": {
+        "basis": "owned",
+        "charge": 4400,
+        "value": 80000
+      }
+    },
+    "lemon-ssjv-2015": {
+      "label": "Lemons, San Joaquin Valley South",
+      "year": 2015,
+      "cash": 9573,
+      "rent": 0,
+      "tax": 227,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/a1/39/a139af36-5c70-48ec-8367-bc534c314eb3/lemons-vs-2015.pdf",
+      "caveat": "Includes picking and packing.",
+      "land": {
+        "basis": "owned",
+        "charge": 772,
+        "value": 16250
+      }
+    },
+    "avocado-sd-2020": {
+      "label": "Avocados (high density), San Diego County",
+      "year": 2020,
+      "cash": 12637,
+      "rent": 0,
+      "tax": 413,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/b4/3d/b43d58d9-1e91-4a3e-80f9-a2edb14958b0/2020avocadohighdensitysandiegocounty.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 1386,
+        "value": 25200
+      }
+    },
+    "avocado-ventura-2011": {
+      "label": "Avocados, Ventura & Santa Barbara",
+      "year": 2011,
+      "cash": 5886,
+      "rent": 0,
+      "tax": 708,
+      "url": "https://class.ucanr.edu/sites/default/files/2012-11/156254.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 2375,
+        "value": 50000
+      }
+    },
+    "cling-peach-2017": {
+      "label": "Cling peaches, Sacramento & San Joaquin Valley",
+      "year": 2017,
+      "cash": 6633,
+      "rent": 0,
+      "tax": 275,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/65/6c/656ce5fa-f4f9-4e95-99fe-a01c1ea8a7a4/2017peachsvsjv-ecling-final_draft2.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 1100
+      }
+    },
+    "fresh-peach-ssjv-2009": {
+      "label": "Fresh-market peaches, San Joaquin Valley South",
+      "year": 2009,
+      "cash": 12277,
+      "rent": 0,
+      "tax": 141,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/90/2f/902faeaa-5024-413d-92dd-927002909580/peachesvs09.pdf",
+      "caveat": "Includes harvest and packing.",
+      "land": {
+        "basis": "owned",
+        "charge": 425,
+        "value": 8947
+      }
+    },
+    "nectarine-ssjv-2009": {
+      "label": "Nectarines, San Joaquin Valley South",
+      "year": 2009,
+      "cash": 13086,
+      "rent": 0,
+      "tax": 139,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/39/b6/39b6cb12-0c79-4b66-bb92-b1012bdbbfd2/nectarinevs09.pdf",
+      "caveat": "Includes harvest and packing.",
+      "land": {
+        "basis": "owned",
+        "charge": 425,
+        "value": 8947
+      }
+    },
+    "prune-sv-2022": {
+      "label": "Prunes (dried plums), Sacramento Valley",
+      "year": 2022,
+      "cash": 5535,
+      "rent": 0,
+      "tax": 301,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2023/04/21/2022prunessacvalley42023.pdf",
+      "caveat": "Includes harvest and drying.",
+      "land": {
+        "basis": "owned",
+        "charge": 1300
+      }
+    },
+    "prune-ssjv-2023": {
+      "label": "Prunes (dried plums), South San Joaquin Valley",
+      "year": 2023,
+      "cash": 6129,
+      "rent": 0,
+      "tax": 311,
+      "url": "https://coststudyfiles.ucdavis.edu/2024/03/27/2023.Prunes.SJV-Final-3.25.24.pdf",
+      "caveat": "Includes harvest and drying.",
+      "land": {
+        "basis": "owned",
+        "charge": 1400
+      }
+    },
+    "cherry-nsjv-2017": {
+      "label": "Sweet cherries, San Joaquin Valley North",
+      "year": 2017,
+      "cash": 15969,
+      "rent": 0,
+      "tax": 346,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/84/4f/844f0de3-7c1c-4bd3-89ac-893e3388c140/cherry2017_nsjv_final_draft4.pdf",
+      "caveat": "Includes harvest, packing and sales commission.",
+      "land": {
+        "basis": "owned",
+        "charge": 1400
+      }
+    },
+    "plum-ssjv-2016": {
+      "label": "Fresh plums, San Joaquin Valley South",
+      "year": 2016,
+      "cash": 11911,
+      "rent": 0,
+      "tax": 231,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/05/1e/051eabc3-9bdd-45cc-9c85-f122f8f275f0/2016plumssjvfinaldraft112316.pdf",
+      "caveat": "Includes harvest and packing.",
+      "land": {
+        "basis": "owned",
+        "charge": 675
+      }
+    },
+    "apricot-sjv-2003": {
+      "label": "Fresh apricots, San Joaquin Valley",
+      "year": 2003,
+      "cash": 3694,
+      "rent": 0,
+      "tax": 96,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/bb/10/bb101479-e0b0-42e4-aeda-5e94ca48ce56/apricotsfreshsjv.pdf",
+      "caveat": "2003 study, inflated from the 2004 index (oldest available): rough.",
+      "land": {
+        "basis": "owned",
+        "charge": 388
+      }
+    },
+    "pear-delta-2023": {
+      "label": "Pears (Green Bartlett), Sacramento River Delta",
+      "year": 2023,
+      "cash": 10036,
+      "rent": 0,
+      "tax": 255,
+      "url": "https://coststudyfiles.ucdavis.edu/2024/05/02/23PearsSV-4.23.24.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 1260
+      }
+    },
+    "apple-cc-2023": {
+      "label": "Apples for processing, Central Coast",
+      "year": 2023,
+      "cash": 7166,
+      "rent": 0,
+      "tax": 307,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2023/11/13/2023applesccfullfinal-nov23.pdf",
+      "caveat": "County figures are 'pome fruits', mostly apples.",
+      "land": {
+        "basis": "owned",
+        "charge": 2550
+      }
+    },
+    "lettuce-cc-2023": {
+      "label": "Romaine hearts, Central Coast",
+      "year": 2023,
+      "cash": 16347,
+      "rent": 1600,
+      "tax": 11,
+      "url": "https://www.foodpolitics.com/wp-content/uploads/Romaine-lettuce-cost-of-production_UC-Davis_23.pdf",
+      "caveat": "Includes harvest, field packing and cooling.",
+      "land": {
+        "basis": "rent",
+        "charge": 1600
+      }
+    },
+    "broccoli-cc-2023": {
+      "label": "Broccoli (bunched), Central Coast",
+      "year": 2023,
+      "cash": 13577,
+      "rent": 1600,
+      "tax": 11,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2023/08/04/2023-brocbunch14s-full-final.pdf",
+      "caveat": "Includes harvest, field packing and cooling.",
+      "land": {
+        "basis": "rent",
+        "charge": 1600
+      }
+    },
+    "onion-im-2023": {
+      "label": "Onions for dehydrating, Intermountain (Tulelake)",
+      "year": 2023,
+      "cash": 4361,
+      "rent": 550,
+      "tax": 0,
+      "url": "https://coststudyfiles.ucdavis.edu/2024/05/10/2023Onions-Final.pdf",
+      "caveat": "Dehydrator-onion study; fresh-market onions cost more to pack.",
+      "land": {
+        "basis": "rent",
+        "charge": 550
+      }
+    },
+    "pepper-oxnard-2013": {
+      "label": "Fresh bell peppers, Oxnard Plain (UCCE)",
+      "year": 2013,
+      "cash": 13131,
+      "rent": 1400,
+      "tax": 6,
+      "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2014-01/179209.pdf",
+      "caveat": "Includes pick, pack and sell.",
+      "land": {
+        "basis": "rent",
+        "charge": 1400
+      }
+    },
+    "strawberry-cc-2024": {
+      "label": "Strawberries, Central Coast",
+      "year": 2024,
+      "cash": 111755,
+      "rent": 3200,
+      "tax": 47,
+      "url": "https://coststudyfiles.ucdavis.edu/2024/04/04/2024Strawberry-FULL-FINAL-March2024.pdf",
+      "caveat": "Includes hand harvest, packing and selling fee. County value blends fresh and processing berries.",
+      "land": {
+        "basis": "rent",
+        "charge": 3200
+      }
+    },
+    "potato-klamath-2023": {
+      "label": "Potatoes (fresh market), Klamath Basin",
+      "year": 2023,
+      "cash": 3762,
+      "rent": 550,
+      "tax": 0,
+      "url": "https://coststudyfiles.ucdavis.edu/2024/05/10/23PotatoFreshMktKlamath-Final.pdf",
+      "caveat": "Klamath study without grading/packing; packed fresh potatoes (e.g. Kern) cost more, so margins look too high.",
+      "land": {
+        "basis": "rent",
+        "charge": 550
+      }
+    },
+    "blueberry-ssjv-2009": {
+      "label": "Blueberries, San Joaquin Valley South",
+      "year": 2009,
+      "cash": 28084,
+      "rent": 0,
+      "tax": 180,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/79/77/7977d8f7-9f4e-4858-abc8-74c81163b3a5/blueberryvs2009.pdf",
+      "caveat": "Includes hand picking, cooling and packing.",
+      "land": {
+        "basis": "owned",
+        "charge": 461,
+        "value": 9714
+      }
+    },
+    "sweetpotato-sjv-2006": {
+      "label": "Sweet potatoes, Merced County",
+      "year": 2006,
+      "cash": 4318,
+      "rent": 393,
+      "tax": 65,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/6f/32/6f32eea8-df52-4607-897b-6a90537a8aff/potatosweetsjv2006.pdf",
+      "caveat": "Packing (~$4/box) not included.",
+      "land": {
+        "basis": "rent",
+        "charge": 393
+      }
+    },
+    "cantaloupe-imperial-2004": {
+      "label": "Cantaloupes, Imperial County",
+      "year": 2004,
+      "cash": 3708,
+      "rent": 200,
+      "tax": 0,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/d1/e3/d1e38240-392f-40f5-a110-fc1f55d7302a/cantaloupesb04.pdf",
+      "caveat": "Old guideline study (total of all costs, incl. harvest); used for all melons: rough.",
+      "land": {
+        "basis": "rent",
+        "charge": 200
+      }
+    },
+    "corn-grain-ssjv-2015": {
+      "label": "Field corn (grain), San Joaquin Valley South",
+      "year": 2015,
+      "cash": 1613,
+      "rent": 300,
+      "tax": 2,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/8a/b9/8ab9b6ef-72ca-4762-af3c-50b487da72c5/corn-sjv-2015.pdf",
+      "land": {
+        "basis": "rent",
+        "charge": 300
+      }
+    },
+    "corn-silage-nsjv-2015": {
+      "label": "Corn silage, North San Joaquin Valley",
+      "year": 2015,
+      "cash": 1494,
+      "rent": 155,
+      "tax": 2,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/a9/c5/a9c55e16-83cf-46f3-86b8-436ae2deb41f/15ctsilagecornsanjoaquinvalleyfinaldraftjuly20.pdf",
+      "caveat": "County silage values are feed transfer prices; most silage is grown by dairies for their own herds.",
+      "land": {
+        "basis": "rent",
+        "charge": 155,
+        "note": "half the yearly rent: double-cropped with a winter crop"
+      }
+    },
+    "sorghum-sjv-2016": {
+      "label": "Grain sorghum, San Joaquin Valley",
+      "year": 2016,
+      "cash": 1430,
+      "rent": 250,
+      "tax": 201,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/cb/2c/cb2c22b4-04b7-45fb-a29b-7a5babe95776/2016sorghumgrainsjvfinaldraftmar23.pdf",
+      "land": {
+        "basis": "rent",
+        "charge": 250
+      }
+    },
+    "rice-sv-2021": {
+      "label": "Rice (medium grain), Sacramento Valley",
+      "year": 2021,
+      "cash": 2061,
+      "rent": 475,
+      "tax": 8,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2021/11/03/2021ricesacramentovalley.pdf",
+      "land": {
+        "basis": "rent",
+        "charge": 475
+      }
+    },
+    "rice-delta-2022": {
+      "label": "Rice, Delta",
+      "year": 2022,
+      "cash": 1623,
+      "rent": 400,
+      "tax": 8,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2023/05/11/20022ricedeltacontinuousrotation5923.pdf",
+      "land": {
+        "basis": "rent",
+        "charge": 400
+      }
+    },
+    "wildrice-im-2005": {
+      "label": "Wild rice, Intermountain",
+      "year": 2005,
+      "cash": 709,
+      "rent": 150,
+      "tax": 2,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/e2/52/e2525250-9c1e-4279-b0c9-4b182f6f5c4b/wildriceir05.pdf",
+      "land": {
+        "basis": "rent",
+        "charge": 150
+      }
+    },
+    "cotton-acala-2012": {
+      "label": "Cotton (Acala/Upland), San Joaquin Valley",
+      "year": 2012,
+      "cash": 1297,
+      "rent": 0,
+      "tax": 88,
+      "url": "https://cottoninfo.ucdavis.edu/sites/g/files/dgvnsk14551/files/inline-files/150401.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 404,
+        "value": 8500
+      }
+    },
+    "sunflower-sv-2018": {
+      "label": "Sunflowers for hybrid seed, Sacramento Valley",
+      "year": 2018,
+      "cash": 1355,
+      "rent": 272,
+      "tax": 5,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/18/2d/182dcc66-2b3e-4048-b639-b87d0a6456fd/2018sunflowerssacval-finaldraft_92618.pdf",
+      "land": {
+        "basis": "rent",
+        "charge": 272,
+        "note": "18% share of gross"
+      }
+    },
+    "safflower-sv-2005": {
+      "label": "Safflower, Sacramento Valley",
+      "year": 2005,
+      "cash": 260,
+      "rent": 0,
+      "tax": 2,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/75/f3/75f3b0a2-11b4-4514-9e87-4af1565a4942/safflowersvbed2005.pdf",
+      "land": {
+        "basis": "rent",
+        "charge": 57,
+        "note": "20% share of gross"
+      }
+    },
+    "sugarbeet-imperial-2004": {
+      "label": "Sugar beets, Imperial County",
+      "year": 2004,
+      "cash": 1428,
+      "rent": 175,
+      "tax": 0,
+      "url": "https://ccfruitandnuts.ucanr.edu/sites/default/files/2011-06/108188.pdf",
+      "caveat": "Old guideline study (total of all costs): rough.",
+      "land": {
+        "basis": "rent",
+        "charge": 175
+      }
+    },
+    "blackeye-ssjv-2026": {
+      "label": "Blackeye beans, San Joaquin Valley South",
+      "year": 2026,
+      "cash": 1951,
+      "rent": 0,
+      "tax": 125,
+      "url": "https://ucanr.edu/sites/default/files/2026-09/FINAL%20blackeyebeans-sjv-south-2026.pdf",
+      "land": {
+        "basis": "owned",
+        "charge": 1875,
+        "value": 25000
+      }
+    },
+    "garbanzo-svnsjv-2018": {
+      "label": "Garbanzo beans, Sacramento & North San Joaquin Valley",
+      "year": 2018,
+      "cash": 1177,
+      "rent": 195,
+      "tax": 2,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/8c/23/8c232c39-e3b8-4f12-ac02-911cb4602cc2/2018garbanzobeansacvalfinaldraft22018.pdf",
+      "land": {
+        "basis": "rent",
+        "charge": 195
+      }
+    },
+    "oathay-sv-2012": {
+      "label": "Oat hay (dryland), Sacramento Valley",
+      "year": 2012,
+      "cash": 381,
+      "rent": 75,
+      "tax": 0,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/ae/dd/aedd57c9-f980-4bfb-810a-afdffe760a36/oathay_sv2012.pdf",
+      "land": {
+        "basis": "rent",
+        "charge": 75,
+        "note": "20% share of gross"
+      }
+    },
+    "wine-proxy-lodi": {
+      "label": "Wine grapes (Cabernet), Lodi / North San Joaquin Valley",
+      "year": 2021,
+      "cash": 4469,
+      "rent": 0,
+      "tax": 352,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/pub/2022/02/28/2021_grapewinelodi_22522.pdf",
+      "caveat": "No Central Coast or foothill study; Lodi costs used as a stand-in.",
+      "land": {
+        "basis": "owned",
+        "charge": 998,
+        "value": 21000
+      }
+    },
+    "onion-red-ssjv-2006": {
+      "label": "Fresh-market red onions, San Joaquin Valley South",
+      "year": 2006,
+      "cash": 4167,
+      "rent": 300,
+      "tax": 8,
+      "url": "https://coststudyfiles.ucdavis.edu/uploads/cs_public/37/c8/37c88af8-b52e-45eb-bc21-2acd754b0c0a/onionredvs06.pdf",
+      "caveat": "2006 study, inflated: rough. Includes bagging and packing.",
+      "land": {
+        "basis": "rent",
+        "charge": 300
+      }
+    }
+  },
+  "regions": {
+    "napa": [
+      "Napa"
+    ],
+    "northSJV": [
+      "San Joaquin",
+      "Sacramento",
+      "Yolo",
+      "Solano",
+      "Stanislaus"
+    ],
+    "southSJV": [
+      "Fresno",
+      "Madera",
+      "Kern",
+      "Tulare",
+      "Kings",
+      "Merced"
+    ],
+    "coastCitrus": [
+      "Ventura",
+      "Santa Barbara",
+      "San Luis Obispo",
+      "San Diego",
+      "Orange",
+      "Los Angeles",
+      "Monterey"
+    ],
+    "southAvocado": [
+      "San Diego",
+      "Riverside",
+      "Orange"
+    ],
+    "delta": [
+      "San Joaquin",
+      "Sacramento",
+      "Contra Costa"
+    ],
+    "northCoast": [
+      "Sonoma",
+      "Mendocino",
+      "Lake",
+      "Marin",
+      "Humboldt",
+      "Trinity"
+    ],
+    "otherWine": [
+      "Monterey",
+      "San Luis Obispo",
+      "Santa Barbara",
+      "Santa Cruz",
+      "San Benito",
+      "Santa Clara",
+      "San Mateo",
+      "Alameda",
+      "Contra Costa",
+      "El Dorado",
+      "Amador",
+      "Calaveras",
+      "Nevada",
+      "Placer",
+      "Tuolumne",
+      "Mariposa",
+      "Riverside",
+      "San Diego",
+      "Shasta",
+      "Ventura",
+      "Los Angeles",
+      "Yuba",
+      "Butte"
+    ],
+    "intermountain": [
+      "Siskiyou",
+      "Modoc",
+      "Lassen"
+    ]
+  },
+  "crops": [
+    {
+      "cropId": 1,
+      "unit": "lb",
+      "variants": [
+        {
+          "label": "Almonds",
+          "match": [
+            [
+              "Almonds, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "almond-sjvn-2024"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 2,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Wine grapes",
+          "yieldRange": [
+            0.1,
+            5.0
+          ],
+          "match": [
+            [
+              "Grapes, All",
+              "Grapes, Wine"
+            ],
+            [
+              "Grapes, All",
+              "Unspecified"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "wine-napa-2020",
+              "region": "napa"
+            },
+            {
+              "study": "wine-sonoma-2016",
+              "region": "northCoast"
+            },
+            {
+              "study": "wine-lodi-2021",
+              "region": "northSJV"
+            },
+            {
+              "study": "wine-proxy-lodi",
+              "region": "otherWine"
+            },
+            {
+              "study": "wine-ssjv-2019"
+            }
+          ]
+        },
+        {
+          "label": "Table grapes",
+          "match": [
+            [
+              "Grapes, All",
+              "Grapes, Table"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "table-grape-ssjv-2018"
+            }
+          ]
+        },
+        {
+          "label": "Raisin grapes",
+          "match": [
+            [
+              "Grapes, All",
+              "Grapes, Raisin"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "raisin-sjv-2016"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 3,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Silage",
+          "match": [
+            [
+              "Silage, All",
+              null
+            ],
+            [
+              "Corn, All",
+              null,
+              {
+                "maxPrice": 120
+              }
+            ]
+          ],
+          "costs": [
+            {
+              "study": "corn-silage-nsjv-2015"
+            }
+          ]
+        },
+        {
+          "label": "Grain corn",
+          "match": [
+            [
+              "Corn, All",
+              null,
+              {
+                "minPrice": 120
+              }
+            ]
+          ],
+          "costs": [
+            {
+              "study": "corn-grain-ssjv-2015"
+            }
+          ]
+        },
+        {
+          "label": "Sorghum",
+          "match": [
+            [
+              "Sorghum, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "sorghum-sjv-2016"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 4,
+      "unit": "lb",
+      "variants": [
+        {
+          "label": "Pistachios",
+          "match": [
+            [
+              "Pistachios",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "pistachio-ssjv-2020"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 5,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Alfalfa",
+          "match": [
+            [
+              "Alfalfa, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "alfalfa-svnsjv-2020"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 7,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Rice",
+          "match": [
+            [
+              "Rice, All",
+              "Unspecified"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "rice-delta-2022",
+              "region": "delta"
+            },
+            {
+              "study": "rice-sv-2021"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 8,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Grain hay",
+          "match": [
+            [
+              "Hay, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "oathay-sv-2012"
+            }
+          ]
+        },
+        {
+          "label": "Oats",
+          "match": [
+            [
+              "Oats, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "oathay-sv-2012"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 9,
+      "unit": "lb",
+      "variants": [
+        {
+          "label": "Walnuts",
+          "match": [
+            [
+              "Walnuts",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "walnut-ssjv-2023",
+              "region": "southSJV"
+            },
+            {
+              "study": "walnut-sv-2022"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 10,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Navel oranges",
+          "match": [
+            [
+              "Oranges, All",
+              "Oranges, Navel"
+            ],
+            [
+              "Oranges, All",
+              "Unspecified"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "navel-ssjv-2021"
+            }
+          ]
+        },
+        {
+          "label": "Valencia oranges",
+          "match": [
+            [
+              "Oranges, All",
+              "Oranges, Valencia"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "navel-ssjv-2021"
+            }
+          ]
+        },
+        {
+          "label": "Mandarins",
+          "match": [
+            [
+              "Citrus, All",
+              "Tangerines & Mandarins"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "mandarin-ssjv-2011"
+            }
+          ]
+        },
+        {
+          "label": "Lemons",
+          "match": [
+            [
+              "Citrus, All",
+              "Lemons"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "lemon-ventura-2020",
+              "region": "coastCitrus"
+            },
+            {
+              "study": "lemon-ssjv-2015"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 11,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Tomatoes",
+          "match": [
+            [
+              "Tomatoes, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "tomato-sv-2023"
+            }
+          ],
+          "maxPrice": 300
+        }
+      ]
+    },
+    {
+      "cropId": 12,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Wheat",
+          "match": [
+            [
+              "Wheat, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "wheat-sv-2016"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 15,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Lettuce",
+          "match": [
+            [
+              "Lettuce, All",
+              "Head (Iceberg)"
+            ],
+            [
+              "Lettuce, All",
+              "Romaine"
+            ],
+            [
+              "Lettuce, All",
+              "Leaf"
+            ],
+            [
+              "Lettuce, All",
+              "Unspecified"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "lettuce-cc-2023"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 16,
+      "unit": "lb",
+      "variants": [
+        {
+          "label": "Cotton",
+          "match": [
+            [
+              "Cotton, Lint, All",
+              null
+            ]
+          ],
+          "extras": [
+            {
+              "label": "Cottonseed",
+              "match": [
+                "Cotton, Seed",
+                null
+              ]
+            }
+          ],
+          "costs": [
+            {
+              "study": "cotton-acala-2012"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 17,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Broccoli",
+          "match": [
+            [
+              "Broccoli",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "broccoli-cc-2023"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 19,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Dry onions",
+          "match": [
+            [
+              "Onions, Dry",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "onion-im-2023",
+              "region": "intermountain"
+            },
+            {
+              "study": "onion-red-ssjv-2006"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 20,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Cling peaches",
+          "match": [
+            [
+              "Peaches, All",
+              "Clingstone"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "cling-peach-2017"
+            }
+          ]
+        },
+        {
+          "label": "Fresh peaches",
+          "match": [
+            [
+              "Peaches, All",
+              "Freestone"
+            ],
+            [
+              "Peaches, All",
+              "Unspecified"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "fresh-peach-ssjv-2009"
+            }
+          ]
+        },
+        {
+          "label": "Nectarines",
+          "match": [
+            [
+              "Stone Fruits, All",
+              "Nectarines"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "nectarine-ssjv-2009"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 22,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Melons",
+          "match": [
+            [
+              "Melons, All",
+              "Cantaloupe"
+            ],
+            [
+              "Melons, All",
+              "Watermelon"
+            ],
+            [
+              "Melons, All",
+              "Honeydew"
+            ],
+            [
+              "Melons, All",
+              "Miscellaneous"
+            ],
+            [
+              "Melons, All",
+              "Unspecified"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "cantaloupe-imperial-2004"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 23,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Olives",
+          "match": [
+            [
+              "Olives",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "olive-table-2023"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 24,
+      "unit": "lb",
+      "variants": [
+        {
+          "label": "Avocados",
+          "match": [
+            [
+              "Avocados",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "avocado-sd-2020",
+              "region": "southAvocado"
+            },
+            {
+              "study": "avocado-ventura-2011"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 25,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Strawberries",
+          "match": [
+            [
+              "Berries, Strawberries, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "strawberry-cc-2024"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 26,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Prunes",
+          "match": [
+            [
+              "Stone Fruits, All",
+              "Prunes"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "prune-ssjv-2023",
+              "region": "southSJV"
+            },
+            {
+              "study": "prune-sv-2022"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 28,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Cherries",
+          "match": [
+            [
+              "Stone Fruits, All",
+              "Cherries"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "cherry-nsjv-2017"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 30,
+      "unit": "lb",
+      "variants": [
+        {
+          "label": "Sunflower seed",
+          "match": [
+            [
+              "Seed for Planting, Sunflower",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "sunflower-sv-2018"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 31,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Potatoes",
+          "match": [
+            [
+              "Potatoes",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "potato-klamath-2023"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 32,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Safflower",
+          "match": [
+            [
+              "Safflower",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "safflower-sv-2005"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 33,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Pomegranates",
+          "match": [
+            [
+              "Pomegrantates",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "pomegranate-ssjv-2010"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 34,
+      "unit": "lb",
+      "variants": [
+        {
+          "label": "Blueberries",
+          "match": [
+            [
+              "Berries, All",
+              "Blueberries"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "blueberry-ssjv-2009"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 35,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Sugar beets",
+          "match": [
+            [
+              "Sugar Beets",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "sugarbeet-imperial-2004"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 36,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Sweet potatoes",
+          "match": [
+            [
+              "Sweet Potatoes",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "sweetpotato-sjv-2006"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 38,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Dry beans",
+          "match": [
+            [
+              "Beans, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "blackeye-ssjv-2026",
+              "region": "southSJV"
+            },
+            {
+              "study": "garbanzo-svnsjv-2018"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 39,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Plums",
+          "match": [
+            [
+              "Stone Fruits, All",
+              "Plums"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "plum-ssjv-2016"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 40,
+      "unit": "lb",
+      "variants": [
+        {
+          "label": "Dates",
+          "match": [
+            [
+              "Dates",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "date-coachella-2006"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 42,
+      "unit": "lb",
+      "variants": [
+        {
+          "label": "Wild rice",
+          "match": [
+            [
+              "Rice, All",
+              "Wild"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "wildrice-im-2005"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 43,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Peppers",
+          "match": [
+            [
+              "Peppers, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "pepper-oxnard-2013"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 45,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Pears",
+          "match": [
+            [
+              "Pears, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "pear-delta-2023"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 46,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Apples",
+          "match": [
+            [
+              "Pome Fruits, All",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "apple-cc-2023"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 47,
+      "unit": "lb",
+      "variants": [
+        {
+          "label": "Pecans",
+          "match": [
+            [
+              "Pecans",
+              null
+            ]
+          ],
+          "costs": [
+            {
+              "study": "pecan-2005"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cropId": 49,
+      "unit": "ton",
+      "variants": [
+        {
+          "label": "Apricots",
+          "match": [
+            [
+              "Stone Fruits, All",
+              "Apricots"
+            ]
+          ],
+          "costs": [
+            {
+              "study": "apricot-sjv-2003"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "overrides": [
+    {
+      "_note": "PDF: 0.95 t/ac meats at $4,400/t; hulls 243,000 t (2.07 t/ac) at $75/t. CalAg's row has meats only.",
+      "cropId": 1,
+      "county": "San Joaquin",
+      "year": 2024,
+      "source": "sjc-2024",
+      "yield": 1900,
+      "price": 2.2,
+      "extras": [
+        {
+          "label": "Hulls",
+          "perAcre": 155
+        }
+      ]
+    },
+    {
+      "_note": "CalAg has no 2024 San Joaquin alfalfa row.",
+      "cropId": 5,
+      "county": "San Joaquin",
+      "year": 2024,
+      "source": "sjc-2024",
+      "yield": 6.78,
+      "price": 259,
+      "extras": []
+    },
+    {
+      "_note": "Processing tomatoes only; CalAg's 'Tomatoes, All' mixes in fresh-market.",
+      "cropId": 11,
+      "county": "San Joaquin",
+      "year": 2024,
+      "source": "sjc-2024",
+      "yield": 46.85,
+      "price": 126.3,
+      "extras": []
+    }
+  ],
+  "landIndex": {
+    "_doc": "USDA NASS Land Values, California all-cropland value $/acre (Aug surveys; latest revisions). 2012 interpolated. Studies before 2007 use 2007. Factors never below 1.",
+    "label": "CA cropland value change",
+    "values": {
+      "2007": 9700,
+      "2008": 9880,
+      "2009": 9480,
+      "2010": 9130,
+      "2011": 9230,
+      "2012": 9550,
+      "2013": 9860,
+      "2014": 10140,
+      "2015": 10850,
+      "2016": 11160,
+      "2017": 11630,
+      "2018": 12170,
+      "2019": 12830,
+      "2020": 13160,
+      "2021": 14370,
+      "2022": 16170,
+      "2023": 16820,
+      "2024": 17330
+    }
+  }
+}

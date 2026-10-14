@@ -2,7 +2,7 @@ YEAR ?= 2023
 REGION ?= statewide
 UV ?= uv
 
-.PHONY: setup download inspect lookup process tiles overview fields-low regions basemap all test
+.PHONY: setup download inspect lookup process tiles overview fields-low regions economics basemap all test
 
 setup:
 	$(UV) sync --frozen
@@ -34,10 +34,13 @@ fields-low:
 regions:
 	$(UV) run python pipeline/06_regions.py --year $(YEAR) --region $(REGION)
 
+economics:
+	$(UV) run python pipeline/09_economics.py
+
 basemap:
 	@echo "$@: not yet"
 
-all: lookup process tiles overview fields-low regions basemap
+all: lookup process tiles overview fields-low regions economics basemap
 
 test:
 	$(UV) run pytest tests/pipeline -q

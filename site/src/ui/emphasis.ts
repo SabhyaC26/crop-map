@@ -1,3 +1,4 @@
+import type { ExpressionSpecification } from 'maplibre-gl';
 import type { CropIndex } from '../data/crops';
 import type { FieldsLayer } from '../layers/fields';
 import type { loadIconManifest } from '../lib/icons';
@@ -27,6 +28,14 @@ export interface EmphasisState {
   readonly active: ReadonlySet<number> | null;
 }
 
+/** A map-wide field filter (e.g. profitable only), combined with the crop selection. */
+export interface FieldFilter {
+  /** Per-field condition for the detailed field layers. */
+  readonly condition: ExpressionSpecification;
+  /** Crops that pass, for zoomed-out layers that only know the crop. */
+  readonly cropIds: readonly number[];
+}
+
 export interface EmphasisController {
   readonly state: EmphasisState;
   /** Search selects exactly one crop (or clears everything with null). */
@@ -35,6 +44,7 @@ export interface EmphasisController {
   toggle(cropId: number): void;
   clear(): void;
   setPreview(cropId: number | null): void;
+  setFilter(filter: FieldFilter | null): void;
   setMarkers(markers: MarkerSink | undefined): void;
   subscribe(listener: (state: EmphasisState) => void): () => void;
 }
@@ -65,16 +75,26 @@ export function createEmphasis({ fields, overview, markers: initialMarkers }: Em
   let search: number | null = null;
   let selected: ReadonlySet<number> = new Set();
   let preview: number | null = null;
+  let filter: FieldFilter | null = null;
   let state = derive(search, selected, preview);
   const listeners = new Set<(s: EmphasisState) => void>();
 
-  /** A hovered legend preview alone leaves the emoji markers be; only a pinned crop clears them. */
-  const hidesMarkers = (): boolean => state.selected.size > 0;
+  /** A hovered legend preview alone leaves the emoji markers be; a pinned crop or a filter clears them. */
+  const hidesMarkers = (): boolean => state.selected.size > 0 || filter !== null;
+
+  /** Zoomed-out crops to light: the selection, narrowed by the filter. [] means nothing passes. */
+  const overviewTargets = (ids: number[] | null): number[] | null => {
+    if (filter === null) return ids;
+    const passing = new Set(filter.cropIds);
+    return (ids ?? [...passing]).filter((id) => passing.has(id));
+  };
 
   const applyTargets = (): void => {
     const ids = state.active === null ? null : [...state.active];
-    fields.setEmphasis(ids);
-    overview.setHighlight(ids);
+    fields.setEmphasis(ids, filter?.condition ?? null);
+    const lit = overviewTargets(ids);
+    // The overview treats an empty list as "clear"; an unknown id dims every crop instead.
+    overview.setHighlight(lit !== null && lit.length === 0 ? [-1] : lit);
     markers?.setHidden(hidesMarkers());
   };
 
@@ -113,6 +133,10 @@ export function createEmphasis({ fields, overview, markers: initialMarkers }: Em
       if (cropId === preview) return;
       preview = cropId;
       update();
+    },
+    setFilter(next) {
+      filter = next;
+      applyTargets();
     },
     setMarkers(next) {
       markers = next;

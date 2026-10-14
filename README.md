@@ -9,7 +9,8 @@ A playful map of what California grows, from field-level crop data.
 Every farm field in the state, coloured by crop, on a hand-tuned pastel basemap. Emoji markers bob over the
 regions famous for each crop, the "What's in view" legend tallies the fields on screen, clicking a field opens a
 card with its crop, acreage and county, and search lights up where a crop grows statewide
-(try "almonds"). Demo videos: [laptop](docs/demo/demo-laptop.mp4), [mobile](docs/demo/demo-mobile.mp4).
+(try "almonds"). Each field card also estimates profit per acre (crop sales, growing cost, land cost), and a
+filter under the search bar highlights profitable or losing fields ([method](docs/economics.md)). Demo videos: [laptop](docs/demo/demo-laptop.mp4), [mobile](docs/demo/demo-mobile.mp4).
 
 ## How it works
 
@@ -23,6 +24,7 @@ read straight from [PMTiles](https://protomaps.com/docs/pmtiles) archives over H
 | `pipeline/` | Python + GDAL/tippecanoe pipeline that turns the DWR shapefile into tiles and regions |
 | `data/lookup/` | Hand-curated crop lookup (DWR code → name, emoji, colour, harvest months) and place names |
 | `assets-src/` | Icon sources |
+| `data/lookup/economics.json` | Hand-curated cost studies and crop-type/region mapping for the profit estimates |
 | `docs/` | Notes on crop codes, regions, icons, fonts, harvest sources, and screenshots |
 
 ## Run it locally
@@ -70,6 +72,13 @@ The live site runs on Cloudflare Pages with the tiles on R2: `deploy.sh` builds 
 
 - **Crop fields:** California Department of Water Resources, [Statewide Crop Mapping 2023](https://data.cnra.ca.gov/dataset/6c3d65e3-35bb-49e1-a51e-49d5a2cf09a9),
   produced by Land IQ.
+- **Crop yields & prices (profit estimates):** [UC Davis CalAg](https://calag.ucdavis.edu/data/county-crop-reports.html)
+  compilation of County Agricultural Commissioner crop reports (2022–2024); `make economics` downloads
+  `cleaned_county_ag_all_crops_web.xlsx` from the
+  [CalAg shared folder](https://ucdavis.app.box.com/s/y6t2icitof2gib1zwwy7ygu3bjpogh0f/folder/368575016764).
+- **Growing & land costs (profit estimates):** [UC Davis Cost and Return Studies](https://coststudies.ucdavis.edu),
+  land rent/tax removed from growing cost, scaled to 2024 by USDA NASS prices-paid and California cropland-value
+  indexes. Method and every study: [docs/economics.md](docs/economics.md).
 - **Basemap:** © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL), via
   [Protomaps](https://protomaps.com).
 - **Terrain shading:** [AWS Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) (Terrarium).

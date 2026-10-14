@@ -1,5 +1,6 @@
 import type { LngLatLike, Map as MapLibreMap } from 'maplibre-gl';
 import type { Crop, CropIndex } from '../data/crops';
+import { computeEconomics, type CropEconomics, type EconomicsIndex } from '../data/economics';
 import type { FieldHit, FieldsLayer } from '../layers/fields';
 import { darken, mix, withAlpha } from '../lib/color';
 import { iconUrl } from '../lib/icons';
@@ -20,6 +21,7 @@ export interface FieldPopupOptions {
   fields: FieldsLayer;
   root: HTMLElement;
   iconManifest: Record<string, string>;
+  economics: EconomicsIndex;
 }
 
 const SHEET_QUERY = window.matchMedia('(max-width: 639px)');
@@ -113,6 +115,135 @@ function buildHarvestStrip(crop: Crop, harvest: readonly boolean[]): HTMLElement
   return wrap;
 }
 
+const usd = (n: number, opts: Intl.NumberFormatOptions = {}): string =>
+  n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0, ...opts });
+
+const signedUsd = (n: number, opts?: Intl.NumberFormatOptions): string =>
+  `${n < 0 ? '−' : '+'}${usd(Math.abs(n), opts)}`;
+
+const signedPct = (n: number): string => `${n < 0 ? '−' : ''}${Math.abs(Math.round(n * 100))}%`;
+
+const COMPACT: Intl.NumberFormatOptions = { notation: 'compact', maximumFractionDigits: 1 };
+
+/** "$2.20/lb", "$259/ton": cents only when the unit price is small. */
+const unitPrice = (price: number, unit: string): string =>
+  `${usd(price, price < 20 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : {})}/${unit}`;
+
+const formatYield = (n: number, unit: string): string =>
+  `${n.toLocaleString('en-US', { maximumFractionDigits: n < 100 ? 2 : 0 })} ${unit}`;
+
+function sourceLink(label: string, url: string): HTMLElement {
+  if (!url) return el('span', '', label);
+  const a = el('a', 'fp-econ-link', label);
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  return a;
+}
+
+/** "* 2024 data": the year behind the yield and price (sources are in the breakdown). */
+function basisLine(e: CropEconomics): string {
+  return `* ${e.year} data${e.isStatewide ? ' (California average)' : ''}`;
+}
+
+function buildEconomics(e: CropEconomics, acres: number, onToggle: () => void): HTMLElement {
+  const r = computeEconomics(e, acres);
+  const toneOf = (n: number): string => (n >= 0 ? 'is-gain' : 'is-loss');
+  const tone = toneOf(r.netPerAcre);
+
+  const wrap = el('details', `fp-econ ${tone}`);
+  wrap.addEventListener('toggle', onToggle);
+
+  const summary = el('summary', 'fp-econ-summary');
+  // A loss is labeled in words; a lone minus sign reads like a "no data" dash.
+  const isLoss = r.netPerAcre < 0;
+  const label = el('span', 'fp-econ-label', isLoss ? 'Loss/acre' : 'Profit/acre');
+  const value = el('span', 'fp-econ-value', isLoss ? usd(-r.netPerAcre) : signedUsd(r.netPerAcre));
+  const field = el(
+    'span',
+    'fp-econ-field',
+    isLoss ? `${usd(-r.net, COMPACT)} loss` : `${signedUsd(r.net, COMPACT)} field`,
+  );
+  field.title = `${signedUsd(r.net)} after land for this ${acres.toFixed(1)}-acre field`;
+  const chevron = el('span', 'fp-econ-chevron');
+  chevron.setAttribute('aria-hidden', 'true');
+  const basis = el('span', 'fp-econ-basis', basisLine(e));
+  summary.append(label, value, field, chevron, basis);
+
+  const table = el('div', 'fp-econ-table');
+  table.setAttribute('role', 'table');
+  const row = (cls: string, name: string, perAcre: string, total: string, note?: string): void => {
+    const tr = el('div', `fp-econ-row ${cls}`);
+    tr.setAttribute('role', 'row');
+    const nameCell = el('span', 'fp-econ-name', name);
+    nameCell.setAttribute('role', 'cell');
+    if (note) nameCell.append(el('small', 'fp-econ-note', note));
+    const a = el('span', 'fp-econ-num', perAcre);
+    const b = el('span', 'fp-econ-num', total);
+    a.setAttribute('role', 'cell');
+    b.setAttribute('role', 'cell');
+    tr.append(nameCell, a, b);
+    table.append(tr);
+  };
+
+  row('is-head', '', 'Per acre', 'This field');
+  const salesNote = `${e.variant ? `${e.variant} · ` : ''}${formatYield(e.yield, e.unit)} × ${unitPrice(e.price, e.unit)}${e.extras.map((x) => ` + ${x.label.toLowerCase()}`).join('')}`;
+  row('', 'Crop sales', usd(r.revenuePerAcre), usd(r.revenue), salesNote);
+  row('', 'Growing cost', `−${usd(r.costPerAcre)}`, `−${usd(r.cost)}`, 'seed, water, labor, harvest…');
+  row(
+    `is-subtotal ${toneOf(r.grossPerAcre)}`,
+    'Gross profit',
+    signedUsd(r.grossPerAcre),
+    signedUsd(r.gross),
+    `${signedPct(r.margin)} margin`,
+  );
+  row(
+    '',
+    'Land cost',
+    `−${usd(r.landPerAcre)}`,
+    `−${usd(r.land)}`,
+    e.landBasis === 'rent' ? 'cash rent' : 'cost of capital on owned land',
+  );
+  row(
+    `is-total ${tone}`,
+    'Profit after land',
+    signedUsd(r.netPerAcre),
+    signedUsd(r.net),
+    `${signedPct(r.netMargin)} margin`,
+  );
+
+  const breakEven = el(
+    'p',
+    'fp-econ-breakeven',
+    `Breaks even at ${unitPrice(r.breakEvenPriceWithLand, e.unit)} with land, ${unitPrice(r.breakEvenPrice, e.unit)} without (sold at ${unitPrice(e.price, e.unit)})`,
+  );
+
+  const scope = e.isStatewide ? 'California average' : formatCounty(e.county);
+  const sources = el('dl', 'fp-econ-sources');
+  const fact = (term: string, ...lines: (string | Node)[]): void => {
+    const dd = el('dd', 'fp-econ-dd');
+    for (const line of lines) {
+      const div = el('div', 'fp-econ-line');
+      div.append(line);
+      dd.append(div);
+    }
+    sources.append(el('dt', 'fp-econ-dt', term), dd);
+  };
+  if (e.variant && e.variantShare !== null) {
+    fact('Assumes', `${e.variant}: ${Math.round(e.variantShare * 100)}% of these acres in ${scope}`);
+  }
+  fact('Yield & price', `${scope} · ${e.year}`, sourceLink(e.revenueSource.label, e.revenueSource.url));
+  fact('Growing cost', sourceLink(e.costSource.label, e.costSource.url), ...e.costSteps);
+  fact('Land cost', ...e.landSteps);
+  fact('Not included', 'Taxes, depreciation, orchard/vineyard establishment');
+  if (e.costCaveat) fact('Note', e.costCaveat);
+
+  const body = el('div', 'fp-econ-body');
+  body.append(table, breakEven, sources);
+  wrap.append(summary, body);
+  return wrap;
+}
+
 function buildAlso(others: readonly Crop[], manifest: Record<string, string>): HTMLElement {
   const wrap = el('section', 'fp-also');
   wrap.append(el('p', 'fp-caption', 'Also grown this year'));
@@ -142,7 +273,7 @@ interface OpenState {
 }
 
 export function createFieldPopup(options: FieldPopupOptions): FieldPopup {
-  const { map, crops, fields, root, iconManifest } = options;
+  const { map, crops, fields, root, iconManifest, economics } = options;
   let state: OpenState | null = null;
   let closeTimer: number | undefined;
 
@@ -180,6 +311,8 @@ export function createFieldPopup(options: FieldPopupOptions): FieldPopup {
 
     card.append(handle, close, head, stats);
     if (crop?.harvest) card.append(buildHarvestStrip(crop, crop.harvest));
+    const econ = economics.get(hit.cropId, hit.county);
+    if (econ) card.append(buildEconomics(econ, hit.acres, onResize));
     const others = crops.parseOther(hit.other).filter((c) => c.cropId !== hit.cropId);
     if (others.length > 0) card.append(buildAlso(others, iconManifest));
     return card;
@@ -211,6 +344,8 @@ export function createFieldPopup(options: FieldPopupOptions): FieldPopup {
   const choosePlacement = (s: OpenState): void => {
     const { y } = map.project(s.lngLat as Parameters<MapLibreMap['project']>[0]);
     const vh = root.clientHeight;
+    // Never taller than one side of the screen can hold, so panning always keeps the field in view.
+    s.card.style.maxHeight = `${Math.max(240, vh - TOP_CLEARANCE - BOTTOM_CLEARANCE - CARD_GAP - SCREEN_MARGIN * 2)}px`;
     const needed = s.card.offsetHeight + CARD_GAP;
     const roomAbove = y - TOP_CLEARANCE;
     const roomBelow = vh - BOTTOM_CLEARANCE - y;
@@ -238,6 +373,15 @@ export function createFieldPopup(options: FieldPopupOptions): FieldPopup {
     if (state) layout(state);
   };
 
+  /** The card changed height (breakdown opened/closed): re-fit it on screen. */
+  const onResize = (): void => {
+    if (!state) return;
+    if (state.placement === 'sheet') revealSheetPoint(state);
+    else choosePlacement(state);
+    state.node.dataset['placement'] = state.placement;
+    layout(state);
+  };
+
   const attachSwipe = (card: HTMLElement): void => {
     let startY = 0;
     let startT = 0;
@@ -245,7 +389,10 @@ export function createFieldPopup(options: FieldPopupOptions): FieldPopup {
     let dragging = false;
 
     card.addEventListener('pointerdown', (e) => {
-      if (state?.placement !== 'sheet' || (e.target as HTMLElement).closest('button')) return;
+      const target = e.target as HTMLElement;
+      if (state?.placement !== 'sheet' || target.closest('button, summary, a')) return;
+      // Once the sheet is scrolled, only the handle/header drags it closed; elsewhere it scrolls.
+      if (card.scrollTop > 0 && !target.closest('.fp-handle, .fp-head')) return;
       dragging = true;
       startY = e.clientY;
       startT = e.timeStamp;
@@ -300,6 +447,8 @@ export function createFieldPopup(options: FieldPopupOptions): FieldPopup {
       node.dataset['placement'] = state.placement;
       layout(state);
       attachSwipe(card);
+      // Scrolling a tall card shouldn't zoom the map underneath.
+      card.addEventListener('wheel', (e) => e.stopPropagation(), { passive: true });
       fields.setSelected(hit.id);
       api.isOpen = true;
     },
