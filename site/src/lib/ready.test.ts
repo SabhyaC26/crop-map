@@ -239,5 +239,35 @@ describe('ready', () => {
       expect(isShown()).toBe(true);
       expect(fake.off).toHaveBeenCalledWith('render', fake.on.mock.calls[0]?.[1]);
     });
+
+    it('skips full painter draw passes while hidden and restores painter.render on reveal', async () => {
+      const fake = createFakeMap();
+      const origRender = vi.fn();
+      const prepareUsed = vi.fn();
+      const prepareUnused = vi.fn();
+      const painter = { context: { gl: true }, render: origRender };
+      const style = {
+        tileManagers: {
+          basemap: { used: true, prepare: prepareUsed },
+          fields: { used: false, prepare: prepareUnused },
+        },
+      };
+      Object.assign(fake.map, { painter, style });
+
+      ready.showMapWhenReady(fake.map, Promise.resolve(), []);
+      painter.render(style, {});
+      expect(origRender).not.toHaveBeenCalled();
+      expect(prepareUsed).toHaveBeenCalledWith(painter.context);
+      expect(prepareUnused).not.toHaveBeenCalled();
+
+      fake.load('basemap');
+      fake.load('fields');
+      await Promise.resolve();
+      fake.render();
+      expect(isShown()).toBe(true);
+
+      painter.render(style, {});
+      expect(origRender).toHaveBeenCalledTimes(1);
+    });
   });
 });

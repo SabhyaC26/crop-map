@@ -79,7 +79,7 @@ export function createRegionMarkers(
       const crop = crops.get(region.cropId);
       if (!crop) continue;
       const size = Math.round(sizeOf(region) * sizeFactor);
-      const parts = buildMarkerElement(region, crop, iconUrl(manifest, crop.icon), size);
+      const parts = buildMarkerElement(region, crop, iconUrl(manifest, crop.icon), size, true);
       parts.root.style.zIndex = String(500 - Math.min(region.rank, 499));
       const marker = new Marker({
         element: parts.root,
@@ -277,6 +277,9 @@ export function createRegionMarkers(
       hideLabels: coarse,
     });
     for (const item of changed) refreshInteractive(item);
+    for (const item of visible) {
+      if (item.gateOn) item.parts.loadIcon?.();
+    }
     markOffscreen();
     // Hidden markers must not keep suppressing the place names underneath them.
     geoLabels.update(hidden ? obstacles : placed);
@@ -396,12 +399,13 @@ export function createRegionMarkers(
   }
 
   measureLabels();
+  applyZoom(true);
+  collide();
   void document.fonts.ready.then(() => {
     if (destroyed) return;
     measureLabels();
     collide();
   });
-  applyZoom(true);
   // The emoji drop in only after the skeleton has faded and the map is visible.
   void mapShown.then(() => {
     if (!map.isMoving()) requestAnimationFrame(reveal);

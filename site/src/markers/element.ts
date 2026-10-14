@@ -12,6 +12,8 @@ export interface MarkerParts {
   label: HTMLElement;
   /** The label pill, measured for collision boxes. */
   name: HTMLElement;
+  /** Assigns the `<img>` src on first display when built with `deferIcon = true`. */
+  loadIcon?: () => void;
 }
 
 const hash01 = (s: string): number => {
@@ -37,7 +39,13 @@ const span = (className: string, text?: string): HTMLSpanElement => {
 export const estimateLabelWidth = (label: string, level: Region['level']): number =>
   label.length * (level === 'coarse' ? 7.6 : 6.9) + 26;
 
-export function buildMarkerElement(region: Region, crop: Crop, iconSrc: string, size: number): MarkerParts {
+export function buildMarkerElement(
+  region: Region,
+  crop: Crop,
+  iconSrc: string,
+  size: number,
+  deferIcon = false,
+): MarkerParts {
   const root = document.createElement('button');
   root.type = 'button';
   root.className = 'crop-marker';
@@ -61,7 +69,13 @@ export function buildMarkerElement(region: Region, crop: Crop, iconSrc: string, 
   img.alt = '';
   img.draggable = false;
   img.decoding = 'async';
-  img.src = iconSrc;
+  let iconLoaded = !deferIcon;
+  if (!deferIcon) img.src = iconSrc;
+  const loadIcon = (): void => {
+    if (iconLoaded) return;
+    iconLoaded = true;
+    img.src = iconSrc;
+  };
 
   const icon = span('crop-marker__icon');
   icon.append(img);
@@ -86,5 +100,5 @@ export function buildMarkerElement(region: Region, crop: Crop, iconSrc: string, 
   fx.append(band);
 
   root.append(fx);
-  return { root, fx, band, label, name };
+  return { root, fx, band, label, name, loadIcon };
 }

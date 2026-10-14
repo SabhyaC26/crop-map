@@ -78,13 +78,11 @@ export function createMap(container: HTMLElement): maplibregl.Map {
     pixelRatio: Math.min(window.devicePixelRatio, 2),
   });
 
+  frameCalifornia(map, container);
+  applyViewLimits(map, container);
+
   map.on('movestart', () => container.classList.add('is-moving'));
   map.on('moveend', () => container.classList.remove('is-moving'));
-
-  map.once('style.load', () => {
-    frameCalifornia(map, container);
-    applyViewLimits(map, container);
-  });
 
   let lastSize = `${container.clientWidth}x${container.clientHeight}`;
   let resizeTimer: number | undefined;

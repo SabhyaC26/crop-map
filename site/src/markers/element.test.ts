@@ -91,6 +91,14 @@ describe('buildMarkerElement', () => {
     expect(img?.getAttribute('src')).toBe(ICON);
   });
 
+  it('defers setting the icon image src until loadIcon is called when deferIcon is true', () => {
+    const parts = buildMarkerElement(region(), crop, ICON, 40, true);
+    const img = parts.root.querySelector('img');
+    expect(img?.getAttribute('src')).toBeNull();
+    parts.loadIcon?.();
+    expect(img?.getAttribute('src')).toBe(ICON);
+  });
+
   it('bobbing cadence is deterministic per region and lasts 3.5 to 4.5 seconds', () => {
     const first = buildMarkerElement(region(), crop, ICON, 40).root.style.getPropertyValue('--bob-dur');
     const second = buildMarkerElement(region(), crop, ICON, 40).root.style.getPropertyValue('--bob-dur');

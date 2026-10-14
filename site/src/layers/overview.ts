@@ -99,6 +99,7 @@ function buildHighlight(crops: CropIndex): LayerSpecification[] {
       'source-layer': FIELDS_LOW_LAYER,
       maxzoom: 10.5,
       filter: noMatch(),
+      layout: { visibility: 'none' },
       paint: {
         'fill-color': color,
         'fill-opacity': scaled(0, ...LOW_FILL_OPACITY),
@@ -114,7 +115,7 @@ function buildHighlight(crops: CropIndex): LayerSpecification[] {
       'source-layer': FIELDS_LOW_LAYER,
       maxzoom: 10.5,
       filter: noMatch(),
-      layout: { 'line-join': 'round' },
+      layout: { 'line-join': 'round', visibility: 'none' },
       paint: {
         'line-color': color,
         'line-width': zoomCurve([5, 2.6], [7, 1.8], [9, 0.8], [10, 0.4]),
@@ -147,17 +148,21 @@ export function addOverviewLayers(map: MapLibreMap, crops: CropIndex): OverviewL
   );
   for (const spec of buildHighlight(crops)) map.addLayer(spec, FIELDS_BEFORE_LAYER_ID);
 
-  const transition = fade(VEIL_FADE_MS);
-  for (const prop of ['raster-saturation-transition', 'raster-brightness-min-transition']) {
-    map.setPaintProperty(OCEAN_GRADIENT_LAYER_ID, prop, transition);
-  }
-  for (const prop of Object.keys(HILLSHADE_NEUTRAL)) map.setPaintProperty(HILLSHADE_LAYER_ID, `${prop}-transition`, transition);
   const hillshadeBase = Object.fromEntries(Object.keys(HILLSHADE_NEUTRAL).map((prop) => [prop, map.getPaintProperty(HILLSHADE_LAYER_ID, prop)]));
+  let washTransitionsSet = false;
 
   let clearTimer: number | undefined;
 
   /** Fades the world wash in or out: veil, ocean raster colour, hillshade tint. */
   const wash = (on: boolean): void => {
+    if (!washTransitionsSet) {
+      washTransitionsSet = true;
+      const transition = fade(VEIL_FADE_MS);
+      for (const prop of ['raster-saturation-transition', 'raster-brightness-min-transition']) {
+        map.setPaintProperty(OCEAN_GRADIENT_LAYER_ID, prop, transition);
+      }
+      for (const prop of Object.keys(HILLSHADE_NEUTRAL)) map.setPaintProperty(HILLSHADE_LAYER_ID, `${prop}-transition`, transition);
+    }
     map.setPaintProperty(DIM_VEIL_LAYER_ID, 'background-opacity', on ? VEIL_OPACITY : 0);
     map.setPaintProperty(OCEAN_GRADIENT_LAYER_ID, 'raster-saturation', on ? OCEAN_DIM.saturation : 0);
     map.setPaintProperty(OCEAN_GRADIENT_LAYER_ID, 'raster-brightness-min', on ? OCEAN_DIM.brightnessMin : 0);
@@ -170,6 +175,12 @@ export function addOverviewLayers(map: MapLibreMap, crops: CropIndex): OverviewL
     map.setPaintProperty(OVERVIEW_DOTS_LAYER_ID, 'circle-opacity', scaled(lit ? 0 : 1, ...DOT_OPACITY));
     map.setPaintProperty(FIELDS_LOW_FILL_LAYER_ID, 'fill-opacity', scaled(lit ? 1 : 0, ...LOW_FILL_OPACITY));
     map.setPaintProperty(FIELDS_LOW_LINE_LAYER_ID, 'line-opacity', scaled(lit ? 1 : 0, ...LOW_LINE_OPACITY));
+  };
+
+  const setLowVisible = (visible: boolean): void => {
+    const value = visible ? 'visible' : 'none';
+    map.setLayoutProperty(FIELDS_LOW_FILL_LAYER_ID, 'visibility', value);
+    map.setLayoutProperty(FIELDS_LOW_LINE_LAYER_ID, 'visibility', value);
   };
 
   const setFilter = (ids: readonly number[] | null): void => {
@@ -188,10 +199,14 @@ export function addOverviewLayers(map: MapLibreMap, crops: CropIndex): OverviewL
         lit = false;
         paint(false);
         wash(false);
-        clearTimer = window.setTimeout(() => setFilter(null), FADE_MS + 60);
+        clearTimer = window.setTimeout(() => {
+          setFilter(null);
+          setLowVisible(false);
+        }, FADE_MS + 60);
         return;
       }
       lit = true;
+      setLowVisible(true);
       setFilter(cropIds);
       paint(true);
       wash(true);

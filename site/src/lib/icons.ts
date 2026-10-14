@@ -77,12 +77,18 @@ function rasterize(img: HTMLImageElement): ImageData {
 export async function registerCropIcons(map: MapLibreMap, crops: readonly Crop[]): Promise<void> {
   const manifest = await loadIconManifest();
   const slugs = [...new Set(crops.map((c) => c.icon))];
-  await Promise.allSettled(
-    slugs.map(async (slug) => {
-      const id = iconImageId(slug);
-      if (map.hasImage(id)) return;
-      const img = await loadImage(iconUrl(manifest, slug));
-      map.addImage(id, rasterize(img), { pixelRatio: PIXEL_RATIO });
-    }),
+  const pending = slugs
+    .map((slug) => ({ slug, id: iconImageId(slug) }))
+    .filter(({ id }) => !map.hasImage(id));
+  const settled = await Promise.allSettled(
+    pending.map(async ({ slug, id }) => ({
+      id,
+      img: await loadImage(iconUrl(manifest, slug)),
+    })),
   );
+  for (const res of settled) {
+    if (res.status === 'fulfilled' && !map.hasImage(res.value.id)) {
+      map.addImage(res.value.id, rasterize(res.value.img), { pixelRatio: PIXEL_RATIO });
+    }
+  }
 }

@@ -223,18 +223,23 @@ function drawKind(ctx: Ctx, kind: FieldTextureKind, crop: Crop, base: string): v
   }
 }
 
-function createCanvas(): { canvas: HTMLCanvasElement; ctx: Ctx } {
-  const canvas = document.createElement('canvas');
-  canvas.width = TILE * RENDER_SCALE;
-  canvas.height = TILE * RENDER_SCALE;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('2d canvas unavailable');
-  ctx.scale(RENDER_SCALE, RENDER_SCALE);
-  return { canvas, ctx };
+let sharedCanvas: { canvas: HTMLCanvasElement; ctx: Ctx } | null = null;
+
+function getCanvas(): { canvas: HTMLCanvasElement; ctx: Ctx } {
+  if (!sharedCanvas) {
+    const canvas = document.createElement('canvas');
+    canvas.width = TILE * RENDER_SCALE;
+    canvas.height = TILE * RENDER_SCALE;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) throw new Error('2d canvas unavailable');
+    sharedCanvas = { canvas, ctx };
+  }
+  sharedCanvas.ctx.setTransform(RENDER_SCALE, 0, 0, RENDER_SCALE, 0, 0);
+  return sharedCanvas;
 }
 
 function renderTile(draw: (ctx: Ctx) => void, rotate: boolean): ImageData {
-  const { canvas, ctx } = createCanvas();
+  const { canvas, ctx } = getCanvas();
   if (rotate) {
     ctx.translate(TILE / 2, TILE / 2);
     ctx.rotate(Math.PI / 2);
@@ -249,15 +254,30 @@ function addPattern(map: MapLibreMap, id: string, draw: (ctx: Ctx) => void, rota
   map.addImage(id, renderTile(draw, rotate), { pixelRatio: PIXEL_RATIO });
 }
 
-/** Adds one tinted, seamless tile per textured crop (plus a rotated twin for row-based textures). Untextured crops register nothing. */
+/**
+ * Registers one tinted, seamless tile per textured crop (plus a rotated twin for row-based textures).
+ * Patterns are only used at z11.5+, so they are rasterised on demand when MapLibre first requests them.
+ */
 export function registerFieldPatterns(map: MapLibreMap, crops: CropIndex): void {
+  const builders = new Map<string, () => void>();
   for (const crop of crops.list) {
     const kind = textureKindOf(crop);
     if (!kind) continue;
     const base = mix(crop.color, CREAM, BASE_CREAM_MIX);
     const draw = (ctx: Ctx): void => drawKind(ctx, kind, crop, base);
-    addPattern(map, patternId(crop.cropId, 0), draw);
-    if (DIRECTIONAL.has(kind)) addPattern(map, patternId(crop.cropId, 1), draw, true);
+    const id0 = patternId(crop.cropId, 0);
+    builders.set(id0, () => addPattern(map, id0, draw));
+    if (DIRECTIONAL.has(kind)) {
+      const id1 = patternId(crop.cropId, 1);
+      builders.set(id1, () => addPattern(map, id1, draw, true));
+    }
+  }
+  if (typeof map.on === 'function') {
+    map.on('styleimagemissing', (e: { id: string }) => {
+      builders.get(e.id)?.();
+    });
+  } else {
+    for (const build of builders.values()) build();
   }
 }
 

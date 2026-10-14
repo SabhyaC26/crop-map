@@ -6,6 +6,8 @@ import './styles/popup.css';
 import './styles/markers.css';
 import './styles/boot.css';
 import { initCropMap, type CropMapApp } from './app';
+import { FIELDS_SOURCE } from './layers/fields';
+import { FIELDS_LOW_SOURCE } from './layers/overview';
 import { showMapWhenReady } from './lib/ready';
 import { createMap } from './map';
 import { TERRAIN_SOURCE } from './style/basemap';
@@ -42,4 +44,4 @@ const ready = initCropMap(map, slots)
   .catch((err: unknown) => console.error('crop layers failed to initialise', err));
 
 // Skeleton until the crop layers and their tiles are in, then fade the map in.
-showMapWhenReady(map, ready, [TERRAIN_SOURCE]);
+showMapWhenReady(map, ready, [TERRAIN_SOURCE, FIELDS_LOW_SOURCE, FIELDS_SOURCE]);

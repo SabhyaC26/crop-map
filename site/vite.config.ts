@@ -45,7 +45,32 @@ const earlyHints = (env: Record<string, string>): Plugin => ({
   },
 });
 
+const STATIC_PREFIX = /^\/(data|icons|fonts|webfonts)\//;
+const STATIC_CACHE = 'public, max-age=86400, stale-while-revalidate=604800';
+
+/** Matches `public/_headers` in local dev/preview so reloads reuse cached tiles, GeoJSON, icons and fonts. */
+const staticCacheHeaders = (): Plugin => {
+  const attach = (middlewares: { use: (fn: (req: { url?: string }, res: { setHeader: (k: string, v: string) => unknown }, next: () => void) => void) => void }): void => {
+    middlewares.use((req, res, next) => {
+      if (req.url && STATIC_PREFIX.test(req.url)) {
+        const origSetHeader = res.setHeader.bind(res);
+        res.setHeader = (name: string, value: string) => {
+          if (name.toLowerCase() === 'cache-control') return origSetHeader(name, STATIC_CACHE);
+          return origSetHeader(name, value);
+        };
+        origSetHeader('Cache-Control', STATIC_CACHE);
+      }
+      next();
+    });
+  };
+  return {
+    name: 'static-cache-headers',
+    configureServer: (server) => attach(server.middlewares),
+    configurePreviewServer: (server) => attach(server.middlewares),
+  };
+};
+
 export default defineConfig(({ mode }) => ({
   build: { target: 'es2022', chunkSizeWarningLimit: 1500 },
-  plugins: [excludePmtilesFromDist(), earlyHints(loadEnv(mode, process.cwd(), 'VITE_'))],
+  plugins: [excludePmtilesFromDist(), earlyHints(loadEnv(mode, process.cwd(), 'VITE_')), staticCacheHeaders()],
 }));

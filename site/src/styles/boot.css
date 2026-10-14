@@ -8,6 +8,17 @@ html.map-ready #map {
   opacity: 1;
 }
 
+#search-slot,
+#legend-slot,
+.compass-rose {
+  transition: opacity 0.4s ease;
+}
+
+html:not(.map-ready) :is(#search-slot, #legend-slot, .compass-rose) {
+  opacity: 0;
+  pointer-events: none;
+}
+
 #boot {
   position: absolute;
   inset: 0;

@@ -500,6 +500,7 @@ export const buildBasemapStyle = (origin: string, baseUrl: string): StyleSpecifi
     [TERRAIN_SOURCE]: {
       type: 'raster-dem',
       tiles: [TERRAIN_TILES_URL],
+      bounds: [-124.6, 32.4, -113.9, 42.1],
       encoding: 'terrarium',
       // The 256px Terrarium tiles stretched over 512px: a quarter of the requests, and the soft shading looks the same.
       tileSize: 512,

@@ -51,7 +51,6 @@ export async function initCropMap(map: MapLibreMap, slots: CropMapSlots): Promis
     loadRegions(),
     whenStyleReady(map),
   ]);
-  await registerCropIcons(map, crops.list);
   const overview = addOverviewLayers(map, crops);
   const fields = addFieldsLayers(map, crops);
   const popup = createFieldPopup({ map, crops, fields, root: slots.popupRoot, iconManifest });
@@ -69,12 +68,39 @@ export async function initCropMap(map: MapLibreMap, slots: CropMapSlots): Promis
     legendSlot: slots.legendSlot,
     popupRoot: slots.popupRoot,
   });
-  // The popup's water section reads these polygons: fetch them once the map is up and the browser is idle.
-  void mapShown.then(() =>
-    whenIdle(() => {
-      loadWater().catch((err: unknown) => console.error('water data failed to load', err));
-    }),
-  );
+  // Field-badge icons (minzoom 12) and popup water polygons (z10.2+) are not used at the state overview:
+  // load icons as the camera reaches z12, and warm water polygons once the map settles at field zoom.
+  let iconsStarted = false;
+  let waterStarted = false;
+  const ensureIcons = (): void => {
+    if (iconsStarted) return;
+    iconsStarted = true;
+    map.off('zoom', onZoomForIcons);
+    registerCropIcons(map, crops.list).catch((err: unknown) => console.error('crop icons failed to load', err));
+  };
+  const ensureWater = (): void => {
+    if (waterStarted) return;
+    waterStarted = true;
+    map.off('idle', onIdleForWater);
+    loadWater().catch((err: unknown) => console.error('water data failed to load', err));
+  };
+  const onZoomForIcons = (): void => {
+    if (map.getZoom() >= 11.8) ensureIcons();
+  };
+  const onIdleForWater = (): void => {
+    if (map.getZoom() >= 10) whenIdle(ensureWater);
+  };
+  map.on('zoom', onZoomForIcons);
+  map.on('idle', onIdleForWater);
+  onZoomForIcons();
+  void mapShown.then(() => {
+    window.setTimeout(() => {
+      whenIdle(() => {
+        ensureIcons();
+        ensureWater();
+      });
+    }, 6000);
+  });
   return { map, crops, fields, overview, popup, markers, controls };
 }
 
