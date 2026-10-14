@@ -3,9 +3,9 @@ import { iconUrl } from '../lib/icons';
 const trim = (n: number): string => n.toFixed(1).replace(/\.0$/, '');
 
 export function formatAcres(acres: number): string {
-  if (acres >= 1e6) return `${trim(acres / 1e6)}M`;
+  if (acres >= 999500) return `${trim(acres / 1e6)}M`;
   if (acres >= 1e4) return `${Math.round(acres / 1e3)}k`;
-  if (acres >= 1e3) return `${trim(acres / 1e3)}k`;
+  if (acres >= 999.5) return `${trim(acres / 1e3)}k`;
   return String(Math.round(acres));
 }
 
