@@ -293,7 +293,7 @@ export function createRegionMarkers(
     if (!child.parent) return null;
     const from = map.project(child.parent.region.lngLat);
     const to = map.project(child.region.lngLat);
-    const offset = { x: from.x - to.x, y: from.y - to.y };
+    const offset = { x: from.x - to.x, y: from.y + child.parent.nudgeY - to.y };
     return Math.hypot(offset.x, offset.y) > MAX_PARENT_OFFSET ? null : offset;
   };
 
