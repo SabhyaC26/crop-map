@@ -3,8 +3,11 @@ import { feature } from 'topojson-client';
 import type { GeometryCollection, Topology } from 'topojson-specification';
 import { WATER_URL } from '../config';
 
+export type BasinPriority = 'High' | 'Medium' | 'Low' | 'Very Low' | '';
+
 export interface BasinInfo {
   name: string;
+  priority: BasinPriority;
   critical: boolean;
 }
 
@@ -18,7 +21,7 @@ export interface WaterInfo {
 
 /** `u`: a town or utility system, ranked after agricultural agencies (cities annex the farmland around them). */
 type DistrictProps = { n: string; u?: 1 };
-type BasinProps = { n: string; c?: 1 };
+type BasinProps = { n: string; p: BasinPriority; c?: 1 };
 
 interface Shape<P> {
   bbox: [number, number, number, number];
@@ -111,6 +114,6 @@ export function waterAt(lng: number, lat: number): WaterInfo | null {
   return {
     district: local?.props.n ?? null,
     within: local && widest && widest.props.n !== local.props.n ? widest.props.n : null,
-    basin: basin ? { name: basin.props.n, critical: basin.props.c === 1 } : null,
+    basin: basin ? { name: basin.props.n, priority: basin.props.p, critical: basin.props.c === 1 } : null,
   };
 }

@@ -166,6 +166,7 @@ function buildWater(info: WaterInfo): HTMLElement {
   );
   const { basin } = info;
   const tags: [string, string][] = [];
+  if (basin?.priority === 'High' || basin?.priority === 'Medium') tags.push([`${basin.priority} priority`, basin.priority.toLowerCase()]);
   if (basin?.critical) tags.push(['Critically overdrafted', 'critical']);
   wrap.append(waterRow(AQUIFER_ICON, basin ? basin.name : 'Not over a mapped groundwater basin', basin ? 'groundwater basin' : null, tags));
   return wrap;
