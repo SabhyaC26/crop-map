@@ -339,3 +339,10 @@ def test_coarse_art_direction():
     for p in coarse:
         counts[p["crop_id"]] = counts.get(p["crop_id"], 0) + 1
     assert max(counts.values()) <= 4
+
+
+def test_label_regions_stay_unique_when_compass_names_repeat():
+    places = [regions.Place("Only Place", -120.0, 37.0, "town", 1)]
+    found = [regions.Region(1, 100 - i, -120.0 + i * 0.01, 37.0, frozenset(), "Fresno") for i in range(5)]
+    regions.label_regions(found, places, 1.0, {})
+    assert len({r.label for r in found}) == len(found)

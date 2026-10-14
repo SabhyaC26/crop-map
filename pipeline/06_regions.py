@@ -350,11 +350,19 @@ def label_regions(
         elif county not in taken:
             label = county
         else:
-            anchor_lon, anchor_lat = (candidates[0][0].lon, candidates[0][0].lat) if candidates else county_centers.get(
-                region.county, (region.lon, region.lat)
-            )
-            anchor_name = candidates[0][0].name if candidates else county
-            label = f"{bearing_name(anchor_lat, anchor_lon, region.lat, region.lon)} {anchor_name}"
+            anchors = [(place.name, place.lon, place.lat) for place, _ in candidates] or [
+                (county, *county_centers.get(region.county, (region.lon, region.lat)))
+            ]
+            compass = [
+                f"{bearing_name(anchor_lat, anchor_lon, region.lat, region.lon)} {anchor_name}"
+                for anchor_name, anchor_lon, anchor_lat in anchors
+            ]
+            label = next((name for name in compass if name not in taken), None)
+            if label is None:
+                suffix = 2
+                while f"{compass[0]} {suffix}" in taken:
+                    suffix += 1
+                label = f"{compass[0]} {suffix}"
         taken.add(label)
         region.label = label
 
