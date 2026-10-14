@@ -56,7 +56,7 @@ export function buildCropIndex(records: readonly CropRecord[]): CropIndex {
       const out: Crop[] = [];
       for (const part of other.split(',')) {
         const crop = byId.get(Number(part));
-        if (crop) out.push(crop);
+        if (crop && !out.includes(crop)) out.push(crop);
       }
       return out;
     },

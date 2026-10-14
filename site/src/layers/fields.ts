@@ -268,7 +268,7 @@ export function addFieldsLayers(map: MapLibreMap, crops: CropIndex): FieldsLayer
     });
   });
   canvas.addEventListener('mouseleave', () => setHover(null));
-  map.on('zoomstart', () => {
+  map.on('zoom', () => {
     if (!interactive()) setHover(null);
   });
 
