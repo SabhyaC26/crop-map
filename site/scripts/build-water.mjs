@@ -5,7 +5,7 @@
 //
 // Sources (California Department of Water Resources), cached in data/work/water/ (--refresh re-downloads):
 //   i03 Water Districts: every public water agency, incl. irrigation districts and federal/state contractors
-//   Bulletin 118 groundwater basins + the SGMA 2019 basin prioritization + the critically overdrafted basins
+//   Bulletin 118 groundwater basins + the critically overdrafted basins
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import mapshaper from 'mapshaper';
@@ -18,7 +18,6 @@ const GEO = 'https://gis.water.ca.gov/arcgis/rest/services/Geoscientific';
 const SOURCES = {
   districts: 'https://gis.data.cnra.ca.gov/api/download/v1/items/538bfc2e4ad64ff78ff18fbb8ca36033/geojson?layers=0',
   basins: `${GEO}/i08_B118_CA_GroundwaterBasins/FeatureServer/0/query?where=1%3D1&outFields=Basin_Subbasin_Number,Basin_Name,Basin_Subbasin_Name&outSR=4326&f=geojson`,
-  priority: `${GEO}/i08_B118_SGMA_2019_Basin_Prioritization/MapServer/1/query?where=1%3D1&returnGeometry=false&f=json&outFields=atlas_wmas.SDE.i08_SGMA_2019_Basin_Prioritization.Basin_Subbasin_Number,atlas_wmas.SDE.i08_SGMA_2019_Basin_Prioritization.Priority`,
   overdraft: `${GEO}/i08_CriticallyOverdraftedBasins/FeatureServer/0/query?where=1%3D1&outFields=Basin_Subbasin_Number&returnGeometry=false&f=json`,
 };
 /** Simplification tolerance in metres: fields are tested by the click point, so a few hundred metres at an edge is fine. */
@@ -73,12 +72,8 @@ const agencyName = (raw) => {
 };
 
 mkdirSync(CACHE, { recursive: true });
-const [districts, basins, priority, overdraft] = await Promise.all(Object.keys(SOURCES).map(cached));
+const [districts, basins, overdraft] = await Promise.all(Object.keys(SOURCES).map(cached));
 
-const PRIORITY_KEY = 'atlas_wmas.SDE.i08_SGMA_2019_Basin_Prioritization.';
-const priorityOf = new Map(
-  priority.features.map(({ attributes: a }) => [a[`${PRIORITY_KEY}Basin_Subbasin_Number`], a[`${PRIORITY_KEY}Priority`]]),
-);
 const critical = new Set(overdraft.features.map(({ attributes: a }) => a.Basin_Subbasin_Number));
 
 const districtLayer = {
@@ -96,7 +91,7 @@ const basinLayer = {
     .filter((f) => f.geometry)
     .map((f) => {
       const id = f.properties.Basin_Subbasin_Number;
-      const props = { n: basinLabel(f.properties.Basin_Name, f.properties.Basin_Subbasin_Name), p: priorityOf.get(id) ?? '' };
+      const props = { n: basinLabel(f.properties.Basin_Name, f.properties.Basin_Subbasin_Name) };
       if (critical.has(id)) props.c = 1;
       return { type: 'Feature', geometry: f.geometry, properties: props };
     }),

@@ -310,16 +310,6 @@
   letter-spacing: 0.01em;
 }
 
-.fp-water-tag.is-medium {
-  background: #e3f0fc;
-  color: #2f6ea8;
-}
-
-.fp-water-tag.is-high {
-  background: #fdebd3;
-  color: #9a5a14;
-}
-
 .fp-water-tag.is-critical {
   background: #fbe0e3;
   color: #a33a4a;
