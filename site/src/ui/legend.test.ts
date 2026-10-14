@@ -161,7 +161,7 @@ describe('legend: what is in view', () => {
 
   // Bug: measure() adds acres for crop ids missing from the crop index to the denominator, so the
   // shares of the crops the legend can show do not reflect the visible acreage.
-  it.fails('does not let unknown crop ids dilute the shares of known crops', () => {
+  it('does not let unknown crop ids dilute the shares of known crops', () => {
     state.features = [...FOUR_CROPS, feature(7, 99, 500)];
     const { rowFor } = mount();
     expect(rowFor(1).querySelector('.lg-pct')?.textContent).toBe('61%');

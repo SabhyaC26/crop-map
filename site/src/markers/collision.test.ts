@@ -88,7 +88,7 @@ describe('resolveCollisions', () => {
     expect(changed).toEqual([b]);
   });
 
-  it.fails('a marker hidden by an icon collision also has its label switched off', () => {
+  it('a marker hidden by an icon collision also has its label switched off', () => {
     // collision.ts:62 seeds labelOn from gateOn before the icon test, and the icon-overlap branch never clears it.
     const a = item('a', 100, 200);
     const b = item('b', 110, 200);

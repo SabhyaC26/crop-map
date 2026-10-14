@@ -32,7 +32,7 @@ describe('formatAcres', () => {
     expect(formatAcres(acres)).toBe(expected);
   });
 
-  it.fails('switches to the thousands form as soon as the rounded count reaches 1000', () => {
+  it('switches to the thousands form as soon as the rounded count reaches 1000', () => {
     // Math.round(999.6) is 1000, so this currently prints "1000 acres" while 1000 prints "1k acres".
     expect(formatAcres(999.6)).toBe('1k acres');
   });

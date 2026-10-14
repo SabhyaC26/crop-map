@@ -107,7 +107,7 @@ describe('icons', () => {
       await expect(icons.loadIconManifest()).rejects.toThrow('icons manifest: HTTP 404');
     });
 
-    it.fails('retries the manifest after a failed request instead of caching the failure', async () => {
+    it('retries the manifest after a failed request instead of caching the failure', async () => {
       fetchMock.mockResolvedValueOnce(jsonResponse({}, false, 503));
       await expect(icons.loadIconManifest()).rejects.toThrow();
       await expect(icons.loadIconManifest()).resolves.toEqual(MANIFEST);
@@ -179,7 +179,7 @@ describe('icons', () => {
       expect(addImage).not.toHaveBeenCalled();
     });
 
-    it.fails('still registers the other icons when one artwork fails to load', async () => {
+    it('still registers the other icons when one artwork fails to load', async () => {
       const { map, images } = createMap();
       await expect(icons.registerCropIcons(map, [crop('almond'), crop('broken', 2)])).resolves.toBeUndefined();
       expect(images.has('icon-almond')).toBe(true);

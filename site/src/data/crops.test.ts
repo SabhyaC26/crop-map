@@ -56,7 +56,7 @@ describe('buildCropIndex', () => {
       expect(index.parseOther('1,').map((c) => c.cropId)).toEqual([1]);
     });
 
-    it.fails('de-duplicates repeated ids so the same crop is not listed twice', () => {
+    it('de-duplicates repeated ids so the same crop is not listed twice', () => {
       expect(index.parseOther('1,1').map((c) => c.cropId)).toEqual([1]);
     });
   });

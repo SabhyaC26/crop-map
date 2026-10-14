@@ -38,7 +38,7 @@ describe('config', () => {
     expect(overridden.OVERVIEW_URL).toBe('/data/overview.pmtiles');
   });
 
-  it.fails('treats an empty VITE_* override as unset and keeps the default', async () => {
+  it('treats an empty VITE_* override as unset and keeps the default', async () => {
     vi.stubEnv('VITE_FIELDS_URL', '');
     vi.resetModules();
     const overridden = await import('./config');

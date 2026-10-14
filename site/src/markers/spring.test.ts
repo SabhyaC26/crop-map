@@ -39,7 +39,7 @@ describe('springEasing', () => {
     expect(Math.abs(sampleAt(pts, 0.9) - 1)).toBeLessThan(0.02);
   });
 
-  it.fails('stays finite at critical damping, the top of the documented 0..1 range', () => {
+  it('stays finite at critical damping, the top of the documented 0..1 range', () => {
     // wd = omega * sqrt(1 - d^2) is 0 at d = 1, so k = d*omega/wd divides by zero and the curve becomes NaN.
     const pts = parseLinear(springEasing(1));
     expect(pts.every(Number.isFinite)).toBe(true);

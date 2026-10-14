@@ -33,12 +33,12 @@ describe('formatAcres', () => {
   });
 
   // Bug: 999,999 rounds to "1000k" because the k branch uses Math.round and never hands off to M.
-  it.fails('hands off to millions instead of printing 1000k', () => {
+  it('hands off to millions instead of printing 1000k', () => {
     expect(formatAcres(999_999)).toBe('1M');
   });
 
   // Bug: 999.6 acres falls through to the plain-number branch and prints "1000" instead of "1k".
-  it.fails('does not print a four-digit plain number at the 1k boundary', () => {
+  it('does not print a four-digit plain number at the 1k boundary', () => {
     expect(formatAcres(999.6)).toBe('1k');
   });
 });
