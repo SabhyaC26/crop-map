@@ -270,8 +270,10 @@ export function createRegionMarkers(
     labelsClear = empty;
     const obstacles = uiObstacles();
     const coarse = mode === 'coarse';
-    const { changed, placed } = resolveCollisions(map, byLevel[mode], map.getZoom(), obstacles, {
-      excluded: coarse ? declutterCoarse(map.getZoom()) : undefined,
+    const zoom = map.getZoom();
+    const visible = byLevel[mode].filter((item) => bandOpacity(item.region.level, zoom) > 0);
+    const { changed, placed } = resolveCollisions(map, visible, zoom, obstacles, {
+      excluded: coarse ? declutterCoarse(zoom) : undefined,
       hideLabels: coarse,
     });
     for (const item of changed) refreshInteractive(item);
