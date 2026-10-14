@@ -68,6 +68,8 @@ export function resolveCollisions(
         labelOn = !hideLabels && !placed.some((q) => overlaps(label, q));
         placed.push(icon);
         if (labelOn) placed.push(label);
+      } else {
+        labelOn = false;
       }
     }
     if (gateOn !== item.gateOn || labelOn !== item.labelOn) {
