@@ -72,6 +72,11 @@ variables `TILES_BASE` and `PAGES_PROJECT` and the secrets `CLOUDFLARE_API_TOKEN
 
 - **Crop fields:** California Department of Water Resources, [Statewide Crop Mapping 2023](https://data.cnra.ca.gov/dataset/6c3d65e3-35bb-49e1-a51e-49d5a2cf09a9),
   produced by Land IQ.
+- **Water (field popup):** California Department of Water Resources:
+  [water agency boundaries](https://data.cnra.ca.gov/dataset/i03-waterdistricts),
+  [Bulletin 118 groundwater basins](https://water.ca.gov/Programs/Groundwater-Management/Bulletin-118), the SGMA 2019
+  basin prioritization and the critically overdrafted basins. Rebuilt into `site/public/data/water.json` by
+  `node site/scripts/build-water.mjs`. They describe the area a field sits in, not that field's own water supply.
 - **Basemap:** © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (ODbL), via
   [Protomaps](https://protomaps.com).
 - **Terrain shading:** [AWS Terrain Tiles](https://registry.opendata.aws/terrain-tiles/) (Terrarium).

@@ -1,8 +1,10 @@
 import type { Map as MapLibreMap } from 'maplibre-gl';
 import { loadCrops, type CropIndex } from './data/crops';
+import { loadWater } from './data/water';
 import { addFieldsLayers, type FieldsLayer } from './layers/fields';
 import { addOverviewLayers, type OverviewLayer } from './layers/overview';
 import { loadIconManifest, registerCropIcons } from './lib/icons';
+import { mapShown } from './lib/ready';
 import { createRegionMarkers, loadRegions, type RegionMarkers } from './markers';
 import { cropRegionPoints } from './markers/regions';
 import { FIELDS_BEFORE_LAYER_ID } from './style/basemap';
@@ -67,5 +69,18 @@ export async function initCropMap(map: MapLibreMap, slots: CropMapSlots): Promis
     legendSlot: slots.legendSlot,
     popupRoot: slots.popupRoot,
   });
+  // The popup's water section reads these polygons: fetch them once the map is up and the browser is idle.
+  void mapShown.then(() =>
+    whenIdle(() => {
+      loadWater().catch((err: unknown) => console.error('water data failed to load', err));
+    }),
+  );
   return { map, crops, fields, overview, popup, markers, controls };
 }
+
+// Safari only shipped requestIdleCallback recently.
+const whenIdle = (fn: () => void): void => {
+  const ric = window.requestIdleCallback as typeof window.requestIdleCallback | undefined;
+  if (ric) ric(fn, { timeout: 3000 });
+  else setTimeout(fn, 1500);
+};
