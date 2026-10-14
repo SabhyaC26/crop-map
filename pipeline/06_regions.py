@@ -362,7 +362,8 @@ def label_regions(
 def coarse_label_candidates(lon: float, lat: float, county: str, places: list[Place]) -> list[str]:
     """State-scale names, best first: prominent places within 45 km by distance, else other places within 35 km."""
     ranked = sorted(
-        (float(haversine_km(lat, lon, place.lat, place.lon)), place) for place in places
+        ((float(haversine_km(lat, lon, place.lat, place.lon)), place) for place in places),
+        key=lambda item: item[0],
     )
     prominent = [place.name for km, place in ranked if place.prominence == PROMINENT and km <= COARSE_PROMINENT_KM]
     if prominent:
@@ -466,7 +467,10 @@ def find_hotspots(crop_points: pd.DataFrame) -> list[Hotspot]:
 
 def hotspot_label_candidates(hotspot: Hotspot, places: list[Place]) -> list[str]:
     """Prominence-1 places within SEARCH_PROMINENT_KM, then prominence-2 within SEARCH_OTHER_KM, nearest first."""
-    ranked = sorted((float(haversine_km(hotspot.lat, hotspot.lon, p.lat, p.lon)), p) for p in places)
+    ranked = sorted(
+        ((float(haversine_km(hotspot.lat, hotspot.lon, p.lat, p.lon)), p) for p in places),
+        key=lambda item: item[0],
+    )
     first = [p.name for km, p in ranked if p.prominence == PROMINENT and km <= SEARCH_PROMINENT_KM]
     second = [p.name for km, p in ranked if p.prominence != PROMINENT and km <= SEARCH_OTHER_KM]
     return [*first, *second, county_label(hotspot.county)]

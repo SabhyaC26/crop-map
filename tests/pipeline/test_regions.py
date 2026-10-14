@@ -124,6 +124,12 @@ def test_coarse_label_prefers_prominent_then_other_then_county():
     assert regions.label_point(-110.0, 37.0, "Fresno", places) == "Fresno County"
 
 
+def test_place_labels_tolerate_equal_distances():
+    twins = [regions.Place("Twin A", -120.0, 37.0, "town", 1), regions.Place("Twin B", -120.0, 37.0, "town", 1)]
+    assert regions.coarse_label_candidates(-120.0, 37.1, "Fresno", twins) == ["Twin A", "Twin B"]
+    assert regions.hotspot_label_candidates(regions.Hotspot(-120.0, 37.1, 1.0, "Fresno"), twins)[:2] == ["Twin A", "Twin B"]
+
+
 def test_label_coarse_dedups_without_compass_words():
     places = [regions.Place("Only City", -120.0, 37.0, "town", 1)]
     found = [regions.Region(1, 100 - 10 * i, -120.0 + i * 0.3, 37.0, frozenset(), "Fresno") for i in range(4)]
